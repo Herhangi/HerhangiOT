@@ -1,0 +1,14 @@
+﻿[
+    {
+      "GameWorldId" : 1,
+      "GameWorldName" : "Adonis",
+      "GameWorldIp" : "127.0.0.1",
+      "GameWorldPort" : 7172
+    },
+    {
+      "GameWorldId" : 2,
+      "GameWorldName" : "Babonis",
+      "GameWorldIp" : "127.0.0.1",
+      "GameWorldPort" : 7172
+    }
+]
