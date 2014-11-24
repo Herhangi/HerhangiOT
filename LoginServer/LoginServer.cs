@@ -59,7 +59,7 @@ namespace HerhangiOT.LoginServer
             _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_PORT]);
             _listener.Start();
             _listener.BeginAcceptSocket(LoginListenerCallback, _listener);
-            Logger.Log(LogLevels.Information, "Listening for clients");
+            Logger.Log(LogLevels.Operation, "LoginServer Listening for clients");
         }
 
         void ConfigManager_ConfigsLoaded()
@@ -69,7 +69,7 @@ namespace HerhangiOT.LoginServer
 
         void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {
-            Logger.Log(LogLevels.Information, "Login Server Shutting Down!");
+            Logger.Log(LogLevels.Operation, "Login Server Shutting Down!");
             _listener.Stop();
         }
 

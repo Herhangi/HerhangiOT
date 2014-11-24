@@ -330,7 +330,9 @@ namespace HerhangiOT.ServerLibrary.Networking
 
             Array.Copy(value, 0, _buffer, _position, value.Length);
             _position += value.Length;
-            _length += value.Length;
+
+            if (_position > _length)
+                _length += value.Length;
 
             //if (_position > _length)
             //    _length = _position;

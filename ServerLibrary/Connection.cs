@@ -15,7 +15,7 @@ namespace HerhangiOT.ServerLibrary
         protected bool IsChecksumEnabled { get; set; }
         protected bool IsEncryptionEnabled { get; set; }
 
-        public void HandleFirstConnection(IAsyncResult ar)
+        public virtual void HandleFirstConnection(IAsyncResult ar)
         {
             TcpListener clientListener = (TcpListener)ar.AsyncState;
             Socket = clientListener.EndAcceptSocket(ar);
@@ -44,13 +44,18 @@ namespace HerhangiOT.ServerLibrary
                 if (Stream.CanRead)
                     currentlyRead += Stream.Read(InMessage.Buffer, currentlyRead, size - currentlyRead);
                 else
+                {
                     Disconnect();
+                    return;
+                }
             }
             InMessage.Reset(2, size);
 
             //I won't do checksum control as other servers do not care about it
-            InMessage.GetUInt32(); //Adler Checksum
-            InMessage.GetByte(); //Protocol Id
+            uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
+            uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
+            if (checksum != recvChecksum)
+                InMessage.SkipBytes(-4);
             
             ProcessMessage();
         }
@@ -93,7 +98,7 @@ namespace HerhangiOT.ServerLibrary
 
         private void InternalSend(OutputMessage message)
         {
-            Stream.BeginWrite(message.Buffer, 0, message.Length, null, null);
+            Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, null, null);
         }
 
 

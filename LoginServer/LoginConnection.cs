@@ -10,6 +10,7 @@ namespace HerhangiOT.LoginServer
     {
         protected override void ProcessMessage()
         {
+            InMessage.GetByte(); //Protocol Id
             InMessage.GetUInt16(); //Client OS
             ushort version = InMessage.GetUInt16(); //Client Version
 

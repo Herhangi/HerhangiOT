@@ -10,13 +10,21 @@ namespace HerhangiOT.ServerLibrary.Utility
         
         public static bool SetKey(string p, string q)
         {
+            Logger.LogOperationStart("Setting up RSA encyption");
+
             BigInteger mP, mQ;
 
             if (!BigInteger.TryParse(p, out mP))
+            {
+                Logger.LogOperationFailed("P value could not be parsed!");
                 return false;
-            
+            }
+
             if (!BigInteger.TryParse(q, out mQ))
+            {
+                Logger.LogOperationFailed("Q value could not be parsed!");
                 return false;
+            }
             
             N = mP * mQ;
 
@@ -24,7 +32,7 @@ namespace HerhangiOT.ServerLibrary.Utility
             BigInteger mod = (mP - 1)*(mQ - 1);
 
             D = mE.ModInverse(mod);
-            byte[] a = D.ToByteArray();
+            Logger.LogOperationDone();
             return true;
         }
 

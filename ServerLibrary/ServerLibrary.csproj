@@ -57,10 +57,13 @@
     <Compile Include="Database\Database.cs" />
     <Compile Include="Database\DatabaseJson.cs" />
     <Compile Include="Database\DatabaseMssql.cs" />
+    <Compile Include="ExternalMethods.cs" />
+    <Compile Include="ItemManager.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Model\Account.cs" />
     <Compile Include="Model\AccountCharacter.cs" />
     <Compile Include="Model\GameWorld.cs" />
+    <Compile Include="Model\Item.cs" />
     <Compile Include="Networking\NetworkEnums.cs" />
     <Compile Include="Networking\NetworkMessage.cs" />
     <Compile Include="Networking\OutputMessage.cs" />

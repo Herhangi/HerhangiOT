@@ -9,6 +9,22 @@ namespace HerhangiOT.ServerLibrary
 {
     public class ScriptManager
     {
+        public static bool LoadCsScripts()
+        {
+            Logger.LogOperationStart("Loading .cs Scripts");
+
+            Logger.LogOperationDone();
+            return true;
+        }
+
+        public static bool LoadLuaScripts()
+        {
+            Logger.LogOperationStart("Loading .lua Scripts");
+
+            Logger.LogOperationDone();
+            return true;
+        }
+
         public static bool CompileCsScripts(string path, string outputPath, List<string> externalAssemblies, out Assembly assembly)
         {
             if (!Directory.Exists(path))

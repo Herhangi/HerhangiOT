@@ -11,7 +11,10 @@
         ErrorMessage = 0x14,
         FyiMessage = 0x15,
         WaitingList = 0x16,
+        
         Ping = 0x1E,
+        WelcomeToGameServer = 0x1F,
+
         Death = 0x28,
         CanReportBugs = 0x32,
 

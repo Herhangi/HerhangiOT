@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
@@ -17,6 +16,8 @@ namespace HerhangiOT.GameServer
 
         static void Main(string[] args)
         {
+            ExternalMethods.SetConsoleCtrlHandler(ConsoleCtrlOperationHandler, true);
+
             Console.Title = Constants.STATUS_SERVER_NAME;
             Console.Clear();
             Console.WriteLine("Welcome to {0} - Version {1}", Constants.STATUS_SERVER_NAME, Constants.STATUS_SERVER_VERSION);
@@ -24,8 +25,8 @@ namespace HerhangiOT.GameServer
             Console.WriteLine("-----------------------------------------------------");
             
             // Loading config.lua
-            if(!ConfigManager.Load())
-                return;
+            if (!ConfigManager.Load())
+                ExitApplication();
 
             // Setting up process priority
             switch (ConfigManager.Instance[ConfigStr.DEFAULT_PRIORITY])
@@ -42,19 +43,44 @@ namespace HerhangiOT.GameServer
             }
             
             // Setting up RSA cyrpto
-            Rsa.SetKey(RsaP, RsaQ);
+            if(!Rsa.SetKey(RsaP, RsaQ))
+                ExitApplication();
 
             // Initializing Database connection
-            if(!Database.Initialize())
-                return;
+            if (!Database.Initialize())
+                ExitApplication();
+            //DATABASE MANAGER UPDATE DATABASE
+
             // Loading vocations
-            if(!Vocation.Load())
-                return;
+            if (!Vocation.Load())
+                ExitApplication();
 
             // Loading items
+            if(!ItemManager.Load())
+                ExitApplication();
+            
+            // Loading scripts
+            if(!ScriptManager.LoadCsScripts() || !ScriptManager.LoadLuaScripts())
+                ExitApplication();
 
+            // LOAD CREATURES HERE
+            // LOAD OUTFITS HERE
 
+            switch (ConfigManager.Instance[ConfigStr.WORLD_TYPE])
+            {
+                case "pvp":
+                    Game.WorldType = GameWorldTypes.Pvp;
+                    break;
+                case "no-pvp":
+                    Game.WorldType = GameWorldTypes.NoPvp;
+                    break;
+                case "pvp-enforced":
+                    Game.WorldType = GameWorldTypes.PvpEnforced;
+                    break;
+            }
+            Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.WorldType);
 
+            // Initialize Game State
 
             if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
             {
@@ -70,7 +96,9 @@ namespace HerhangiOT.GameServer
 
             while (true)
             {
-                string command = Console.ReadLine() ?? string.Empty;
+                string command = Console.ReadLine();
+
+                if (command == null) continue;
 
                 if (_loginServer.CommandLineOperations.ContainsKey(command))
                     _loginServer.CommandLineOperations[command].Invoke();
@@ -79,6 +107,17 @@ namespace HerhangiOT.GameServer
                     Logger.Log(LogLevels.Warning, "Command is unknown!");
                 }
             }
+        }
+
+        private static void ConsoleCtrlOperationHandler(ConsoleCtrlEvents ctrlEvent)
+        {
+            Logger.Log(LogLevels.Warning, "Command Line Operations Disabled!");
+        }
+
+        static void ExitApplication()
+        {
+            Console.ReadKey();
+            Environment.Exit(0);
         }
     }
 }
