@@ -6,11 +6,14 @@ using System.Security.Cryptography;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Threading;
 
 namespace HerhangiOT.LoginServer
 {
     public class LoginServer
     {
+        public static Dispatcher DatabaseDispatcher;
+
         public static string MOTD { get; private set; }
         public static List<GameWorld> GameWorlds { get; private set; }
         public static HashAlgorithm PasswordHasher { get; private set; }
@@ -23,6 +26,9 @@ namespace HerhangiOT.LoginServer
             ConfigManager.ConfigsLoaded += ConfigManager_ConfigsLoaded;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+
+            DatabaseDispatcher = new Dispatcher();
+            DatabaseDispatcher.Start();
 
             if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
             {
@@ -54,7 +60,6 @@ namespace HerhangiOT.LoginServer
                     Logger.Log(LogLevels.Error, "Unknown password hash algorithm detected!");
                     return;
             }
-
             MOTD = string.Format("{0}\n{1}", ConfigManager.Instance[ConfigInt.MOTD_NUM], ConfigManager.Instance[ConfigStr.MOTD]);
             _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_PORT]);
             _listener.Start();

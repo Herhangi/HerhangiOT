@@ -2,11 +2,14 @@
 using System.Net;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary;
+using HerhangiOT.ServerLibrary.Threading;
 
 namespace HerhangiOT.GameServer
 {
     public class GameServer
     {
+        public static Dispatcher DatabaseDispatcher;
+
         private TcpListener _listener;
 
         public void Start()

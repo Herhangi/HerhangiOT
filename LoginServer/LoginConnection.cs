@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Model;
 using HerhangiOT.ServerLibrary.Networking;
+using HerhangiOT.ServerLibrary.Threading;
 
 namespace HerhangiOT.LoginServer
 {
@@ -46,6 +49,7 @@ namespace HerhangiOT.LoginServer
             //string password = InMessage.GetString();
             byte[] password = InMessage.GetBytes(InMessage.GetUInt16());
 
+            Console.WriteLine(username + " - " + password);
             if (string.IsNullOrEmpty(username))
             {
                 Disconnect("Invalid account name.");
@@ -56,6 +60,7 @@ namespace HerhangiOT.LoginServer
             string hashedPassword = string.Empty;
             foreach (byte b in hash)
                 hashedPassword += b.ToString("x2");
+
             Account acc = Database.Instance.GetAccountInformation(username, hashedPassword);
 
             if (acc == null)
@@ -96,7 +101,23 @@ namespace HerhangiOT.LoginServer
 
             Send(message);
 
+            Console.WriteLine("START");
+            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
+            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
+            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
+            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
+            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
+            Console.WriteLine("END");
+
             Disconnect();
+        }
+
+        private static int counter = 0;
+
+        private void HandleLoginPacket(int i)
+        {
+            Thread.Sleep(400);
+            Console.WriteLine("a:" + i);
         }
     }
 }

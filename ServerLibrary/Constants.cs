@@ -12,5 +12,8 @@
 
         public const ushort NETWORKMESSAGE_MAXSIZE = 24590;
         public const ushort NETWORKMESSAGE_ERRORMAXSIZE = NETWORKMESSAGE_MAXSIZE - 16;
+
+        public const int OutputMessagePoolSize = 100;
+        public const int OutputMessagePoolExpansionSize = 10;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using HerhangiOT.ServerLibrary;
 
@@ -55,6 +56,9 @@ namespace HerhangiOT.GameServer
             List<string> externalAssemblies = new List<string>();
             externalAssemblies.Add(Assembly.GetExecutingAssembly().Location);
 
+            if (!Directory.Exists("CompiledDllCache"))
+                Directory.CreateDirectory("CompiledDllCache");
+            
             if(!ScriptManager.CompileCsScripts("Data/Vocations", "CompiledDllCache/Vocations.dll", externalAssemblies, out vocationsAssembly))
                 return false;
 
