@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Threading;
@@ -29,7 +33,7 @@ namespace HerhangiOT.GameServer
             DispatcherManager.Start();
 
             // Loading config.lua
-            if (!ConfigManager.Load())
+            if (!ConfigManager.Load("config.lua"))
                 ExitApplication();
 
             // Setting up process priority
@@ -98,19 +102,64 @@ namespace HerhangiOT.GameServer
 
             _gameServer.Start();
 
+            // Loading Command Line Operations
+            if (!LoadCLO())
+                ExitApplication();
+
             while (true)
             {
                 string command = Console.ReadLine();
 
                 if (command == null) continue;
 
-                if (_loginServer.CommandLineOperations.ContainsKey(command))
+                if(_gameServer.CommandLineOperations.ContainsKey(command))
+                    _gameServer.CommandLineOperations[command].Invoke();
+                else if (_loginServer != null && _loginServer.CommandLineOperations.ContainsKey(command))
                     _loginServer.CommandLineOperations[command].Invoke();
                 else
                 {
                     Logger.Log(LogLevels.Warning, "Command is unknown!");
                 }
             }
+        }
+
+        public static bool LoadCLO()
+        {
+            Logger.LogOperationStart("Loading Command Line Operations");
+
+            Assembly cloAssembly;
+            List<string> externalAssemblies = new List<string>();
+            externalAssemblies.Add(Assembly.GetExecutingAssembly().Location);
+            externalAssemblies.Add(Assembly.GetAssembly(typeof(HerhangiOT.ScriptLibrary.CommandLineOperation)).Location);
+
+            if (!Directory.Exists("CompiledDllCache"))
+                Directory.CreateDirectory("CompiledDllCache");
+
+            if (!ScriptManager.CompileCsScripts("Scripts/CLO", "CompiledDllCache/CLO.dll", externalAssemblies, out cloAssembly))
+                return false;
+
+            try
+            {
+                foreach (Type clo in cloAssembly.GetTypes())
+                {
+                    if (clo.BaseType == typeof(CommandLineOperation))
+                    {
+                        CommandLineOperation voc = (CommandLineOperation)Activator.CreateInstance(clo);
+                        voc.Setup();
+                        voc.InviteToGameServerCommandList(_gameServer);
+                        if(_loginServer != null)
+                            voc.InviteToLoginServerCommandList(_loginServer);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogOperationFailed(e.ToString());
+                return false;
+            }
+
+            Logger.LogOperationDone();
+            return true;
         }
 
         private static void ConsoleCtrlOperationHandler(ConsoleCtrlEvents ctrlEvent)

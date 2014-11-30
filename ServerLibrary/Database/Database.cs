@@ -15,7 +15,7 @@ namespace HerhangiOT.ServerLibrary.Database
             if (_isInitialized)
                 return false;
 
-            Logger.LogOperationStart("Initializing database connection");
+            Logger.LogOperationStart(string.Format("Initializing database connection<{0}>", ConfigManager.Instance[ConfigStr.DATABASE_TYPE]));
 
             try
             {

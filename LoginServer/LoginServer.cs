@@ -6,15 +6,13 @@ using System.Security.Cryptography;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Model;
-using HerhangiOT.ServerLibrary.Threading;
 
 namespace HerhangiOT.LoginServer
 {
-    public class LoginServer
+    public class LoginServer : Server
     {
         public static string MOTD { get; private set; }
         public static List<GameWorld> GameWorlds { get; private set; }
-        public static HashAlgorithm PasswordHasher { get; private set; }
 
         private TcpListener _listener;
         private List<Socket> _loginRequesters = new List<Socket>();
@@ -93,10 +91,6 @@ namespace HerhangiOT.LoginServer
         }
 
         #region Command Line Operations
-        public Dictionary<string, Action> CommandLineOperations = new Dictionary<string, Action>()
-        {
-            {"exit", ExitOperation}
-        };
 
         private static void ExitOperation()
         {

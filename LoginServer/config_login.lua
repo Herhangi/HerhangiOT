@@ -1,6 +1,6 @@
 -- Connection Config
 -- NOTE: maxPlayers set to 0 means no limit
-useExternalLoginServer = "yes"
+useExternalLoginServer = "no"
 loginServerIp = "127.0.0.1"
 loginServerPort = 7171
 -- Password Hash Algorithms: sha1, md5

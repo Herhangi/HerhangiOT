@@ -103,6 +103,7 @@ namespace HerhangiOT.ServerLibrary
     public class ConfigManager
     {
         private static bool _isLoaded;
+        private static string _lastLoadedFile;
         
         public int this[ConfigInt configName]
         {
@@ -125,16 +126,17 @@ namespace HerhangiOT.ServerLibrary
 
         public static ConfigManager Instance { get; private set; }
 
-        public static bool Load()
+        public static bool Load(string filename)
         {
             Logger.LogOperationStart("Loading configurations");
+            _lastLoadedFile = filename;
             // Creating instance here instead of getter for performance gain
             if (Instance == null) Instance = new ConfigManager();
 
             Lua config = new Lua();
             try
             {
-                config.DoFile("config.lua");
+                config.DoFile(filename);
             }
             catch (Exception)
             {
@@ -254,7 +256,7 @@ namespace HerhangiOT.ServerLibrary
 		        return false;
 	        }
 
-	        bool result = Load();
+	        bool result = Load(_lastLoadedFile);
             //if (transformToSHA1(getString(ConfigManager::MOTD)) != g_game.getMotdHash()) {
             //    g_game.incrementMotdNum();
             //}

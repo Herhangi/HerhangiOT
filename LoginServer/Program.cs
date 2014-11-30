@@ -13,7 +13,7 @@ namespace HerhangiOT.LoginServer
 
         static void Main(string[] args)
         {
-            ConfigManager.Load();
+            ConfigManager.Load("config_login.lua");
             Rsa.SetKey(RsaP, RsaQ);
 
             LoginServer.Start();
