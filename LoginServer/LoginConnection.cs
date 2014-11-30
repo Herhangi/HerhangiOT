@@ -46,10 +46,13 @@ namespace HerhangiOT.LoginServer
             IsEncryptionEnabled = true;
             
             string username = InMessage.GetString();
-            //string password = InMessage.GetString();
             byte[] password = InMessage.GetBytes(InMessage.GetUInt16());
 
-            Console.WriteLine(username + " - " + password);
+            DispatcherManager.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(username, password)));
+        }
+
+        private void HandleLoginPacket(string username, byte[] password)
+        {
             if (string.IsNullOrEmpty(username))
             {
                 Disconnect("Invalid account name.");
@@ -68,7 +71,7 @@ namespace HerhangiOT.LoginServer
                 Disconnect("Account name or password is not correct.");
                 return;
             }
-            
+
             OutputMessage message = new OutputMessage();
             message.AddByte((byte)ServerPacketType.MOTD);
             message.AddString(LoginServer.MOTD);
@@ -100,24 +103,7 @@ namespace HerhangiOT.LoginServer
             }
 
             Send(message);
-
-            Console.WriteLine("START");
-            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
-            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
-            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
-            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
-            LoginServer.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(counter++)));
-            Console.WriteLine("END");
-
             Disconnect();
-        }
-
-        private static int counter = 0;
-
-        private void HandleLoginPacket(int i)
-        {
-            Thread.Sleep(400);
-            Console.WriteLine("a:" + i);
         }
     }
 }

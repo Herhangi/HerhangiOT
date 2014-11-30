@@ -8,8 +8,6 @@ namespace HerhangiOT.GameServer
 {
     public class GameServer
     {
-        public static Dispatcher DatabaseDispatcher;
-
         private TcpListener _listener;
 
         public void Start()

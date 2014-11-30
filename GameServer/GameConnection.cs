@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HerhangiOT.ServerLibrary;
+using HerhangiOT.ServerLibrary.Database;
+using HerhangiOT.ServerLibrary.Model;
 using HerhangiOT.ServerLibrary.Networking;
+using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
@@ -23,10 +27,10 @@ namespace HerhangiOT.GameServer
         {
             base.HandleFirstConnection(ar);
 
-            SendWelcomeSignal();
+            SendWelcomeMessage();
         }
 
-        private void SendWelcomeSignal()
+        private void SendWelcomeMessage()
         {
             OutputMessage message = new OutputMessage();
             message.FreeMessage();
@@ -53,7 +57,7 @@ namespace HerhangiOT.GameServer
 
         protected override void ProcessMessage()
         {
-            if (_didReceiveFirstMessage)
+            if (!_didReceiveFirstMessage)
             {
                 HandleLoginPacket(this);
             }
@@ -71,7 +75,7 @@ namespace HerhangiOT.GameServer
             conn._didReceiveFirstMessage = true;
             ClientPacketType requestType = (ClientPacketType)conn.InMessage.GetByte();
 
-            conn.InMessage.GetByte(); //Protocol Id
+            //conn.InMessage.GetByte(); //Protocol Id
             conn.InMessage.GetUInt16(); //Client OS
             ushort version = conn.InMessage.GetUInt16(); //Client Version
 
@@ -93,9 +97,70 @@ namespace HerhangiOT.GameServer
             conn.InMessage.SkipBytes(1); //GameMaster Flag
             string accountName = conn.InMessage.GetString();
             string characterName = conn.InMessage.GetString();
-            string password = conn.InMessage.GetString();
+            byte[] password = conn.InMessage.GetBytes(conn.InMessage.GetUInt16());
 
-            Console.Write("");
+            uint challengeTimestamp = conn.InMessage.GetUInt32();
+            byte challengeRandom = conn.InMessage.GetByte();
+
+            if (challengeRandom != conn._challengeRandom || challengeTimestamp != conn._challengeTimestamp)
+            {
+                conn.Disconnect();
+                return;
+            }
+            
+	        if (version < Constants.CLIENT_VERSION_MIN || (version > Constants.CLIENT_VERSION_MAX)) {
+		        conn.DispatchDisconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!");
+		        return;
+	        }
+
+            if (string.IsNullOrEmpty(accountName))
+            {
+                conn.DispatchDisconnect("You must enter your account name.");
+                return;
+            }
+            
+            //if (g_game.getGameState() == GAME_STATE_STARTUP)
+            //{
+            //    dispatchDisconnectClient("Gameworld is starting up. Please wait.");
+            //    return;
+            //}
+
+            //if (g_game.getGameState() == GAME_STATE_MAINTAIN)
+            //{
+            //    dispatchDisconnectClient("Gameworld is under maintenance. Please re-connect in a while.");
+            //    return;
+            //}
+
+            // CHECK FOR BAN
+
+            DispatcherManager.DatabaseDispatcher.AddTask( new Task(
+                () => conn.AuthenticateCharacter(accountName, characterName, password)
+            ));
+        }
+
+        private void AuthenticateCharacter(string username, string character, byte[] password)
+        {
+            byte[] hash = LoginServer.LoginServer.PasswordHasher.ComputeHash(password);
+            string hashedPassword = string.Empty;
+            foreach (byte b in hash)
+                hashedPassword += b.ToString("x2");
+
+            Account acc = Database.Instance.GetAccountInformation(username, hashedPassword);
+            if (acc == null)
+            {
+                DispatchDisconnect("Account name or password is not correct.");
+                return;
+            }
+            
+            bool doesCharacterExist = acc.Characters.Any(t => t.CharacterName.Equals(character));
+            if (doesCharacterExist)
+            {
+                
+            }
+            else
+            {
+                DispatchDisconnect("Character not found.");
+            }
         }
     }
 }

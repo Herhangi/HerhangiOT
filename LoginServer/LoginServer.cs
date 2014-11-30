@@ -12,8 +12,6 @@ namespace HerhangiOT.LoginServer
 {
     public class LoginServer
     {
-        public static Dispatcher DatabaseDispatcher;
-
         public static string MOTD { get; private set; }
         public static List<GameWorld> GameWorlds { get; private set; }
         public static HashAlgorithm PasswordHasher { get; private set; }
@@ -26,9 +24,6 @@ namespace HerhangiOT.LoginServer
             ConfigManager.ConfigsLoaded += ConfigManager_ConfigsLoaded;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
-            DatabaseDispatcher = new Dispatcher();
-            DatabaseDispatcher.Start();
 
             if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
             {

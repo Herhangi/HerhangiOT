@@ -62,9 +62,9 @@ namespace HerhangiOT.ServerLibrary.Threading
         public void Start()
         {
             State = DispatcherState.Running;
+            Signaler = new AutoResetEvent(false);
             Thread = new Thread(new ThreadStart(DispatcherThread));
             Thread.Start();
-            Signaler = new AutoResetEvent(false);
         }
 
         public void Stop()
@@ -98,18 +98,17 @@ namespace HerhangiOT.ServerLibrary.Threading
             while (State != DispatcherState.Terminated)
             {
                 Task task = null;
-                Console.WriteLine("1");
                 if (TaskList.Count == 0)
                 {
                     Signaler.WaitOne();
                 }
-                Console.WriteLine("2");
 
                 if (TaskList.Count != 0 && (State != DispatcherState.Terminated))
                 {
                     task = TaskList[0];
                     TaskList.RemoveAt(0);
                 }
+                else continue;
 
                 if (!task.IsExpired())
                 {

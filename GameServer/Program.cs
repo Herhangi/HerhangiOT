@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
+using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
@@ -24,6 +25,9 @@ namespace HerhangiOT.GameServer
             Console.WriteLine("Developed by {0}", Constants.STATUS_SERVER_DEVELOPERS);
             Console.WriteLine("-----------------------------------------------------");
             
+            // Start Threads
+            DispatcherManager.Start();
+
             // Loading config.lua
             if (!ConfigManager.Load())
                 ExitApplication();
