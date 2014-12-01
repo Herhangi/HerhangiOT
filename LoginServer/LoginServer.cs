@@ -9,10 +9,11 @@ using HerhangiOT.ServerLibrary.Model;
 
 namespace HerhangiOT.LoginServer
 {
-    public class LoginServer : Server
+    public class LoginServer
     {
         public static string MOTD { get; private set; }
         public static List<GameWorld> GameWorlds { get; private set; }
+        public static HashAlgorithm PasswordHasher { get; protected set; }
 
         private TcpListener _listener;
         private List<Socket> _loginRequesters = new List<Socket>();

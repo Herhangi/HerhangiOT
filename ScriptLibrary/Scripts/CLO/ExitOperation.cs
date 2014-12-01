@@ -1,18 +1,15 @@
 ﻿using System;
-using HerhangiOT.ScriptLibrary;
 
-namespace HerhangiOT.GameServer.Scripts.CLO
+namespace HerhangiOT.ScriptLibrary.Scripts.CLO
 {
-    public class ExitCommand : CommandLineOperation
+    public class ExitOperation : CommandLineOperation
     {
         public override void Setup()
         {
             Command = "exit";
-            IsUsableInGameServer = true;
-            IsUsableInGameServer = true;
         }
 
-        public override void Operation()
+        public override void Operation(string[] args)
         {
             string response;
             do

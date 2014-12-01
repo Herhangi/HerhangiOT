@@ -1,4 +1,5 @@
 ﻿using System;
+using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Utility;
 
@@ -13,6 +14,8 @@ namespace HerhangiOT.LoginServer
 
         static void Main(string[] args)
         {
+            Tools.Initialize();
+
             ConfigManager.Load("config_login.lua");
             Rsa.SetKey(RsaP, RsaQ);
 
@@ -20,10 +23,25 @@ namespace HerhangiOT.LoginServer
 
             while (true)
             {
-                string command = Console.ReadLine() ?? string.Empty;
+                string input = Console.ReadLine();
 
-                if(LoginServer.CommandLineOperations.ContainsKey(command))
-                    LoginServer.CommandLineOperations[command].Invoke();
+                if (input == null) continue;
+                input = input.Trim();
+                input = input.ToLowerInvariant();
+
+                string[] command = input.Split(' ');
+
+                if (ScriptManager.CommandLineOperations.ContainsKey(command[0]))
+                {
+                    try
+                    {
+                        ScriptManager.CommandLineOperations[command[0]].Invoke(command);
+                    }
+                    catch (Exception)
+                    {
+                        Logger.Log(LogLevels.Warning, "Command '" + command[0] + "' could not be executed in this environment!");
+                    }
+                }
                 else
                 {
                     Logger.Log(LogLevels.Warning, "Command is unknown!");

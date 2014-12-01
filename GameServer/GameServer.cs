@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary;
 
 namespace HerhangiOT.GameServer
 {
-    public class GameServer : Server
+    public class GameServer
     {
         private TcpListener _listener;
 

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Threading;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Model;

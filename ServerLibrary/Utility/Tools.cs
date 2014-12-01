@@ -5,6 +5,14 @@ namespace HerhangiOT.ServerLibrary.Utility
 {
     public class Tools
     {
+        private static DateTime _startTime;
+        public static uint Uptime { get { return (uint)((DateTime.Now - _startTime).Ticks/10000); } }
+
+        public static void Initialize()
+        {
+            _startTime = DateTime.Now;
+        }
+
         public static bool ConverLuaBoolean(string value)
         {
             if (string.IsNullOrWhiteSpace(value))

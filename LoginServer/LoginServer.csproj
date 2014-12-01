@@ -75,6 +75,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ScriptLibrary\ScriptLibrary.csproj">
+      <Project>{768CDD7D-78E0-4901-ADBC-884E07DEC3B9}</Project>
+      <Name>ScriptLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ServerLibrary\ServerLibrary.csproj">
       <Project>{0a3749df-d290-4f83-92a0-0950923e55ed}</Project>
       <Name>ServerLibrary</Name>
