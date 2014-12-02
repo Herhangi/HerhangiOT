@@ -56,11 +56,9 @@ namespace HerhangiOT.GameServer
             Assembly vocationsAssembly;
             List<string> externalAssemblies = new List<string>();
             externalAssemblies.Add(Assembly.GetExecutingAssembly().Location);
+            bool redFromCache;
 
-            if (!Directory.Exists("CompiledDllCache"))
-                Directory.CreateDirectory("CompiledDllCache");
-            
-            if(!ScriptManager.CompileCsScripts("Data/Vocations", "CompiledDllCache/Vocations.dll", externalAssemblies, out vocationsAssembly))
+            if(!ScriptManager.CompileCsScripts("Data/Vocations", "Vocations.*.dll", externalAssemblies, out vocationsAssembly, out redFromCache))
                 return false;
 
             try
@@ -80,7 +78,10 @@ namespace HerhangiOT.GameServer
                 return false;
             }
 
-            Logger.LogOperationDone();
+            if (redFromCache)
+                Logger.LogOperationCached();
+            else
+                Logger.LogOperationDone();
             return true;
         }
     }

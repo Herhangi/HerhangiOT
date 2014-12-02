@@ -4,7 +4,7 @@
     {
         public const string STATUS_SERVER_NAME = "HerhangiOT";
         public const string STATUS_SERVER_VERSION = "1.0";
-        public const string STATUS_SERVER_DEVELOPERS = "Turhan Yagiz 'Herhangi' Merpez, Ceren 'Jrenn' Inci";
+        public const string STATUS_SERVER_DEVELOPERS = "Turhan Yagiz 'Herhangi' Merpez";
 
         public const ushort CLIENT_VERSION_MIN = 1041;
         public const ushort CLIENT_VERSION_MAX = 1041;

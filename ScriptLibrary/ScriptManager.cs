@@ -2,9 +2,9 @@
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using HerhangiOT.ServerLibrary;
-using HerhangiOT.ServerLibrary.Utility;
 using Microsoft.CSharp;
 
 namespace HerhangiOT.ScriptLibrary
@@ -33,34 +33,63 @@ namespace HerhangiOT.ScriptLibrary
             return true;
         }
 
-        public static bool CompileCsScripts(string path, string outputPath, List<string> externalAssemblies, out Assembly assembly)
+        public static bool CompileCsScripts(string path, string outputDllPattern, List<string> externalAssemblies, out Assembly assembly, out bool redFromCache, bool forceCompilation = false)
         {
+            redFromCache = false;
             if (!Directory.Exists(path))
             {
                 Logger.LogOperationFailed("CsScript directory could not be found: "+path+"!");
                 assembly = null;
                 return false;
             }
-            string[] files = Directory.GetFiles(path, "*.cs");
+            string[] files = Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories);
             if (files.Length == 0)
             {
                 Logger.LogOperationFailed("No files found in CsScript directory: "+path+"!");
                 assembly = null;
                 return false;
             }
-            
+
+            if (!Directory.Exists("CompiledDllCache"))
+                Directory.CreateDirectory("CompiledDllCache");
+
+            if (!forceCompilation)
+            {
+                string cachedDll = GetCachedDllAndRemoveOlds(outputDllPattern);
+
+                if (cachedDll != null)
+                {
+                    DateTime lastCompileTime = new FileInfo(cachedDll).LastWriteTime;
+                    DateTime lastEditTime = GetNewestFile(new DirectoryInfo("Scripts/CLO")).LastWriteTime;
+
+                    if (lastEditTime < lastCompileTime)
+                    {
+                        redFromCache = true;
+                        assembly = Assembly.LoadFile(Path.Combine(Environment.CurrentDirectory, cachedDll));
+                        return true;
+                    }
+                }
+            }
+
+            List<string> referencedAssemblies = new List<string>();
+            referencedAssemblies.Add(Assembly.GetEntryAssembly().Location); // GameServer or LoginServer
+            referencedAssemblies.Add(Assembly.GetAssembly(typeof(Constants)).Location); //ServerLibrary
+            referencedAssemblies.Add(Assembly.GetAssembly(typeof(CommandLineOperation)).Location); //ServiceLibrary
+            referencedAssemblies.Add(Assembly.GetAssembly(typeof(System.Timers.Timer)).Location);
+            if (externalAssemblies != null) referencedAssemblies.AddRange(externalAssemblies); //Assemblies sent from compilation requester
+            string outputFile = "CompiledDllCache/" + (outputDllPattern.Replace("*", string.Format("{0:yyyyMMdd_HHmmss}", DateTime.Now)));
+
             var codeProvider = new CSharpCodeProvider();
             var compilerParameters = new CompilerParameters
             {
                 GenerateExecutable = false,
                 GenerateInMemory = false,
                 IncludeDebugInformation = true,
-                OutputAssembly = outputPath
+                OutputAssembly = outputFile
             };
-            compilerParameters.ReferencedAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-            foreach (string externalAssembly in externalAssemblies)
+            foreach (string referencedAssembly in referencedAssemblies)
             {
-                compilerParameters.ReferencedAssemblies.Add(externalAssembly);
+                compilerParameters.ReferencedAssemblies.Add(referencedAssembly);
             }
 
             CompilerResults result = codeProvider.CompileAssemblyFromFile(compilerParameters, files); // Compile
@@ -80,32 +109,14 @@ namespace HerhangiOT.ScriptLibrary
             return true;
         }
 
-        private static void RemoveOldDlls()
-        {
-            for (int i = RemovableAssemblies.Count - 1; i > -1; i--)
-            {
-                string location = RemovableAssemblies[i].Location;
-                RemovableAssemblies.RemoveAt(i);
-                File.Delete(location);
-            }
-        }
-
-        public static bool LoadCommandLineOperations()
+        public static bool LoadCommandLineOperations(bool forceCompilation = false)
         {
             Logger.LogOperationStart("Loading Command Line Operations");
+            bool readFromCache;
 
-            string dllName = string.Format("CLO.{0:yyyyMMdd_HHmmss}.dll", DateTime.Now);
             Assembly cloAssembly;
-            List<string> externalAssemblies = new List<string>();
-            externalAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-            //externalAssemblies.Add(Assembly.GetAssembly(typeof(Tools)).Location);
-            externalAssemblies.Add(Assembly.GetAssembly(typeof(Constants)).Location);
-            externalAssemblies.Add(Assembly.GetAssembly(typeof(CommandLineOperation)).Location);
-
-            if (!Directory.Exists("CompiledDllCache"))
-                Directory.CreateDirectory("CompiledDllCache");
-
-            if (!CompileCsScripts("Scripts/CLO", "CompiledDllCache/" + dllName, externalAssemblies, out cloAssembly))
+            
+            if (!CompileCsScripts("Scripts/CLO", "CLO.*.dll", null, out cloAssembly, out readFromCache, forceCompilation))
                 return false;
 
             // Removing if compilation is successful so that we are not out of current assembly if compilation fails
@@ -116,7 +127,6 @@ namespace HerhangiOT.ScriptLibrary
                 ReferencedAssemblies.Remove(ExternalDll.CLO);
             }
             ReferencedAssemblies.Add(ExternalDll.CLO, cloAssembly);
-            RemoveOldDlls();
 
             try
             {
@@ -137,8 +147,44 @@ namespace HerhangiOT.ScriptLibrary
                 return false;
             }
 
-            Logger.LogOperationDone();
+            if(readFromCache)
+                Logger.LogOperationCached();
+            else
+                Logger.LogOperationDone();
             return true;
+        }
+
+        private static string GetCachedDllAndRemoveOlds(string pattern)
+        {
+            if (!Directory.Exists("CompiledDllCache"))
+                Directory.CreateDirectory("CompiledDllCache");
+
+            string[] files = Directory.GetFiles("CompiledDllCache", pattern);
+
+            for (int i = 0; i < files.Length - 1; i++)
+            {
+                try
+                {
+                    File.Delete(files[i]);
+                    File.Delete(files[i].Replace(".dll", ".pdb"));   
+                }
+                catch
+                {
+                    // THIS IS UNIMPORTANT, DLLs ARE USED BY CURRENT PROCESS WILL BE DELETED ON NEXT TIME WE EXECUTE PROGRAM
+                }
+            }
+
+            if (files.Length > 0)
+                return files[files.Length - 1];
+            return null;
+        }
+
+        private static FileInfo GetNewestFile(DirectoryInfo directory)
+        {
+            return directory.GetFiles()
+               .Union(directory.GetDirectories().Select(GetNewestFile))
+               .OrderByDescending(f => (f == null ? DateTime.MinValue : f.LastWriteTime))
+               .FirstOrDefault();                        
         }
     }
 }

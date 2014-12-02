@@ -21,6 +21,9 @@ namespace HerhangiOT.ServerLibrary
 
         public static void LogOperationDone()
         {
+            if (Console.WindowWidth - Console.CursorLeft - 14 < 0)
+                Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft));
+
             int elapsed = Environment.TickCount - _operationStartedOn;
             string text = String.Format("Done ({0:0.000}s)", elapsed / 1000.0);
             
@@ -32,12 +35,29 @@ namespace HerhangiOT.ServerLibrary
 
         public static void LogOperationFailed(string errorText = "")
         {
+            if (Console.WindowWidth - Console.CursorLeft - 14 < 0)
+                Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft));
+
             Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft - 14));
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Error!");
             Console.ResetColor();
             if(!string.IsNullOrWhiteSpace(errorText))
                 Console.WriteLine(errorText);
+        }
+
+        public static void LogOperationCached()
+        {
+            if (Console.WindowWidth - Console.CursorLeft - 16 < 0)
+                Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft));
+
+            int elapsed = Environment.TickCount - _operationStartedOn;
+            string text = String.Format("Cached ({0:0.000}s)", elapsed / 1000.0);
+
+            Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft - 16));
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(text);
+            Console.ResetColor();
         }
     }
 }

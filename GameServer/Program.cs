@@ -72,6 +72,10 @@ namespace HerhangiOT.GameServer
             if(!ScriptManager.LoadCsScripts() || !ScriptManager.LoadLuaScripts())
                 ExitApplication();
 
+            // Loading Command Line Operations
+            if (!ScriptManager.LoadCommandLineOperations())
+                ExitApplication();
+
             // LOAD CREATURES HERE
             // LOAD OUTFITS HERE
 
@@ -102,10 +106,6 @@ namespace HerhangiOT.GameServer
             }
 
             _gameServer.Start();
-
-            // Loading Command Line Operations
-            if (!ScriptManager.LoadCommandLineOperations())
-                ExitApplication();
 
             while (true)
             {
