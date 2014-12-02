@@ -61,7 +61,7 @@ namespace HerhangiOT.ServerLibrary
             ProcessMessage();
         }
 
-        protected void Disconnect()
+        public void Disconnect()
         {
             Stream.Close();
             Socket.Close();
@@ -111,7 +111,6 @@ namespace HerhangiOT.ServerLibrary
         {
             Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, null, null);
         }
-
 
         protected abstract void ProcessMessage();
     }

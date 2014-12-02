@@ -70,7 +70,7 @@ namespace HerhangiOT.LoginServer
                 return;
             }
 
-            OutputMessage message = new OutputMessage();
+            OutputMessage message = OutputMessagePool.GetOutputMessage();
             message.AddByte((byte)ServerPacketType.MOTD);
             message.AddString(LoginServer.MOTD);
 
@@ -100,8 +100,11 @@ namespace HerhangiOT.LoginServer
                 message.AddUInt16((ushort)premiumLeft.TotalDays);
             }
 
-            Send(message);
-            Disconnect();
+            message.MessageTarget = this;
+            message.DisconnectAfterMessage = true;
+            OutputMessagePool.AddToAutoSend(message);
+            //Send(message);
+            //Disconnect();
         }
     }
 }

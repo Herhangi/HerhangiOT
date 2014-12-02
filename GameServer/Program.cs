@@ -3,6 +3,7 @@ using System.Diagnostics;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
+using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
@@ -23,6 +24,7 @@ namespace HerhangiOT.GameServer
             ExternalMethods.SetConsoleCtrlHandler(ConsoleCtrlOperationHandler, true);
 
             Tools.Initialize();
+            OutputMessagePool.Initialize();
 
             Console.Title = Constants.STATUS_SERVER_NAME;
             Console.Clear();

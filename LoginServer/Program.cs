@@ -14,6 +14,10 @@ namespace HerhangiOT.LoginServer
 
         static void Main(string[] args)
         {
+            Console.WriteLine("Standalone Login Server is not yet supported!");
+            Console.ReadKey();
+            return;
+
             Tools.Initialize();
 
             ConfigManager.Load("config_login.lua");

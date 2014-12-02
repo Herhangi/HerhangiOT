@@ -14,6 +14,8 @@ namespace HerhangiOT.ServerLibrary.Networking
             get { return _headerPosition; }
             protected set { _headerPosition = value; }
         }
+        public Connection MessageTarget;
+        public bool DisconnectAfterMessage;
 
         public OutputMessage()
         {
@@ -27,6 +29,9 @@ namespace HerhangiOT.ServerLibrary.Networking
             //4 bytes for checksum
             //2 bytes for encrypted message size
             _headerPosition = 8;
+            MessageTarget = null;
+            DisconnectAfterMessage = false;
+
             Reset();
         }
 
