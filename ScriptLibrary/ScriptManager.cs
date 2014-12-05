@@ -75,8 +75,18 @@ namespace HerhangiOT.ScriptLibrary
             referencedAssemblies.Add(Assembly.GetEntryAssembly().Location); // GameServer or LoginServer
             referencedAssemblies.Add(Assembly.GetAssembly(typeof(Constants)).Location); //ServerLibrary
             referencedAssemblies.Add(Assembly.GetAssembly(typeof(CommandLineOperation)).Location); //ServiceLibrary
-            referencedAssemblies.Add(Assembly.GetAssembly(typeof(System.Timers.Timer)).Location);
+            //referencedAssemblies.Add("System.dll");
             if (externalAssemblies != null) referencedAssemblies.AddRange(externalAssemblies); //Assemblies sent from compilation requester
+            //Add assemblies in "assembly" file found in compiled folder
+            if (File.Exists(Path.Combine(path, "assembly")))
+            {
+                foreach (string assemblyName in File.ReadAllLines(Path.Combine(path, "assembly")))
+                {
+                    if(!string.IsNullOrWhiteSpace(assemblyName) && !assemblyName.StartsWith("//"))
+                        referencedAssemblies.Add(assemblyName);
+                }
+            }
+
             string outputFile = "CompiledDllCache/" + (outputDllPattern.Replace("*", string.Format("{0:yyyyMMdd_HHmmss}", DateTime.Now)));
 
             var codeProvider = new CSharpCodeProvider();
