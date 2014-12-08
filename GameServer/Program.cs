@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
@@ -114,10 +116,25 @@ namespace HerhangiOT.GameServer
                 string input = Console.ReadLine();
 
                 if (input == null) continue;
-                input = input.Trim();
-                input = input.ToLowerInvariant();
 
-                string[] command = input.Split(' ');
+                string[] firstPass = input.Split('"');
+                List<string> secondPass = firstPass[0].Trim().Split(' ').ToList();
+                
+                if (firstPass.Length > 1)
+                {
+                    for (int i = 1; i < firstPass.Length; i++)
+                    {
+                        if (i%2 == 1)
+                        {
+                            secondPass.Add(firstPass[i]);
+                        }
+                        else
+                        {
+                            secondPass.AddRange(firstPass[i].Trim().Split(' '));
+                        }
+                    }
+                }
+                string[] command = secondPass.ToArray();
 
                 if (ScriptManager.CommandLineOperations.ContainsKey(command[0]))
                 {

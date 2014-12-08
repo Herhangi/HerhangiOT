@@ -40,8 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandLineOperation.cs" />
+    <Compile Include="Scriptability\CommandLineOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scriptability\PacketListener.cs" />
+    <Compile Include="ScriptableEventManager.cs" />
+    <Compile Include="ScriptError.cs" />
     <Compile Include="ScriptManager.cs" />
     <None Include="Scripts\CLO\assembly">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
