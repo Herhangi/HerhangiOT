@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
+using HerhangiOT.ServerLibrary.Enums;
 using HerhangiOT.ServerLibrary.Model;
 using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Threading;
@@ -76,7 +77,7 @@ namespace HerhangiOT.GameServer
             ClientPacketType requestType = (ClientPacketType)conn.InMessage.GetByte();
 
             //conn.InMessage.GetByte(); //Protocol Id
-            conn.InMessage.GetUInt16(); //Client OS
+            OperatingSystems clientOs = (OperatingSystems)conn.InMessage.GetUInt16(); //Client OS
             ushort version = conn.InMessage.GetUInt16(); //Client Version
 
             conn.InMessage.SkipBytes(5);  // U32 clientVersion, U8 clientType
@@ -108,10 +109,17 @@ namespace HerhangiOT.GameServer
                 return;
             }
             
-	        if (version < Constants.CLIENT_VERSION_MIN || (version > Constants.CLIENT_VERSION_MAX)) {
+	        if (version < Constants.CLIENT_VERSION_MIN || (version > Constants.CLIENT_VERSION_MAX))
+            {
 		        conn.DispatchDisconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!");
 		        return;
 	        }
+
+            if (clientOs >= OperatingSystems.CLIENTOS_OTCLIENT_LINUX)
+            {
+                conn.DispatchDisconnect("Custom clients are not supported, yet!");
+                return;
+            }
 
             if (string.IsNullOrEmpty(accountName))
             {
@@ -133,34 +141,15 @@ namespace HerhangiOT.GameServer
 
             // CHECK FOR BAN
 
-            DispatcherManager.DatabaseDispatcher.AddTask( new Task(
-                () => conn.AuthenticateCharacter(accountName, characterName, password)
+            DispatcherManager.DatabaseDispatcher.AddTask(new Task(
+                () => DatabaseOperations.CheckCharacterAuthenticity(conn, accountName, characterName, password)
             ));
         }
 
-        private void AuthenticateCharacter(string username, string character, byte[] password)
-        {
-            byte[] hash = LoginServer.LoginServer.PasswordHasher.ComputeHash(password);
-            string hashedPassword = string.Empty;
-            foreach (byte b in hash)
-                hashedPassword += b.ToString("x2");
 
-            Account acc = Database.Instance.GetAccountInformation(username, hashedPassword);
-            if (acc == null)
-            {
-                DispatchDisconnect("Account name or password is not correct.");
-                return;
-            }
+        private void RetrieveCharacterData(string character)
+        {
             
-            bool doesCharacterExist = acc.Characters.Any(t => t.CharacterName.Equals(character));
-            if (doesCharacterExist)
-            {
-                
-            }
-            else
-            {
-                DispatchDisconnect("Character not found.");
-            }
         }
     }
 }

@@ -31,7 +31,7 @@ namespace HerhangiOT.ServerLibrary.Networking
             Thread.Start();
         }
 
-        public static OutputMessage GetOutputMessage(bool autoSend = false)
+        public static OutputMessage GetOutputMessage()
         {
             OutputMessage message;
 
@@ -59,7 +59,15 @@ namespace HerhangiOT.ServerLibrary.Networking
             }
         }
 
-        public static void AddToAutoSend(OutputMessage msg, bool pushFront = false)
+        public static void SendImmediately(OutputMessage msg)
+        {
+            msg.MessageTarget.Send(msg);
+            if (msg.DisconnectAfterMessage) msg.MessageTarget.Disconnect();
+
+            ReleaseMessage(msg);
+        }
+
+        public static void AddToQueue(OutputMessage msg, bool pushFront = false)
         {
             bool sendSignal;
 
@@ -99,6 +107,8 @@ namespace HerhangiOT.ServerLibrary.Networking
                     //outputPool->startExecutionFrame();
                     msg.MessageTarget.Send(msg);
                     if (msg.DisconnectAfterMessage) msg.MessageTarget.Disconnect();
+
+                    ReleaseMessage(msg);
                     //outputPool->sendAll();
 
                     //g_game.clearSpectatorCache();
@@ -110,9 +120,4 @@ namespace HerhangiOT.ServerLibrary.Networking
     //!!
     // USING CIRCULAR BUFFER MIGHT BE USEFUL
     //!!
-
-
-    // ADD OutputMessagePoolSize = 100 to Constants.cs
-    // ADD OutPutMessagePoolExpansionSize = 10 to Constants.cs
-
 }

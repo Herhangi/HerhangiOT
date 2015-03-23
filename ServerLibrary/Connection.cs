@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary.Networking;
-using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.ServerLibrary
@@ -67,25 +66,26 @@ namespace HerhangiOT.ServerLibrary
             Socket.Close();
         }
 
-        protected void Disconnect(string reason)
+        public void Disconnect(string reason)
         {
-            OutputMessage message = new OutputMessage();
+            OutputMessage message = OutputMessagePool.GetOutputMessage();
             message.AddByte((byte)ServerPacketType.Disconnect);
             message.AddString(reason);
-            
-            Send(message);
 
-            Disconnect();
+            message.MessageTarget = this;
+            message.DisconnectAfterMessage = true;
+            OutputMessagePool.AddToQueue(message);
         }
 
-        protected void DispatchDisconnect(string reason)
+        public void DispatchDisconnect(string reason)
         {
-            OutputMessage message = new OutputMessage();
+            OutputMessage message = OutputMessagePool.GetOutputMessage();
             message.AddByte((byte)ServerPacketType.ErrorMessage);
             message.AddString(reason);
 
-            DispatcherManager.NetworkDispatcher.AddTask(new Task(() => Send(message)));
-            DispatcherManager.NetworkDispatcher.AddTask(new Task(Disconnect));
+            message.MessageTarget = this;
+            message.DisconnectAfterMessage = true;
+            OutputMessagePool.AddToQueue(message);
         }
 
         public bool Send(OutputMessage message)

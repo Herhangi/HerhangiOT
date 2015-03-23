@@ -21,5 +21,10 @@
     public class Game
     {
         public static GameWorldTypes WorldType;
+
+        public static void CharacterLogin()
+        {
+            
+        }
     }
 }

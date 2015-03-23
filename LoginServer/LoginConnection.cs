@@ -102,9 +102,7 @@ namespace HerhangiOT.LoginServer
 
             message.MessageTarget = this;
             message.DisconnectAfterMessage = true;
-            OutputMessagePool.AddToAutoSend(message);
-            //Send(message);
-            //Disconnect();
+            OutputMessagePool.AddToQueue(message);
         }
     }
 }
