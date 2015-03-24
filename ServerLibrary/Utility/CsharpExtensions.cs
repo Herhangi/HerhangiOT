@@ -29,5 +29,19 @@ namespace HerhangiOT.ServerLibrary.Utility
                 a[index + i] = value;
             }
         }
+
+        public static int MemCmp<T>(this T[] source, T[] target, int comparisonSize) where T : IComparable<T>
+        {
+            if(source.Length < comparisonSize || target.Length < comparisonSize)
+                throw new ArgumentOutOfRangeException();
+
+            for (int i = 0; i < comparisonSize; i++)
+            {
+                int comparison = source[i].CompareTo(target[i]);
+                if (comparison != 0)
+                    return comparison;
+            }
+            return 0;
+        }
     }
 }

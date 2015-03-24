@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using HerhangiOT.GameServerLibrary;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
@@ -14,7 +15,7 @@ namespace HerhangiOT.GameServer
     public class Program
     {
         public static uint Uptime { get { return (uint)(DateTime.Now - _startTime).Ticks; } }
-        private static GameServer _gameServer = new GameServer();
+        private static readonly GameServer GameServer = new GameServer();
         private static LoginServer.LoginServer _loginServer;
 
         private static DateTime _startTime;
@@ -25,6 +26,7 @@ namespace HerhangiOT.GameServer
         {
             ExternalMethods.SetConsoleCtrlHandler(ConsoleCtrlOperationHandler, true);
 
+            Game.Initialize();
             Tools.Initialize();
             OutputMessagePool.Initialize();
 
@@ -63,6 +65,7 @@ namespace HerhangiOT.GameServer
             if (!Database.Initialize())
                 ExitApplication();
             //DATABASE MANAGER UPDATE DATABASE
+            //DATABASE TASKS START
 
             // Loading vocations
             if (!Vocation.Load())
@@ -86,16 +89,16 @@ namespace HerhangiOT.GameServer
             switch (ConfigManager.Instance[ConfigStr.WORLD_TYPE])
             {
                 case "pvp":
-                    Game.WorldType = GameWorldTypes.Pvp;
+                    Game.Instance.WorldType = GameWorldTypes.Pvp;
                     break;
                 case "no-pvp":
-                    Game.WorldType = GameWorldTypes.NoPvp;
+                    Game.Instance.WorldType = GameWorldTypes.NoPvp;
                     break;
                 case "pvp-enforced":
-                    Game.WorldType = GameWorldTypes.PvpEnforced;
+                    Game.Instance.WorldType = GameWorldTypes.PvpEnforced;
                     break;
             }
-            Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.WorldType);
+            Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.Instance.WorldType);
 
             // Initialize Game State
 
@@ -109,7 +112,7 @@ namespace HerhangiOT.GameServer
                 _loginServer.Start();
             }
 
-            _gameServer.Start();
+            GameServer.Start();
 
             while (true)
             {

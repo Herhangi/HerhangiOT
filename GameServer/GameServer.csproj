@@ -80,6 +80,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Data\Items\items.xml" />
     <Content Include="Data\Vocations\VocationKnight.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -102,10 +103,15 @@
     <None Include="config.lua">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Data\Items\items.otb" />
     <None Include="GameServer_TemporaryKey.pfx" />
     <None Include="Properties\app.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GameServerLibrary\GameServerLibrary.csproj">
+      <Project>{159c19b7-7ea5-4293-84e1-795a4171e3e6}</Project>
+      <Name>GameServerLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LoginServer\LoginServer.csproj">
       <Project>{a55f171c-8903-43fa-96c7-f13fb2ecf970}</Project>
       <Name>LoginServer</Name>

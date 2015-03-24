@@ -2,7 +2,7 @@
 {
     public enum GameWorldTypes
     {
-        Pvp,
+        Pvp = 1,
         NoPvp,
         PvpEnforced
     }
@@ -20,7 +20,18 @@
 
     public class Game
     {
-        public static GameWorldTypes WorldType;
+        #region Singleton Implementation
+        private static Game _instance;
+        public static Game Instance { get { return _instance; } }
+        #endregion
+
+        public GameStates GameState;
+        public GameWorldTypes WorldType;
+
+        public static void Initialize()
+        {
+            _instance = new Game { GameState = GameStates.Startup };
+        }
 
         public static void CharacterLogin()
         {

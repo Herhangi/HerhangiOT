@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.GameServerLibrary.Model;
+using HerhangiOT.ServerLibrary;
 
-namespace HerhangiOT.ServerLibrary
+namespace HerhangiOT.GameServerLibrary
 {
     public class ItemManager
     {
-        public List<Item> Items;
+        public static uint DwMajorVersion;
+        public static uint DwMinorVersion;
+        public static uint DwBuildNumber;
+
+        private static Dictionary<ushort, ItemTemplate> _templates = new Dictionary<ushort, ItemTemplate>();
+        public List<ItemTemplate> Items;
 
         public static bool Load()
         {
@@ -27,6 +33,7 @@ namespace HerhangiOT.ServerLibrary
 
         private static bool LoadFromOtb()
         {
+
             return true;
         }
 

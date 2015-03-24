@@ -32,25 +32,5 @@ namespace HerhangiOT.GameServer
 
             _listener.BeginAcceptSocket(GameListenerCallback, _listener);
         }
-
-        #region Command Line Operations
-        private static void ClearOperation()
-        {
-            Console.Clear();
-        }
-
-        private static void ExitOperation()
-        {
-            string response;
-            do
-            {
-                Console.Write("Are you sure to exit(yes/no): ");
-                response = (Console.ReadLine() ?? string.Empty).ToLowerInvariant();
-            } while (!response.Equals("yes") && !response.Equals("no"));
-
-            if (response.Equals("yes"))
-                Environment.Exit(0);
-        }
-        #endregion
     }
 }
