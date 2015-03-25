@@ -43,12 +43,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\Abilities.cs" />
     <Compile Include="Model\Item.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="ItemManager.cs" />
     <Compile Include="Model\ItemTemplate.cs" />
+    <Compile Include="Model\Outfit.cs" />
     <Compile Include="Model\Position.cs" />
     <Compile Include="Model\Thing.cs" />
+    <Compile Include="OutfitManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

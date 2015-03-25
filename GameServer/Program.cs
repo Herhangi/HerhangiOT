@@ -84,8 +84,12 @@ namespace HerhangiOT.GameServer
                 ExitApplication();
 
             // LOAD CREATURES HERE
-            // LOAD OUTFITS HERE
 
+            // Loading outfits
+            if(!OutfitManager.Load())
+                ExitApplication();
+
+            // Setting game world type
             switch (ConfigManager.Instance[ConfigStr.WORLD_TYPE])
             {
                 case "pvp":
@@ -97,8 +101,14 @@ namespace HerhangiOT.GameServer
                 case "pvp-enforced":
                     Game.Instance.WorldType = GameWorldTypes.PvpEnforced;
                     break;
+                default:
+                    Logger.Log(LogLevels.Error, "Invalid game world type: " + ConfigManager.Instance[ConfigStr.WORLD_TYPE]);
+                    ExitApplication();
+                    break;
             }
             Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.Instance.WorldType);
+
+            // Loading map
 
             // Initialize Game State
 

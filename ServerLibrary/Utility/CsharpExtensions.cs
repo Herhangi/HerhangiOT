@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Numerics;
+using System.Text;
 
 namespace HerhangiOT.ServerLibrary.Utility
 {
@@ -42,6 +44,12 @@ namespace HerhangiOT.ServerLibrary.Utility
                     return comparison;
             }
             return 0;
+        }
+
+        public static string GetString(this BinaryReader reader)
+        {
+            ushort len = reader.ReadUInt16();
+            return Encoding.Default.GetString(reader.ReadBytes(len));
         }
     }
 }

@@ -18,7 +18,7 @@
         public bool IsStackable;
         public bool IsAnimation;
 
-        //Abilities
+        public Abilities Abilities { get; private set; }
         //ConditionDamage
 
         public double Weight = 0.0;
@@ -53,6 +53,7 @@
 
         //MagicEffect
         //Bed
+        public Direction BedPartnerDirection;
         public WeaponType WeaponType = WeaponType.None;
         public AmmoType AmmoType = AmmoType.None;
         public ProjectileType ShootType = ProjectileType.None;
@@ -91,7 +92,7 @@
         public bool IsVertical = false;
         public bool IsHorizontal = false;
         public bool IsHangable = false;
-        public bool IsDistanceReadable = false;
+        public bool AllowDistanceRead = false;
         public bool StopTime;
         
         public string GetPluralName()
@@ -106,6 +107,11 @@
                 PluralName += "s";
 
             return PluralName;
+        }
+
+        public Abilities GetAbilitiesWithInitializer()
+        {
+            return Abilities ?? (Abilities = new Abilities());
         }
     }
 }

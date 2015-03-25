@@ -60,6 +60,7 @@
     <Compile Include="Database\DatabaseMssql.cs" />
     <Compile Include="Enums\OperatingSystems.cs" />
     <Compile Include="ExternalMethods.cs" />
+    <Compile Include="FileLoader.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Model\Account.cs" />
     <Compile Include="Model\AccountCharacter.cs" />

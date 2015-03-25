@@ -24,6 +24,18 @@ namespace HerhangiOT.ServerLibrary.Utility
             return ch != 'f' && ch != 'n' && ch != '0';
         }
 
+        public static int FlagEnumToArrayPoint(uint value)
+        {
+            if (value == 0) return -1;
+
+            for (int i = 0; i < 32; i++)
+            {
+                value = value >> 1;
+                if (value == 0) return i;
+            }
+            return -1;
+        }
+
         public static uint AdlerChecksum(byte[] data, int index, int length)
         {
             const ushort adler = 65521;
