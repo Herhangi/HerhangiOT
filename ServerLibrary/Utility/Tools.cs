@@ -30,7 +30,7 @@ namespace HerhangiOT.ServerLibrary.Utility
 
             for (int i = 0; i < 32; i++)
             {
-                value = value >> 1;
+                value >>= 1;
                 if (value == 0) return i;
             }
             return -1;

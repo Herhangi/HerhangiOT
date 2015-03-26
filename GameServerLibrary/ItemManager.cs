@@ -16,17 +16,15 @@ namespace HerhangiOT.GameServerLibrary
         public static uint DwBuildNumber;
 
         public static Dictionary<ushort, ushort> ReverseItemDict = new Dictionary<ushort, ushort>(); //ClientId -> ServerId 
-        private static readonly Dictionary<ushort, ItemTemplate> Templates = new Dictionary<ushort, ItemTemplate>();
+        public static readonly Dictionary<ushort, ItemTemplate> Templates = new Dictionary<ushort, ItemTemplate>();
 
         public static bool Load()
         {
             Logger.LogOperationStart("Loading Items");
 
             if (!LoadFromOtb())
-            {
-                Logger.LogOperationFailed("Could not load items from OTB!");
                 return false;
-            }
+            
             if (!LoadFromXml())
                 return false;
             
@@ -38,7 +36,10 @@ namespace HerhangiOT.GameServerLibrary
         {
             FileLoader fileLoader = new FileLoader();
             if (!fileLoader.OpenFile("Data/Items/items.otb", "OTBI"))
+            {
+                Logger.LogOperationFailed("OTB file could not be loaded!");
                 return false;
+            }
 
             byte type;
             NodeStruct node = fileLoader.GetChildNode(null, out type);
@@ -59,6 +60,7 @@ namespace HerhangiOT.GameServerLibrary
 
                     if (datalen != 140) // 3 integers + 128 bytes 
                     {
+                        Logger.LogOperationFailed("OTB file is in invalid format!");
                         return false;
                     }
 
@@ -74,12 +76,12 @@ namespace HerhangiOT.GameServerLibrary
             }
             else if (DwMajorVersion != 3)
             {
-                Logger.Log(LogLevels.Error, "Old version detected, a newer version of items.otb is required.");
+                Logger.LogOperationFailed("Old version detected, a newer version of items.otb is required.");
                 return false;
             }
             else if (DwMinorVersion < (uint)OtbClientVersion.V1035)
             {
-                Logger.Log(LogLevels.Error, "A newer version of items.otb is required.");
+                Logger.LogOperationFailed("A newer version of items.otb is required.");
                 return false;
             }
 
@@ -87,7 +89,10 @@ namespace HerhangiOT.GameServerLibrary
             while (node != null)
             {
                 if (!fileLoader.GetProps(node, out props))
+                {
+                    Logger.LogOperationFailed("OTB file is in invalid format!");
                     return false;
+                }
 
                 ItemFlags flags = (ItemFlags)props.ReadUInt32();
 
@@ -195,6 +200,7 @@ namespace HerhangiOT.GameServerLibrary
                 node = fileLoader.GetNextNode(node, out type);
             }
 
+            fileLoader.Close();
             return true;
         }
 
@@ -396,40 +402,40 @@ namespace HerhangiOT.GameServerLibrary
                             switch (valueAttribute.InnerText.ToLowerInvariant())
                             {
                                 case "head":
-                                    item.SlotPosition |= SlotPositions.Head;
+                                    item.SlotPosition |= SlotPositionFlags.Head;
                                     break;
                                 case "body":
-                                    item.SlotPosition |= SlotPositions.Armor;
+                                    item.SlotPosition |= SlotPositionFlags.Armor;
                                     break;
                                 case "legs":
-                                    item.SlotPosition |= SlotPositions.Legs;
+                                    item.SlotPosition |= SlotPositionFlags.Legs;
                                     break;
                                 case "feet":
-                                    item.SlotPosition |= SlotPositions.Feet;
+                                    item.SlotPosition |= SlotPositionFlags.Feet;
                                     break;
                                 case "backpack":
-                                    item.SlotPosition |= SlotPositions.Backpack;
+                                    item.SlotPosition |= SlotPositionFlags.Backpack;
                                     break;
                                 case "two-handed":
-                                    item.SlotPosition |= SlotPositions.TwoHand;
+                                    item.SlotPosition |= SlotPositionFlags.TwoHand;
                                     break;
                                 case "right-hand":
-                                    item.SlotPosition &= ~SlotPositions.LeftHand;
+                                    item.SlotPosition &= ~SlotPositionFlags.LeftHand;
                                     break;
                                 case "left-hand":
-                                    item.SlotPosition &= ~SlotPositions.RightHand;
+                                    item.SlotPosition &= ~SlotPositionFlags.RightHand;
                                     break;
                                 case "necklace":
-                                    item.SlotPosition |= SlotPositions.Necklace;
+                                    item.SlotPosition |= SlotPositionFlags.Necklace;
                                     break;
                                 case "ring":
-                                    item.SlotPosition |= SlotPositions.Ring;
+                                    item.SlotPosition |= SlotPositionFlags.Ring;
                                     break;
                                 case "ammo":
-                                    item.SlotPosition |= SlotPositions.Ammo;
+                                    item.SlotPosition |= SlotPositionFlags.Ammo;
                                     break;
                                 case "hand":
-                                    item.SlotPosition |= SlotPositions.Hand;
+                                    item.SlotPosition |= SlotPositionFlags.Hand;
                                     break;
                                 default:
                                     Logger.Log(LogLevels.Warning, "ParseItemNode: Unknown slottype: " + valueAttribute.InnerText);
@@ -737,39 +743,39 @@ namespace HerhangiOT.GameServerLibrary
                             break;
                         case "suppressdrunk":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Drunk;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Drunk;
                             break;
                         case "suppressenergy":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Energy;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Energy;
                             break;
                         case "suppressfire":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Fire;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Fire;
                             break;
                         case "suppresspoison":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Poison;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Poison;
                             break;
                         case "suppressdrown":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Drown;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Drown;
                             break;
                         case "suppressphysical":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Bleeding;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Bleeding;
                             break;
                         case "suppressfreeze":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Freezing;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Freezing;
                             break;
                         case "suppressdazzle":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Dazzled;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Dazzled;
                             break;
                         case "suppresscurse":
                             if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
-                                item.GetAbilitiesWithInitializer().ConditionSupressions |= Conditions.Cursed;
+                                item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Cursed;
                             break;
                         case "elementice":
                             abilities = item.GetAbilitiesWithInitializer();

@@ -14,15 +14,13 @@ namespace HerhangiOT.GameServer
 {
     public class Program
     {
-        public static uint Uptime { get { return (uint)(DateTime.Now - _startTime).Ticks; } }
         private static readonly GameServer GameServer = new GameServer();
         private static LoginServer.LoginServer _loginServer;
 
-        private static DateTime _startTime;
         private const string RsaP = "14299623962416399520070177382898895550795403345466153217470516082934737582776038882967213386204600674145392845853859217990626450972452084065728686565928113";
         private const string RsaQ = "7630979195970404721891201847792002125535401292779123937207447574596692788513647179235335529307251350570728407373705564708871762033017096809910315212884101";
 
-        static void Main(string[] args)
+        static void Main()
         {
             ExternalMethods.SetConsoleCtrlHandler(ConsoleCtrlOperationHandler, true);
 
@@ -89,6 +87,10 @@ namespace HerhangiOT.GameServer
             if(!OutfitManager.Load())
                 ExitApplication();
 
+            // Loading map
+            if (!Map.Load())
+                ExitApplication();
+
             // Setting game world type
             switch (ConfigManager.Instance[ConfigStr.WORLD_TYPE])
             {
@@ -107,8 +109,6 @@ namespace HerhangiOT.GameServer
                     break;
             }
             Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.Instance.WorldType);
-
-            // Loading map
 
             // Initialize Game State
 

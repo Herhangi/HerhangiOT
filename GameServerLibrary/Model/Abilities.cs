@@ -24,7 +24,7 @@
         public uint ManaTicks;
 
         public uint ConditionImmunities;
-        public Conditions ConditionSupressions;
+        public ConditionFlags ConditionSupressions;
 
         #region Late Initializers For Arrays
         public void InitializeSkillModifiers()

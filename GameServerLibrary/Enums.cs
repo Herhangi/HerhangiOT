@@ -4,7 +4,7 @@ namespace HerhangiOT.GameServerLibrary
 {
     #region Flag Enums
     [Flags]
-    public enum SlotPositions : uint
+    public enum SlotPositionFlags : uint
     {
         Nowhere = 0,
         Head = 1 << 0,
@@ -73,7 +73,7 @@ namespace HerhangiOT.GameServerLibrary
         FullTile = 1 << 25
     }
     [Flags]
-    public enum Conditions : uint
+    public enum ConditionFlags : uint
     {
         None = 0,
         Poison = 1 << 0,
@@ -104,6 +104,70 @@ namespace HerhangiOT.GameServerLibrary
         Pacified = 1 << 25,
         SpellCooldown = 1 << 26,
         SpellGroupCooldown = 1 << 27
+    }
+    [Flags]
+    public enum TileFlags : uint
+    {
+        None = 0,
+        ProtectionZone = 1 << 0,
+        DeprecatedHouse = 1 << 1,
+        NoPvpZone = 1 << 2,
+        NoLogout = 1 << 3,
+        PvpZone = 1 << 4,
+        Refresh = 1 << 5, // unused
+
+        //internal usage
+        House = 1 << 6,
+        FloorChange = 1 << 7,
+        FloorChangeDown = 1 << 8,
+        FloorchangeNorth = 1 << 9,
+        FloorChangeSouth = 1 << 10,
+        FloorChangeEast = 1 << 11,
+        FloorChangeWest = 1 << 12,
+        Teleport = 1 << 13,
+        MagicField = 1 << 14,
+        MailBox = 1 << 15,
+        TrashHolder = 1 << 16,
+        Bed = 1 << 17,
+        Depot = 1 << 18,
+        BlockSolid = 1 << 19,
+        BlockPath = 1 << 20,
+        ImmovableBlockSolid = 1 << 21,
+        ImmovableBlockPath = 1 << 22,
+        ImmovableNoFieldBlockPath = 1 << 23,
+        NoFieldBlockPath = 1 << 24,
+        DynamicTile = 1 << 25,
+        FloorChangeSouthAlt = 1 << 26,
+        FloorChangeEastAlt = 1 << 27,
+        SupportsHangable = 1 << 28
+    }
+    [Flags]
+    public enum ItemAttributeFlags : uint
+    {
+        None = 0,
+        ActionId = 1 << 0,
+        UniqueId = 1 << 1,
+        Description = 1 << 2,
+        Text = 1 << 3,
+        Date = 1 << 4,
+        Writer = 1 << 5,
+        Name = 1 << 6,
+        Article = 1 << 7,
+        PluralName = 1 << 8,
+        Weight = 1 << 9,
+        Attack = 1 << 10,
+        Defense = 1 << 11,
+        ExtraDefense = 1 << 12,
+        Armor = 1 << 13,
+        HitChance = 1 << 14,
+        ShootRange = 1 << 15,
+        Owner = 1 << 16,
+        Duration = 1 << 17,
+        DecayState = 1 << 18,
+        CorpseOwner = 1 << 19,
+        Charges = 1 << 20,
+        FluidType = 1 << 21,
+        DoorId = 1 << 22
     }
     #endregion
 
@@ -375,4 +439,97 @@ namespace HerhangiOT.GameServerLibrary
         Male = 1,
         Last = Male
     }
+
+    public enum FixedItems : ushort
+    {
+        BrowseField = 460, // for internal use
+
+        FireFieldPvpFull = 1487,
+        FireFieldPvpMedium = 1488,
+        FireFieldPvpSmall = 1489,
+        FireFieldPersistentFull = 1492,
+        FireFieldPersistentMedium = 1493,
+        FireFieldPersistentSmall = 1494,
+        FireFieldNoPvp = 1500,
+
+        PoisonFieldPvp = 1490,
+        PoisonFieldPersistent = 1496,
+        PoisonFieldNoPvp = 1503,
+
+        EnergyFieldPvp = 1491,
+        EnergyFieldPersistent = 1495,
+        EnergyFieldNoPvp = 1504,
+
+        MagicWall = 1497,
+        MagicWallPersistent = 1498,
+        MagicWallSafe = 11098,
+
+        WildGrowth = 1499,
+        WildGrowthPersistent = 2721,
+        WildGrowthSafe = 11099,
+
+        Bag = 1987,
+
+        GoldCoin = 2148,
+        PlatinumCoin = 2152,
+        CrystalCoin = 2160,
+
+        Depot = 2594,
+        Locket1 = 2589,
+        Inbox = 14404,
+        Market = 14405,
+
+        MaleCorpse = 3058,
+        FemaleCorpse = 3065,
+
+        FullSplash = 2016,
+        SmallSplash = 2019,
+
+        Parcel = 2595,
+        Letter = 2597,
+        LetterStamped = 2598,
+        Label = 2599,
+
+        AmuletOfLoss = 2173,
+
+        DocumentReadOnly = 1968
+    }
+
+    public enum AttributeTypes : byte
+    {
+        Description = 1,
+        ExtFile = 2,
+        TileFlags = 3,
+        ActionId = 4,
+        UniqueId = 5,
+        Text = 6,
+        Desc = 7,
+        TeleDest = 8,
+        Item = 9,
+        DepotId = 10,
+        ExtSpawnFile = 11,
+        RuneCharges = 12,
+        ExtHouseFile = 13,
+        HouseDoorId = 14,
+        Count = 15,
+        Duration = 16,
+        DecayingState = 17,
+        WrittenDate = 18,
+        WrittenBy = 19,
+        SleeperGuid = 20,
+        SleepStart = 21,
+        Charges = 22,
+        ContainerItems = 23,
+        Name = 24,
+        Article = 25,
+        PluralName = 26,
+        Weight = 27,
+        Attack = 28,
+        Defense = 29,
+        ExtraDefense = 30,
+        Armor = 31,
+        HitChance = 32,
+        ShootRange = 33
+    }
+
 }

@@ -41,8 +41,7 @@ namespace HerhangiOT.ServerLibrary
             }
 
             _root = null;
-            _root = new NodeStruct();
-            _root.Start = 4;
+            _root = new NodeStruct {Start = 4};
 
             if (_reader.ReadByte() == NodeStart)
                 return ParseNode(_root);
@@ -50,14 +49,21 @@ namespace HerhangiOT.ServerLibrary
             return false;
         }
 
+        public void Close()
+        {
+            NodeStruct.ClearNet(_root);
+            _root = null;
+
+            _reader.Close();
+            _file.Close();
+        }
+
         protected bool ParseNode(NodeStruct node)
         {
             int value;
-            long pos;
-	        NodeStruct currentNode = node;
+            NodeStruct currentNode = node;
 
-            value = _file.ReadByte();
-	        while (value != -1)
+	        while ((value = _file.ReadByte()) != -1)
 	        {
 	            currentNode.Type = (byte)value;
 		        bool setPropsSize = false;
@@ -65,19 +71,17 @@ namespace HerhangiOT.ServerLibrary
 		        while (true)
 		        {
 		            value = _file.ReadByte();
-
-			        if (value == -1)
-				        return false;
+			        if (value == -1) return false;
 
 			        bool skipNode = false;
 
-			        switch ((byte)value) {
+		            long pos;
+		            switch ((byte)value) {
 				        case NodeStart:
 			                pos = _file.Position;
 
-                            NodeStruct childNode = new NodeStruct();
-                            childNode.Start = pos;
-			                currentNode.PropsSize = pos - currentNode.Start - 2;
+                            NodeStruct childNode = new NodeStruct {Start = pos};
+		                    currentNode.PropsSize = pos - currentNode.Start - 2;
 			                currentNode.Child = childNode;
 
                             setPropsSize = true;
@@ -96,8 +100,7 @@ namespace HerhangiOT.ServerLibrary
 					        }
 
 			                value = _file.ReadByte();
-			                if (value == -1)
-			                    return true;
+			                if (value == -1) return true;
 
 					        switch ((byte)value) {
 						        case NodeStart:
@@ -105,15 +108,15 @@ namespace HerhangiOT.ServerLibrary
 					                pos = _file.Position;
 
 							        skipNode = true;
-							        NodeStruct nextNode = new NodeStruct();
-							        nextNode.Start = pos;
-							        currentNode.Next = nextNode;
+							        NodeStruct nextNode = new NodeStruct {Start = pos};
+					                currentNode.Next = nextNode;
 							        currentNode = nextNode;
 							        break;
 
 						        case NodeEnd:
 							        //return safeTell(pos) && safeSeek(pos);
                                     _file.Seek(-1, SeekOrigin.Current);
+                                    //_file.Seek(pos, SeekOrigin.Begin);
 					                return true;
 
 						        default:
@@ -182,7 +185,7 @@ namespace HerhangiOT.ServerLibrary
         private byte[] GetProps(NodeStruct node, out long size)
         {
             size = 0;
-            if (node == null)return null;
+            if (node == null) return null;
 
             if (_buffer == null || _buffer.Length < node.PropsSize)
             {

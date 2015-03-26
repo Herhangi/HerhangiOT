@@ -5,7 +5,7 @@ using System.Text;
 
 namespace HerhangiOT.ServerLibrary.Utility
 {
-    static class CsharpExtensions
+    public static class CsharpExtensions
     {
         public static BigInteger ModInverse(this BigInteger a, BigInteger n)
         {

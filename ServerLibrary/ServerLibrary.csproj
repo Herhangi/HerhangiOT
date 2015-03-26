@@ -32,9 +32,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="lua51">
-      <HintPath>..\DLLs\lua51.dll</HintPath>
-    </Reference>
     <Reference Include="LuaInterface">
       <HintPath>..\DLLs\LuaInterface.dll</HintPath>
     </Reference>
@@ -44,12 +41,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigManager.cs" />
@@ -74,6 +66,7 @@
     <Compile Include="Threading\DispatcherManager.cs" />
     <Compile Include="Threading\Task.cs" />
     <Compile Include="Utility\CsharpExtensions.cs" />
+    <Compile Include="Utility\Deque.cs" />
     <Compile Include="Utility\Rsa.cs" />
     <Compile Include="Utility\Tools.cs" />
   </ItemGroup>

@@ -36,27 +36,36 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Map.cs" />
     <Compile Include="Model\Abilities.cs" />
+    <Compile Include="Model\Creature.cs" />
+    <Compile Include="Model\DynamicTile.cs" />
+    <Compile Include="Model\House.cs" />
+    <Compile Include="Model\HouseTile.cs" />
     <Compile Include="Model\Item.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="ItemManager.cs" />
+    <Compile Include="Model\Items\BedItem.cs" />
+    <Compile Include="Model\Items\Container.cs" />
+    <Compile Include="Model\Items\DepotLocker.cs" />
+    <Compile Include="Model\Items\Door.cs" />
+    <Compile Include="Model\Items\MagicField.cs" />
+    <Compile Include="Model\Items\Mailbox.cs" />
+    <Compile Include="Model\Items\Teleport.cs" />
+    <Compile Include="Model\Items\TrashHolder.cs" />
     <Compile Include="Model\ItemTemplate.cs" />
     <Compile Include="Model\Outfit.cs" />
     <Compile Include="Model\Position.cs" />
     <Compile Include="Model\Thing.cs" />
+    <Compile Include="Model\Tile.cs" />
+    <Compile Include="Model\Town.cs" />
     <Compile Include="OutfitManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Items\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\ServerLibrary\ServerLibrary.csproj">
       <Project>{0a3749df-d290-4f83-92a0-0950923e55ed}</Project>

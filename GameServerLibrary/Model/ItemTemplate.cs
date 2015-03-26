@@ -47,7 +47,7 @@
         public ushort TransformEquipTo;
         public ushort TransformDequipTo;
         public ushort MaxItems;
-        public SlotPositions SlotPosition;
+        public SlotPositionFlags SlotPosition;
         public ushort Speed = 0;
         public ushort WareId = 0;
 

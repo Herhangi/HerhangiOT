@@ -2,8 +2,10 @@
 {
     public abstract class Thing
     {
-        public abstract ushort GetThingId();
+        public virtual ushort GetThingId() { return 0; }
 
-        public abstract string GetDescription(int lookDistance = 0);
+        public virtual string GetDescription(int lookDistance = 0) { return string.Empty; }
+
+        public virtual void SetParent(Thing parent) { }
     }
 }
