@@ -39,7 +39,7 @@ namespace HerhangiOT.GameServerLibrary
                     if(outfitNode.Attributes == null) continue;
 
                     XmlAttribute enabledAttribute = outfitNode.Attributes["enabled"];
-                    if(enabledAttribute == null || !Tools.ConverLuaBoolean(enabledAttribute.InnerText)) continue;
+                    if(enabledAttribute == null || !Tools.ConvertLuaBoolean(enabledAttribute.InnerText)) continue;
 
                     XmlAttribute typeAttribute = outfitNode.Attributes["type"];
                     if (typeAttribute == null)
@@ -66,8 +66,8 @@ namespace HerhangiOT.GameServerLibrary
                     {
                         Name = outfitNode.Attributes["name"].InnerText,
                         LookType = ushort.Parse(lookTypeAttribute.InnerText),
-                        IsPremiumOnly = Tools.ConverLuaBoolean(outfitNode.Attributes["premium"].InnerText),
-                        IsUnlockedAtBeginning = Tools.ConverLuaBoolean(outfitNode.Attributes["unlocked"].InnerText)
+                        IsPremiumOnly = Tools.ConvertLuaBoolean(outfitNode.Attributes["premium"].InnerText),
+                        IsUnlockedAtBeginning = Tools.ConvertLuaBoolean(outfitNode.Attributes["unlocked"].InnerText)
                     });
                 }
             }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using HerhangiOT.GameServerLibrary;
+using HerhangiOT.GameServerLibrary.Model;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
@@ -40,6 +41,12 @@ namespace HerhangiOT.GameServer
             // Loading config.lua
             if (!ConfigManager.Load("config.lua"))
                 ExitApplication();
+
+            if(!Enum.TryParse(ConfigManager.Instance[ConfigStr.MIN_CONSOLE_LOG_LEVEL], true, out Logger.MinConsoleLogLevel))
+            {
+                Console.WriteLine("LOGGER LOG LEVEL COULD NOT BE PARSED! PLEASE FIX!");
+                ExitApplication();
+            }
 
             // Setting up process priority
             switch (ConfigManager.Instance[ConfigStr.DEFAULT_PRIORITY])
@@ -111,10 +118,17 @@ namespace HerhangiOT.GameServer
             Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.Instance.WorldType);
 
             // Initialize Game State
+            Game.Instance.GameState = GameStates.Init;
+
+            //TODO: HOUSE RENTS
+            //TODO: MARKET CHECK OFFERS
+            //TODO: MARKET STATISTICS
 
             if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
             {
-                
+                //Create secret communication channel with login server if login server is external
+                if (!SecretServerConnection.Initialize())
+                    ExitApplication();
             }
             else
             {
@@ -123,6 +137,8 @@ namespace HerhangiOT.GameServer
             }
 
             GameServer.Start();
+            Game.Instance.GameState = GameStates.Normal;
+            //TODO: FIRE SERVER RUNNING EVENT
 
             while (true)
             {
@@ -165,14 +181,16 @@ namespace HerhangiOT.GameServer
                     Logger.Log(LogLevels.Warning, "Command is unknown!");
                 }
             }
+// ReSharper disable FunctionNeverReturns
         }
+// ReSharper restore FunctionNeverReturns
 
         private static void ConsoleCtrlOperationHandler(ConsoleCtrlEvents ctrlEvent)
         {
             Logger.Log(LogLevels.Warning, "Command Line Operations Disabled!");
         }
 
-        static void ExitApplication()
+        internal static void ExitApplication()
         {
             Console.ReadKey();
             Environment.Exit(0);

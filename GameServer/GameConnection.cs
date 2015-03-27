@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using HerhangiOT.ServerLibrary;
-using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Enums;
-using HerhangiOT.ServerLibrary.Model;
 using HerhangiOT.ServerLibrary.Networking;
-using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
 {
     class GameConnection : Connection
     {
-        private static Random _rng = new Random();
+        private static readonly Random Rng = new Random();
+
+        private string _username;
 
         private bool _didReceiveFirstMessage;
         private uint _challengeTimestamp;
         private byte _challengeRandom;
         
-        private static Dictionary<ClientPacketType, Action<GameConnection>> _packetHandlers = new Dictionary<ClientPacketType, Action<GameConnection>>()
+        private static readonly Dictionary<ClientPacketType, Action<GameConnection>> PacketHandlers = new Dictionary<ClientPacketType, Action<GameConnection>>
         {
             {ClientPacketType.GameServerRequest, HandleLoginPacket}
         };
@@ -45,7 +43,7 @@ namespace HerhangiOT.GameServer
             _challengeTimestamp = (uint)Environment.TickCount;
             message.AddUInt32(_challengeTimestamp);
 
-            _challengeRandom = (byte)_rng.Next(0, 256);
+            _challengeRandom = (byte)Rng.Next(0, 256);
             message.AddByte(_challengeRandom);
 
             // Write Adler Checksum
@@ -54,7 +52,6 @@ namespace HerhangiOT.GameServer
 
             Send(message);
         }
-
 
         protected override void ProcessMessage()
         {
@@ -66,16 +63,15 @@ namespace HerhangiOT.GameServer
             {
                 ClientPacketType requestType = (ClientPacketType)InMessage.GetByte();
 
-                if(_packetHandlers.ContainsKey(requestType))
-                    _packetHandlers[requestType].Invoke(this);
+                if(PacketHandlers.ContainsKey(requestType))
+                    PacketHandlers[requestType].Invoke(this);
             }
         }
 
         private static void HandleLoginPacket(GameConnection conn)
         {
             conn._didReceiveFirstMessage = true;
-            ClientPacketType requestType = (ClientPacketType)conn.InMessage.GetByte();
-
+            conn.InMessage.GetByte();
             //conn.InMessage.GetByte(); //Protocol Id
             OperatingSystems clientOs = (OperatingSystems)conn.InMessage.GetUInt16(); //Client OS
             ushort version = conn.InMessage.GetUInt16(); //Client Version
@@ -96,7 +92,7 @@ namespace HerhangiOT.GameServer
             conn.IsEncryptionEnabled = true;
 
             conn.InMessage.SkipBytes(1); //GameMaster Flag
-            string accountName = conn.InMessage.GetString();
+            conn._username = conn.InMessage.GetString();
             string characterName = conn.InMessage.GetString();
             byte[] password = conn.InMessage.GetBytes(conn.InMessage.GetUInt16());
 
@@ -121,35 +117,66 @@ namespace HerhangiOT.GameServer
                 return;
             }
 
-            if (string.IsNullOrEmpty(accountName))
+            if (string.IsNullOrEmpty(conn._username))
             {
                 conn.DispatchDisconnect("You must enter your account name.");
                 return;
             }
-            
-            //if (g_game.getGameState() == GAME_STATE_STARTUP)
-            //{
-            //    dispatchDisconnectClient("Gameworld is starting up. Please wait.");
-            //    return;
-            //}
 
-            //if (g_game.getGameState() == GAME_STATE_MAINTAIN)
-            //{
-            //    dispatchDisconnectClient("Gameworld is under maintenance. Please re-connect in a while.");
-            //    return;
-            //}
+            if (Game.Instance.GameState == GameStates.Startup)
+            {
+                conn.DispatchDisconnect("Gameworld is starting up. Please wait.");
+                return;
+            }
 
-            // CHECK FOR BAN
+            if (Game.Instance.GameState == GameStates.Maintain)
+            {
+                conn.DispatchDisconnect("Gameworld is under maintenance. Please re-connect in a while.");
+                return;
+            }
 
-            DispatcherManager.DatabaseDispatcher.AddTask(new Task(
-                () => DatabaseOperations.CheckCharacterAuthenticity(conn, accountName, characterName, password)
-            ));
+            // TODO: CHECK FOR BAN
+
+            SecretCommunication.OnCharacterAuthenticationResultArrived += conn.OnCharacterAuthenticationResultArrived;
+            SecretCommunication.CheckCharacterAuthenticity(conn._username, characterName, password);
+
+            //DispatcherManager.DatabaseDispatcher.AddTask(new Task(
+            //    () => DatabaseOperations.CheckCharacterAuthenticity(conn, accountName, characterName, password)
+            //));
         }
 
-
-        private void RetrieveCharacterData(string character)
+        private void OnCharacterAuthenticationResultArrived(SecretNetworkResponseType response, string username, string character)
         {
+            if (!_username.Equals(username, StringComparison.InvariantCulture)) return;
             
+            SecretCommunication.OnCharacterAuthenticationResultArrived -= OnCharacterAuthenticationResultArrived;
+
+            if (response != SecretNetworkResponseType.Success)
+            {
+                string disconnectMessage;
+
+                switch (response)
+                {
+                    case SecretNetworkResponseType.InvalidAccountData:
+                        disconnectMessage = "Your account information has been changed! Please log in again...";
+                        break;
+                    case SecretNetworkResponseType.AnotherCharacterOnline:
+                        disconnectMessage = "You are online with another character!";
+                        break;
+                    case SecretNetworkResponseType.CharacterCouldNotBeFound:
+                        disconnectMessage = "Character could not be found!";
+                        break;
+                    default:
+                        disconnectMessage = "An improbable error occured! Please log in again. Contact server admins if problem persists!";
+                        break;
+                }
+
+                DispatchDisconnect(disconnectMessage);
+            }
+            else
+            {
+                //LOGIN   
+            }
         }
     }
 }

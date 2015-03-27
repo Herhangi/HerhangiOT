@@ -39,7 +39,7 @@ namespace HerhangiOT.ServerLibrary.Database
             while (reader.Read())
             {
                 GameWorld world = new GameWorld();
-                world.GameWorldId = reader.GetInt32(0);
+                world.GameWorldId = (byte)reader.GetInt32(0);
                 world.GameWorldName = reader.GetString(1);
                 world.GameWorldIP = reader.GetString(2);
                 world.GameWorldPort = (ushort)reader.GetInt32(3);

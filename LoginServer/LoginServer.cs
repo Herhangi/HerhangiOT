@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
@@ -12,10 +13,14 @@ namespace HerhangiOT.LoginServer
     public class LoginServer
     {
         public static string MOTD { get; private set; }
-        public static List<GameWorld> GameWorlds { get; private set; }
+        public static Dictionary<byte, GameWorld> GameWorlds { get; private set; }
+        public static Dictionary<byte, GameServerConnection> GameServerConnections { get; private set; }
+
+        public static Dictionary<string, Account> OnlineAccounts { get; private set; } 
         public static HashAlgorithm PasswordHasher { get; protected set; }
 
         private TcpListener _listener;
+        private TcpListener _secretServerListener;
         private List<Socket> _loginRequesters = new List<Socket>();
  
         public void Start()
@@ -24,20 +29,27 @@ namespace HerhangiOT.LoginServer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
+            OnlineAccounts = new Dictionary<string, Account>();
+            GameServerConnections = new Dictionary<byte, GameServerConnection>();
             if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
             {
-                GameWorlds = Database.Instance.GetGameWorlds();
+                GameWorlds = Database.Instance.GetGameWorlds().ToDictionary(i => i.GameWorldId);
             }
             else
             {
-                GameWorlds = new List<GameWorld>();
-                GameWorlds.Add(new GameWorld()
+                GameWorlds = new Dictionary<byte, GameWorld>
                 {
-                    GameWorldId = 1,
-                    GameWorldName = ConfigManager.Instance[ConfigStr.SERVER_NAME],
-                    GameWorldIP = ConfigManager.Instance[ConfigStr.GAME_SERVER_IP],
-                    GameWorldPort = (ushort)ConfigManager.Instance[ConfigInt.GAME_SERVER_PORT]
-                });
+                    {
+                        (byte)ConfigManager.Instance[ConfigInt.GAME_SERVER_ID], new GameWorld
+                        {
+                            GameWorldId = (byte)ConfigManager.Instance[ConfigInt.GAME_SERVER_ID],
+                            GameWorldName = ConfigManager.Instance[ConfigStr.SERVER_NAME],
+                            GameWorldIP = ConfigManager.Instance[ConfigStr.GAME_SERVER_IP],
+                            GameWorldPort = (ushort) ConfigManager.Instance[ConfigInt.GAME_SERVER_PORT],
+                            Secret = ConfigManager.Instance[ConfigStr.GAME_SERVER_SECRET]
+                        }
+                    }
+                };
             }
 
             switch (ConfigManager.Instance[ConfigStr.PASSWORD_HASH_ALGORITHM])
@@ -55,9 +67,14 @@ namespace HerhangiOT.LoginServer
                     return;
             }
             MOTD = string.Format("{0}\n{1}", ConfigManager.Instance[ConfigInt.MOTD_NUM], ConfigManager.Instance[ConfigStr.MOTD]);
-            _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_PORT]);
+            _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_SERVER_PORT]);
             _listener.Start();
             _listener.BeginAcceptSocket(LoginListenerCallback, _listener);
+
+            _secretServerListener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_SERVER_SECRET_PORT]);
+            _secretServerListener.Start();
+            _secretServerListener.BeginAcceptSocket(MasterServerListenerCallback, _secretServerListener);
+
             Logger.Log(LogLevels.Operation, "LoginServer Listening for clients");
         }
 
@@ -86,6 +103,14 @@ namespace HerhangiOT.LoginServer
         private void LoginListenerCallback(IAsyncResult ar)
         {
             LoginConnection requester = new LoginConnection();
+            requester.HandleFirstConnection(ar);
+
+            _listener.BeginAcceptSocket(LoginListenerCallback, _listener);
+        }
+
+        private void MasterServerListenerCallback(IAsyncResult ar)
+        {
+            GameServerConnection requester = new GameServerConnection();
             requester.HandleFirstConnection(ar);
 
             _listener.BeginAcceptSocket(LoginListenerCallback, _listener);

@@ -16,6 +16,7 @@ namespace HerhangiOT.ServerLibrary.Networking
         }
         public Connection MessageTarget;
         public bool DisconnectAfterMessage;
+        public bool IsRecycledMessage = true;
 
         public OutputMessage()
         {

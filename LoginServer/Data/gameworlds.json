@@ -1,14 +1,16 @@
 ﻿[
     {
-      "GameWorldId" : 1,
-      "GameWorldName" : "Adonis",
-      "GameWorldIp" : "127.0.0.1",
-      "GameWorldPort" : 7172
+        "GameWorldId" : 1,
+        "GameWorldName" : "Adonis",
+        "GameWorldIp" : "127.0.0.1",
+        "GameWorldPort" : 7172,
+        "Secret" : "YW+B=PZrk5WwQm4Ma!79r!2?"
     },
     {
-      "GameWorldId" : 2,
-      "GameWorldName" : "Babonis",
-      "GameWorldIp" : "127.0.0.1",
-      "GameWorldPort" : 7172
+        "GameWorldId" : 2,
+        "GameWorldName" : "Babonis",
+        "GameWorldIp" : "127.0.0.1",
+        "GameWorldPort": 7172,
+        "Secret" : "c#8SJ6zmZM8@PDBHE@f^4mvf"
     }
 ]

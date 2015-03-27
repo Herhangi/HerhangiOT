@@ -106,9 +106,11 @@ namespace HerhangiOT.ServerLibrary.Networking
                 {
                     //outputPool->startExecutionFrame();
                     msg.MessageTarget.Send(msg);
-                    if (msg.DisconnectAfterMessage) msg.MessageTarget.Disconnect();
 
-                    ReleaseMessage(msg);
+                    //MESSAGE RELEASE AND CLIENT DISCONNECT MOVED TO STREAM END
+                    //if (msg.DisconnectAfterMessage) msg.MessageTarget.Disconnect();
+                    //ReleaseMessage(msg);
+
                     //outputPool->sendAll();
 
                     //g_game.clearSpectatorCache();

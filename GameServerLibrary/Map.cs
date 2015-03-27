@@ -54,7 +54,10 @@ namespace HerhangiOT.GameServerLibrary
 
         public Tile GetTile(ushort x, ushort y, byte z)
         {
-            return null;
+            if(Floors[z] == null)
+                return null;
+            Floor floor = Floors[z];
+            return floor.Tiles[x][y];
         }
 
         public void SetTile(Tile tile)

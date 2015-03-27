@@ -25,7 +25,31 @@
         public static Game Instance { get { return _instance; } }
         #endregion
 
-        public GameStates GameState;
+        private GameStates _gameState;
+        public GameStates GameState
+        {
+            get { return _gameState; }
+            set
+            {
+                if(_gameState == GameStates.Shutdown) return; //Shutdown cannot be stopped!
+
+                if(_gameState == value) return; //Prevent doing same procedures!
+
+                _gameState = value;
+                switch (_gameState)
+                {
+                    case GameStates.Init:
+                        //TODO: Program HERE
+                        break;
+                    case GameStates.Shutdown:
+                        //TODO: Program HERE
+                        break;
+                    case GameStates.Closed:
+                        //TODO: Program HERE
+                        break;
+                }
+            }
+        }
         public GameWorldTypes WorldType;
 
         public static void Initialize()

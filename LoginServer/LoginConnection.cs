@@ -62,7 +62,7 @@ namespace HerhangiOT.LoginServer
             foreach (byte b in hash)
                 hashedPassword += b.ToString("x2");
 
-            Account acc = Database.Instance.GetAccountInformation(username, hashedPassword);
+            Account acc = LoginServerData.RetrieveAccountData(username, hashedPassword);
 
             if (acc == null)
             {
@@ -76,9 +76,9 @@ namespace HerhangiOT.LoginServer
 
             message.AddByte((byte)ServerPacketType.CharacterList);
             message.AddByte((byte)LoginServer.GameWorlds.Count);
-            foreach (GameWorld world in LoginServer.GameWorlds)
+            foreach (GameWorld world in LoginServer.GameWorlds.Values)
             {
-                message.AddByte((byte)world.GameWorldId);
+                message.AddByte(world.GameWorldId);
                 message.AddString(world.GameWorldName);
                 message.AddString(world.GameWorldIP);
                 message.AddUInt16(world.GameWorldPort);

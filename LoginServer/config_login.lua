@@ -1,16 +1,20 @@
 -- Connection Config
 -- NOTE: maxPlayers set to 0 means no limit
-useExternalLoginServer = "no"
+useExternalLoginServer = "yes"
 loginServerIp = "127.0.0.1"
 loginServerPort = 7171
 -- Password Hash Algorithms: sha1, md5
 passwordHashAlgorithm = "sha1"
 
+-- LOGGING
+-- LogLevels: Error, Operation, Warning, Information, Debug
+minConsoleLogLevel = "Information"
+
 motdNum = 0
 motd = "Welcome to Herhangi Server!"
 
-gameServerIp = "127.0.0.1"
-gameServerPort = 7172
+masterServerIp = "127.0.0.1"
+masterServerPort = 7180
 
 -- Database Start
 -- Database Types: mssql, sqlite, mysql, xml, json

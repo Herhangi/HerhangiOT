@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using HerhangiOT.ServerLibrary.Model;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace HerhangiOT.ServerLibrary.Database
 {

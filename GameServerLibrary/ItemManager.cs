@@ -538,10 +538,10 @@ namespace HerhangiOT.GameServerLibrary
                             item.DoesBlockSolid = int.Parse(valueAttribute.InnerText) != 0;
                             break;
                         case "allowdistread":
-                            item.AllowDistanceRead = Tools.ConverLuaBoolean(valueAttribute.InnerText);
+                            item.AllowDistanceRead = Tools.ConvertLuaBoolean(valueAttribute.InnerText);
                             break;
                         case "invisible":
-                            item.GetAbilitiesWithInitializer().Invisible = Tools.ConverLuaBoolean(valueAttribute.InnerText);
+                            item.GetAbilitiesWithInitializer().Invisible = Tools.ConvertLuaBoolean(valueAttribute.InnerText);
                             break;
                         case "speed":
                             item.GetAbilitiesWithInitializer().Speed = int.Parse(valueAttribute.InnerText);
@@ -567,7 +567,7 @@ namespace HerhangiOT.GameServerLibrary
                             abilities.ManaTicks = uint.Parse(valueAttribute.InnerText);
                             break;
                         case "manashield":
-                            item.GetAbilitiesWithInitializer().ManaShield = Tools.ConverLuaBoolean(valueAttribute.InnerText);
+                            item.GetAbilitiesWithInitializer().ManaShield = Tools.ConvertLuaBoolean(valueAttribute.InnerText);
                             break;
                         case "skillsword":
                             abilities = item.GetAbilitiesWithInitializer();
@@ -742,39 +742,39 @@ namespace HerhangiOT.GameServerLibrary
                             abilities.AbsorbPercent[Tools.FlagEnumToArrayPoint((uint)CombatTypes.UndefinedDamage)] += short.Parse(valueAttribute.InnerText);
                             break;
                         case "suppressdrunk":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Drunk;
                             break;
                         case "suppressenergy":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Energy;
                             break;
                         case "suppressfire":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Fire;
                             break;
                         case "suppresspoison":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Poison;
                             break;
                         case "suppressdrown":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Drown;
                             break;
                         case "suppressphysical":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Bleeding;
                             break;
                         case "suppressfreeze":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Freezing;
                             break;
                         case "suppressdazzle":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Dazzled;
                             break;
                         case "suppresscurse":
-                            if (Tools.ConverLuaBoolean(valueAttribute.InnerText))
+                            if (Tools.ConvertLuaBoolean(valueAttribute.InnerText))
                                 item.GetAbilitiesWithInitializer().ConditionSupressions |= ConditionFlags.Cursed;
                             break;
                         case "elementice":

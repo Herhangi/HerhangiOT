@@ -1,6 +1,6 @@
 ﻿namespace HerhangiOT.GameServerLibrary.Model
 {
-    public class HouseTile : DynamicTile
+    public class HouseTile : Tile
     {
         public House House { get; private set; }
 

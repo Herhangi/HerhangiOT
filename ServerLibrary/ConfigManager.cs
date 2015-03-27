@@ -7,13 +7,15 @@ namespace HerhangiOT.ServerLibrary
 {
     public enum ConfigInt
     {
-        LOGIN_PORT = 0,
+        GAME_SERVER_PORT = 0,
+        LOGIN_SERVER_PORT,
+        STATUS_SERVER_PORT,
+        LOGIN_SERVER_SECRET_PORT,
+
         MOTD_NUM,
 
-        STATUS_PORT,
-        GAME_SERVER_PORT,
+        GAME_SERVER_ID,
         MAX_PLAYERS,
-
 
         SQL_PORT,
         PZ_LOCKED,
@@ -47,7 +49,10 @@ namespace HerhangiOT.ServerLibrary
 
     public enum ConfigStr
     {
-        MOTD = 0,
+        GAME_SERVER_IP = 0,
+        LOGIN_SERVER_IP,
+
+        MOTD,
         DATABASE_TYPE,
         DATABASE_MSSQL_CONNECTION_STRING,
 
@@ -55,6 +60,9 @@ namespace HerhangiOT.ServerLibrary
         DATABASE_JSON_CHARACTER_PATH,
 
         PASSWORD_HASH_ALGORITHM,
+        GAME_SERVER_SECRET,
+
+        MIN_CONSOLE_LOG_LEVEL,
 
         DUMMY_STR,
         MAP_NAME,
@@ -64,7 +72,6 @@ namespace HerhangiOT.ServerLibrary
         OWNER_EMAIL,
         URL,
         LOCATION,
-        GAME_SERVER_IP,
         WORLD_TYPE,
         MYSQL_HOST,
         MYSQL_USER,
@@ -178,13 +185,17 @@ namespace HerhangiOT.ServerLibrary
 
                 _strConfigs.Add(ConfigStr.PASSWORD_HASH_ALGORITHM, ReadStrFromConfig(config, "passwordHashAlgorithm", "sha1"));
                 _strConfigs.Add(ConfigStr.GAME_SERVER_IP, ReadStrFromConfig(config, "gameServerIp", "127.0.0.1"));
+                _strConfigs.Add(ConfigStr.LOGIN_SERVER_IP, ReadStrFromConfig(config, "loginServerIp", "127.0.0.1"));
                 _strConfigs.Add(ConfigStr.MAP_NAME, ReadStrFromConfig(config, "mapName", "forgotten"));
                 _strConfigs.Add(ConfigStr.MAP_AUTHOR, ReadStrFromConfig(config, "mapAuthor", "Unknown"));
                 _strConfigs.Add(ConfigStr.HOUSE_RENT_PERIOD, ReadStrFromConfig(config, "houseRentPeriod", "never"));
+                _strConfigs.Add(ConfigStr.GAME_SERVER_SECRET, ReadStrFromConfig(config, "gameServerSecret", ""));
 
-                _intConfigs.Add(ConfigInt.LOGIN_PORT, ReadIntFromConfig(config, "loginServerPort", 7171));
-                _intConfigs.Add(ConfigInt.STATUS_PORT, ReadIntFromConfig(config, "statusProtocolPort", 7171));
+                _intConfigs.Add(ConfigInt.GAME_SERVER_ID, ReadIntFromConfig(config, "gameServerId", 1));
                 _intConfigs.Add(ConfigInt.GAME_SERVER_PORT, ReadIntFromConfig(config, "gameServerPort", 7172));
+                _intConfigs.Add(ConfigInt.LOGIN_SERVER_PORT, ReadIntFromConfig(config, "loginServerPort", 7171));
+                _intConfigs.Add(ConfigInt.STATUS_SERVER_PORT, ReadIntFromConfig(config, "statusServerPort", 7171));
+                _intConfigs.Add(ConfigInt.LOGIN_SERVER_SECRET_PORT, ReadIntFromConfig(config, "loginServerSecretPort", 7180));
                 _intConfigs.Add(ConfigInt.MARKET_OFFER_DURATION, ReadIntFromConfig(config, "marketOfferDuration", 30 * 24 * 60 * 60));
             }
 
@@ -212,6 +223,7 @@ namespace HerhangiOT.ServerLibrary
             _strConfigs.Add(ConfigStr.URL, ReadStrFromConfig(config, "url"));
             _strConfigs.Add(ConfigStr.LOCATION, ReadStrFromConfig(config, "location"));
             _strConfigs.Add(ConfigStr.WORLD_TYPE, ReadStrFromConfig(config, "worldType", "pvp"));
+            _strConfigs.Add(ConfigStr.MIN_CONSOLE_LOG_LEVEL, ReadStrFromConfig(config, "minConsoleLogLevel", "information"));
 
             _intConfigs.Add(ConfigInt.MOTD_NUM, ReadIntFromConfig(config, "motdNum"));
             _intConfigs.Add(ConfigInt.MAX_PLAYERS, ReadIntFromConfig(config, "maxPlayers"));
@@ -289,7 +301,7 @@ namespace HerhangiOT.ServerLibrary
         {
             try
             {
-                return Tools.ConverLuaBoolean(config.GetString(identifier));
+                return Tools.ConvertLuaBoolean(config.GetString(identifier));
             }
             catch (Exception)
             {

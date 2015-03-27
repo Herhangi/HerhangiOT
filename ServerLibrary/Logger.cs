@@ -7,20 +7,26 @@ namespace HerhangiOT.ServerLibrary
     public static class Logger
     {
         private static int _operationStartedOn;
+        public static LogLevels MinConsoleLogLevel = LogLevels.Information;
 
         public static void Log(LogLevels logLevel, string message)
         {
-            Console.WriteLine("[{1:HH:mm:ss}]{0,-13}: {2}", "[" + logLevel + "]", DateTime.Now, message);
+            if (logLevel <= MinConsoleLogLevel)
+                Console.WriteLine("[{1:HH:mm:ss}]{0,-13}: {2}", "[" + logLevel + "]", DateTime.Now, message);
         }
 
         public static void LogOperationStart(string text)
         {
+            if (LogLevels.Operation > MinConsoleLogLevel) return;
+
             _operationStartedOn = Environment.TickCount;
             Console.Write("[{0:HH:mm:ss}]: {1}...", DateTime.Now, text);
         }
 
         public static void LogOperationDone()
         {
+            if (LogLevels.Operation > MinConsoleLogLevel) return;
+
             if (Console.WindowWidth - Console.CursorLeft - 14 < 0)
                 Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft));
 
@@ -35,6 +41,7 @@ namespace HerhangiOT.ServerLibrary
 
         public static void LogOperationFailed(string errorText = "")
         {
+            //This has highest log level priority! Not checking!
             if (Console.WindowWidth - Console.CursorLeft - 14 < 0)
                 Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft));
 
@@ -48,6 +55,8 @@ namespace HerhangiOT.ServerLibrary
 
         public static void LogOperationCached()
         {
+            if (LogLevels.Operation > MinConsoleLogLevel) return;
+
             if (Console.WindowWidth - Console.CursorLeft - 16 < 0)
                 Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft));
 

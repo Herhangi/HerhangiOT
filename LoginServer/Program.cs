@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
+using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.LoginServer
@@ -24,6 +25,8 @@ namespace HerhangiOT.LoginServer
 
             ConfigManager.Load("config_login.lua");
             Rsa.SetKey(RsaP, RsaQ);
+
+            Database.Initialize();
 
             LoginServer.Start();
 

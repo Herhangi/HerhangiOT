@@ -13,6 +13,7 @@ namespace HerhangiOT.ServerLibrary
 
         protected uint[] XteaKey { get; set; }
         protected bool IsChecksumEnabled { get; set; }
+        protected bool IsSecretConnection { get; set; }
         protected bool IsEncryptionEnabled { get; set; }
 
         public virtual void HandleFirstConnection(IAsyncResult ar)
@@ -27,7 +28,7 @@ namespace HerhangiOT.ServerLibrary
             Stream.BeginRead(InMessage.Buffer, 0, 2, ParseHeader, null);
         }
 
-        private void ParseHeader(IAsyncResult ar)
+        protected void ParseHeader(IAsyncResult ar)
         {
             int currentlyRead = Stream.EndRead(ar);
             if (currentlyRead == 0)
@@ -52,10 +53,13 @@ namespace HerhangiOT.ServerLibrary
             InMessage.Reset(2, size);
 
             //I won't do checksum control as other servers do not care about it
-            uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
-            uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
-            if (checksum != recvChecksum)
-                InMessage.SkipBytes(-4);
+            if (!IsSecretConnection)
+            {
+                uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
+                uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
+                if (checksum != recvChecksum)
+                    InMessage.SkipBytes(-4);   
+            }
             
             ProcessMessage();
         }
@@ -109,7 +113,19 @@ namespace HerhangiOT.ServerLibrary
 
         private void InternalSend(OutputMessage message)
         {
-            Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, null, null);
+            Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, OnStreamWriteCompleted, message);
+        }
+
+        private void OnStreamWriteCompleted(IAsyncResult result)
+        {
+            OutputMessage message = (OutputMessage)result.AsyncState;
+            Stream.EndWrite(result);
+
+            if(message.DisconnectAfterMessage)
+                Disconnect();
+
+            if(message.IsRecycledMessage)
+                OutputMessagePool.ReleaseMessage(message);
         }
 
         protected abstract void ProcessMessage();

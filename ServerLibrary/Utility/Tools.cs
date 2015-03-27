@@ -13,7 +13,7 @@ namespace HerhangiOT.ServerLibrary.Utility
             _startTime = DateTime.Now;
         }
 
-        public static bool ConverLuaBoolean(string value)
+        public static bool ConvertLuaBoolean(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {

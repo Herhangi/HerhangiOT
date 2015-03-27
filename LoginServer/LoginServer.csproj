@@ -51,7 +51,10 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameServerConnection.cs" />
     <Compile Include="LoginConnection.cs" />
+    <Compile Include="LoginSecretCommunication.cs" />
+    <Compile Include="LoginServerData.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="LoginServer.cs" />

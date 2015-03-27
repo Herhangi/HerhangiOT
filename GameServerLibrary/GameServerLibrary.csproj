@@ -42,7 +42,6 @@
     <Compile Include="Map.cs" />
     <Compile Include="Model\Abilities.cs" />
     <Compile Include="Model\Creature.cs" />
-    <Compile Include="Model\DynamicTile.cs" />
     <Compile Include="Model\House.cs" />
     <Compile Include="Model\HouseTile.cs" />
     <Compile Include="Model\Item.cs" />
@@ -65,8 +64,14 @@
     <Compile Include="OutfitManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
+    <Folder Include="Model\Vocations\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScriptLibrary\ScriptLibrary.csproj">
+      <Project>{768CDD7D-78E0-4901-ADBC-884E07DEC3B9}</Project>
+      <Name>ScriptLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ServerLibrary\ServerLibrary.csproj">
       <Project>{0a3749df-d290-4f83-92a0-0950923e55ed}</Project>
       <Name>ServerLibrary</Name>

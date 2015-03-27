@@ -1,20 +1,36 @@
--- Connection Config
--- NOTE: maxPlayers set to 0 means no limit
+-- START SERVER CONNECTIONS
 useExternalLoginServer = "no"
 loginServerIp = "127.0.0.1"
 loginServerPort = 7171
--- Password Hash Algorithms: sha1, md5
-passwordHashAlgorithm = "sha1"
+statusServerPort = 7171
+loginServerSecretPort = 7180
 
-motdNum = 0
-motd = "Welcome to Herhangi Server!"
-
+gameServerId = 1
 gameServerIp = "127.0.0.1"
 gameServerPort = 7172
+gameServerSecret = "c#8SJ6zmZM8@PDBHE@f^4mvf"
+-- END SERVER CONNECTIONS
 
--- Database Start
+-- START LOGIN SERVER SPECIFICS
+motdNum = 0
+motd = "Welcome to Herhangi Server!"
+-- END LOGIN SERVER SPECIFICS
+
+-- START GAME SERVER SPECIFICS
+-- Monsters
+deSpawnRange = 2
+deSpawnRadius = 50
+
+-- Combat settings
+-- World Types: pvp, no-pvp, pvp-enforced
+worldType = "pvp"
+-- END GAME SERVER SPECIFICS
+
+-- START DATABASE
 -- Database Types: mssql, sqlite, mysql, xml, json
 databaseType = "json"
+-- Password Hash Algorithms: sha1, md5
+passwordHashAlgorithm = "sha1"
 
 -- MSSQL
 mssqlConnectionString = "Data Source=(LocalDB)\v11.0;Initial Catalog=LoginServerDatabase;Integrated Security=True"
@@ -29,7 +45,16 @@ mysqlPass = ""
 mysqlDatabase = "tibia"
 mysqlPort = 3306
 mysqlSock = ""
--- Database End
+-- END DATABASE
+
+-- START LOGGING
+-- LogLevels: Error, Operation, Warning, Information, Debug
+minConsoleLogLevel = "Information"
+-- !!!FILE LOGGING IS CURRENTLY IN PROGRESS!!!
+logToFile = "no"
+logFilePath = "Logs/GameServer.txt"
+minFileLogLevel = "Information"
+-- END LOGGING
 
 
 bindOnlyGlobalAddress = "no"
@@ -44,8 +69,6 @@ replaceKickOnLogin = "yes"
 maxPacketsPerSecond = 25
 
 -- Combat settings
--- NOTE: valid values for worldType are: "pvp", "no-pvp" and "pvp-enforced"
-worldType = "pvp"
 hotkeyAimbotEnabled = "yes"
 protectionLevel = 1
 killsToRedSkull = 3
@@ -103,9 +126,6 @@ rateLoot = 2
 rateMagic = 3
 rateSpawn = 1
 
--- Monsters
-deSpawnRange = 2
-deSpawnRadius = 50
 
 -- Stamina
 staminaSystem = "yes"
