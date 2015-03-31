@@ -8,23 +8,24 @@ namespace HerhangiOT.GameServer
     public class SecretCommunication
     {
         #region Character Authenticity
-        public delegate void CharacterAuthenticationResultDelegate(SecretNetworkResponseType response, string username, string character);
+        public delegate void CharacterAuthenticationResultDelegate(SecretNetworkResponseType response, string accountName, string character, uint accountId);
         public static event CharacterAuthenticationResultDelegate OnCharacterAuthenticationResultArrived;
-        public static void FireOnCharacterAuthenticationResultArrivedEvent(SecretNetworkResponseType response, string username, string character)
+        public static void FireOnCharacterAuthenticationResultArrivedEvent(SecretNetworkResponseType response, string accountName, string character, uint accountId)
         {
             if (OnCharacterAuthenticationResultArrived != null)
-                OnCharacterAuthenticationResultArrived(response, username, character);
+                OnCharacterAuthenticationResultArrived(response, accountName, character, accountId);
         }
 
-        public static void CheckCharacterAuthenticity(string username, string character, byte[] password)
+        public static void CheckCharacterAuthenticity(string accountName, string character, byte[] password)
         {
-            if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
+            if (ConfigManager.Instance[ConfigBool.UseExternalLoginServer])
             {
             }
             else
             {
-                SecretNetworkResponseType response = LoginSecretCommunication.CheckCharacterAuthenticity(username, character, password);
-                FireOnCharacterAuthenticationResultArrivedEvent(response, username, character);
+                uint accountId;
+                SecretNetworkResponseType response = LoginSecretCommunication.CheckCharacterAuthenticity(accountName, character, password, out accountId);
+                FireOnCharacterAuthenticationResultArrivedEvent(response, accountName, character, accountId);
             }
         }
         #endregion

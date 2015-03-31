@@ -9,14 +9,25 @@ gameServerId = 1
 gameServerIp = "127.0.0.1"
 gameServerPort = 7172
 gameServerSecret = "c#8SJ6zmZM8@PDBHE@f^4mvf"
+
+-- Priorities: realtime, high, higher, normal
+defaultPriority = "high"
+bindOnlyGlobalAddress = "no"
 -- END SERVER CONNECTIONS
 
 -- START LOGIN SERVER SPECIFICS
 motdNum = 0
 motd = "Welcome to Herhangi Server!"
+
+statusTimeout = 5000
 -- END LOGIN SERVER SPECIFICS
 
 -- START GAME SERVER SPECIFICS
+maxPlayers = 10
+serverName = "Herhangi"
+replaceKickOnLogin = "yes"
+maxPacketsPerSecond = 25
+
 -- Monsters
 deSpawnRange = 2
 deSpawnRadius = 50
@@ -37,7 +48,7 @@ mssqlConnectionString = "Data Source=(LocalDB)\v11.0;Initial Catalog=LoginServer
 
 -- JSON
 jsonAccountPath = "Data/Account/"
-jsonCharacterPath = "Data/Character/"
+jsonCharacterPath = "Data/Characters/"
 
 mysqlHost = "127.0.0.1"
 mysqlUser = "root"
@@ -57,17 +68,6 @@ minFileLogLevel = "Information"
 -- END LOGGING
 
 
-bindOnlyGlobalAddress = "no"
-statusProtocolPort = 7171
-maxPlayers = 10
-motd = "Welcome to Herhangi Server!"
-onePlayerOnlinePerAccount = "yes"
-allowClones = "no"
-serverName = "Herhangi"
-statusTimeout = 5000
-replaceKickOnLogin = "yes"
-maxPacketsPerSecond = 25
-
 -- Combat settings
 hotkeyAimbotEnabled = "yes"
 protectionLevel = 1
@@ -81,8 +81,6 @@ whiteSkullTime = 15 * 60 * 1000
 stairJumpExhaustion = 2000
 experienceByKillingPlayers = "no"
 expFromPlayersLevelRange = 75
-noDamageToSameLookfeet = "no"
-
 
 -- Deaths
 -- NOTE: Leave deathLosePercent as -1 if you want to use the default
@@ -110,7 +108,6 @@ premiumToCreateMarketOffer = "yes"
 checkExpiredMarketOffersEachMinutes = 60
 maxMarketOffersAtATimePerPlayer = 100
 
-
 -- Misc.
 allowChangeOutfit = "yes"
 freePremium = "no"
@@ -126,18 +123,8 @@ rateLoot = 2
 rateMagic = 3
 rateSpawn = 1
 
-
 -- Stamina
 staminaSystem = "yes"
-
--- Scripts
-warnUnsafeScripts = "no"
-convertUnsafeScripts = "no"
-
--- Startup
--- NOTE: defaultPriority only works on Windows and sets process priority.
-defaultPriority = "high"
-startupDatabaseOptimization = "no"
 
 -- Status server information
 ownerName = ""

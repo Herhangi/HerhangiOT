@@ -13,7 +13,10 @@ namespace HerhangiOT.GameServer
         {
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
-            _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.GAME_SERVER_PORT]);
+            if (ConfigManager.Instance[ConfigBool.BindOnlyGlobalAddress])
+                _listener = new TcpListener(IPAddress.Parse(ConfigManager.Instance[ConfigStr.GameServerIP]), ConfigManager.Instance[ConfigInt.GameServerPort]);
+            else
+                _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.GameServerPort]);
             _listener.Start();
             _listener.BeginAcceptSocket(GameListenerCallback, _listener);
             Logger.Log(LogLevels.Operation, "GameServer Listening for clients");

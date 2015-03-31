@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using HerhangiOT.GameServerLibrary;
-using HerhangiOT.GameServerLibrary.Model;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
@@ -42,14 +41,14 @@ namespace HerhangiOT.GameServer
             if (!ConfigManager.Load("config.lua"))
                 ExitApplication();
 
-            if(!Enum.TryParse(ConfigManager.Instance[ConfigStr.MIN_CONSOLE_LOG_LEVEL], true, out Logger.MinConsoleLogLevel))
+            if(!Enum.TryParse(ConfigManager.Instance[ConfigStr.MinConsoleLogLevel], true, out Logger.MinConsoleLogLevel))
             {
                 Console.WriteLine("LOGGER LOG LEVEL COULD NOT BE PARSED! PLEASE FIX!");
                 ExitApplication();
             }
 
             // Setting up process priority
-            switch (ConfigManager.Instance[ConfigStr.DEFAULT_PRIORITY])
+            switch (ConfigManager.Instance[ConfigStr.DefaultPriority])
             {
                 case "realtime":
                     Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.RealTime;
@@ -73,7 +72,7 @@ namespace HerhangiOT.GameServer
             //DATABASE TASKS START
 
             // Loading vocations
-            if (!Vocation.Load())
+            if (!ScriptManager.LoadVocations())
                 ExitApplication();
 
             // Loading items
@@ -95,11 +94,11 @@ namespace HerhangiOT.GameServer
                 ExitApplication();
 
             // Loading map
-            if (!Map.Load())
-                ExitApplication();
+            //if (!Map.Load())
+            //    ExitApplication();
 
             // Setting game world type
-            switch (ConfigManager.Instance[ConfigStr.WORLD_TYPE])
+            switch (ConfigManager.Instance[ConfigStr.WorldType])
             {
                 case "pvp":
                     Game.Instance.WorldType = GameWorldTypes.Pvp;
@@ -111,7 +110,7 @@ namespace HerhangiOT.GameServer
                     Game.Instance.WorldType = GameWorldTypes.PvpEnforced;
                     break;
                 default:
-                    Logger.Log(LogLevels.Error, "Invalid game world type: " + ConfigManager.Instance[ConfigStr.WORLD_TYPE]);
+                    Logger.Log(LogLevels.Error, "Invalid game world type: " + ConfigManager.Instance[ConfigStr.WorldType]);
                     ExitApplication();
                     break;
             }
@@ -124,11 +123,13 @@ namespace HerhangiOT.GameServer
             //TODO: MARKET CHECK OFFERS
             //TODO: MARKET STATISTICS
 
-            if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
+            if (ConfigManager.Instance[ConfigBool.UseExternalLoginServer])
             {
                 //Create secret communication channel with login server if login server is external
                 if (!SecretServerConnection.Initialize())
                     ExitApplication();
+
+                // Create signal waiting system to get authentication response from external login server 
             }
             else
             {

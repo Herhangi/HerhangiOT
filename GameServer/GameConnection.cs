@@ -1,17 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using HerhangiOT.GameServerLibrary;
+using HerhangiOT.GameServerLibrary.Model;
 using HerhangiOT.ServerLibrary;
+using HerhangiOT.ServerLibrary.Database.Model;
 using HerhangiOT.ServerLibrary.Enums;
 using HerhangiOT.ServerLibrary.Networking;
+using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
 {
-    class GameConnection : Connection
+    public class GameConnection : Connection
     {
         private static readonly Random Rng = new Random();
 
-        private string _username;
+        public uint AccountId { get; private set; }
+        public string AccountName { get; private set; }
+        public string PlayerName { get; private set; }
+        public OperatingSystems ClientOs { get; private set; }
+        public Player PlayerData { get; private set; }
 
         private bool _didReceiveFirstMessage;
         private uint _challengeTimestamp;
@@ -73,7 +81,7 @@ namespace HerhangiOT.GameServer
             conn._didReceiveFirstMessage = true;
             conn.InMessage.GetByte();
             //conn.InMessage.GetByte(); //Protocol Id
-            OperatingSystems clientOs = (OperatingSystems)conn.InMessage.GetUInt16(); //Client OS
+            conn.ClientOs = (OperatingSystems)conn.InMessage.GetUInt16(); //Client OS
             ushort version = conn.InMessage.GetUInt16(); //Client Version
 
             conn.InMessage.SkipBytes(5);  // U32 clientVersion, U8 clientType
@@ -92,7 +100,7 @@ namespace HerhangiOT.GameServer
             conn.IsEncryptionEnabled = true;
 
             conn.InMessage.SkipBytes(1); //GameMaster Flag
-            conn._username = conn.InMessage.GetString();
+            conn.AccountName = conn.InMessage.GetString();
             string characterName = conn.InMessage.GetString();
             byte[] password = conn.InMessage.GetBytes(conn.InMessage.GetUInt16());
 
@@ -111,13 +119,13 @@ namespace HerhangiOT.GameServer
 		        return;
 	        }
 
-            if (clientOs >= OperatingSystems.CLIENTOS_OTCLIENT_LINUX)
+            if (conn.ClientOs >= OperatingSystems.CLIENTOS_OTCLIENT_LINUX)
             {
                 conn.DispatchDisconnect("Custom clients are not supported, yet!");
                 return;
             }
 
-            if (string.IsNullOrEmpty(conn._username))
+            if (string.IsNullOrEmpty(conn.AccountName))
             {
                 conn.DispatchDisconnect("You must enter your account name.");
                 return;
@@ -138,16 +146,12 @@ namespace HerhangiOT.GameServer
             // TODO: CHECK FOR BAN
 
             SecretCommunication.OnCharacterAuthenticationResultArrived += conn.OnCharacterAuthenticationResultArrived;
-            SecretCommunication.CheckCharacterAuthenticity(conn._username, characterName, password);
-
-            //DispatcherManager.DatabaseDispatcher.AddTask(new Task(
-            //    () => DatabaseOperations.CheckCharacterAuthenticity(conn, accountName, characterName, password)
-            //));
+            SecretCommunication.CheckCharacterAuthenticity(conn.AccountName, characterName, password);
         }
 
-        private void OnCharacterAuthenticationResultArrived(SecretNetworkResponseType response, string username, string character)
+        private void OnCharacterAuthenticationResultArrived(SecretNetworkResponseType response, string accountName, string playerName, uint accountId)
         {
-            if (!_username.Equals(username, StringComparison.InvariantCulture)) return;
+            if (!AccountName.Equals(accountName, StringComparison.InvariantCulture)) return;
             
             SecretCommunication.OnCharacterAuthenticationResultArrived -= OnCharacterAuthenticationResultArrived;
 
@@ -161,7 +165,7 @@ namespace HerhangiOT.GameServer
                         disconnectMessage = "Your account information has been changed! Please log in again...";
                         break;
                     case SecretNetworkResponseType.AnotherCharacterOnline:
-                        disconnectMessage = "You are online with another character!";
+                        disconnectMessage = "You are online with another playerName!";
                         break;
                     case SecretNetworkResponseType.CharacterCouldNotBeFound:
                         disconnectMessage = "Character could not be found!";
@@ -175,8 +179,92 @@ namespace HerhangiOT.GameServer
             }
             else
             {
-                //LOGIN   
+                //LOGIN
+                AccountId = accountId;
+                PlayerName = playerName;
+                Login();
             }
+        }
+
+        public void Login()
+        {
+            if (!Game.OnlinePlayers.ContainsKey(PlayerName))
+            {
+                PlayerData = new Player(this, AccountName, PlayerName);
+                PlayerData.PreloadPlayer();
+
+                //CHECK NAMELOCK
+
+                //TODO: GROUP FLAGS
+                if (Game.Instance.GameState == GameStates.Closing)
+                {
+                    DispatchDisconnect("The game is just going down.\nPlease try again later.");
+                    return;
+                }
+
+                //TODO: GROUP FLAGS
+                if (Game.Instance.GameState == GameStates.Closed)
+                {
+                    DispatchDisconnect("Server is currently closed.\nPlease try again later.");
+                    return;
+                }
+
+                //TODO: WAITING LIST
+
+                if (!PlayerData.LoadPlayer())
+                {
+                    DispatchDisconnect("Your character could not be loaded.");
+                    return;
+                }
+
+                //LOAD PLAYER
+
+                //PLACE CHARACTER
+
+                //LAST LOGIN OPERATIONS
+            }
+            else
+            {
+                PlayerData = Game.OnlinePlayers[PlayerName];
+
+                if (ConfigManager.Instance[ConfigBool.ReplaceKickOnLogin])
+                {
+                    if (PlayerData.Connection != null)
+                    {
+                        PlayerData.Connection.Disconnect();
+                        DispatcherManager.GameDispatcher.AddTask(new Task(Connect));
+                        return;
+                    }
+
+                    Connect();
+                }
+                else
+                {
+                    DispatchDisconnect("You are already logged in!");
+                }
+            }
+        }
+
+        private void Connect()
+        {
+            
+        }
+
+        public void SendStats()
+        {
+            OutputMessage message = OutputMessagePool.GetOutputMessage();
+            message.AddByte((byte)ServerPacketType.PlayerStatus);
+
+            CharacterModel character = PlayerData.CharacterData;
+            message.AddUInt16(character.Health);
+            message.AddUInt16(character.HealthMax);
+
+            message.AddUInt32(PlayerData.FreeCapacity);
+            message.AddUInt32(character.Capacity);
+
+            message.AddUInt64(character.Experience);
+
+            message.AddUInt16(character.Level);
         }
     }
 }

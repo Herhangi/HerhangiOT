@@ -75,8 +75,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Vocation.cs" />
-    <Compile Include="VocationNone.cs" />
     <Content Include="Data\Items\items.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -86,7 +84,6 @@
     <Content Include="Data\Vocations\VocationDruid.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Game.cs" />
     <Compile Include="GameConnection.cs" />
     <Compile Include="IO\IOMap.cs" />
     <Compile Include="SecretCommunication.cs" />
@@ -126,6 +123,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\Characters\Admin Adonis.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Data\Items\items.otb">

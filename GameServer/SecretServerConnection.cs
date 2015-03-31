@@ -64,8 +64,8 @@ namespace HerhangiOT.GameServer
         public void Connect()
         {
             Client = new TcpClient();
-            Client.BeginConnect(ConfigManager.Instance[ConfigStr.LOGIN_SERVER_IP],
-                ConfigManager.Instance[ConfigInt.LOGIN_SERVER_SECRET_PORT], HandleFirstConnection, Client);
+            Client.BeginConnect(ConfigManager.Instance[ConfigStr.LoginServerIP],
+                ConfigManager.Instance[ConfigInt.LoginServerSecretPort], HandleFirstConnection, Client);
         }
 
         public override void HandleFirstConnection(IAsyncResult ar)
@@ -86,8 +86,8 @@ namespace HerhangiOT.GameServer
         {
             OutMessage.Reset();
             OutMessage.AddByte((byte)SecretNetworkPacketType.Authentication);
-            OutMessage.AddByte((byte)ConfigManager.Instance[ConfigInt.GAME_SERVER_ID]);
-            OutMessage.AddString(ConfigManager.Instance[ConfigStr.GAME_SERVER_SECRET]);
+            OutMessage.AddByte((byte)ConfigManager.Instance[ConfigInt.GameServerId]);
+            OutMessage.AddString(ConfigManager.Instance[ConfigStr.GameServerSecret]);
             OutMessage.WriteMessageLength();
 
             Stream.Write(OutMessage.Buffer, OutMessage.HeaderPosition, OutMessage.Length);
