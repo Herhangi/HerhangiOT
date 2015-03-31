@@ -532,7 +532,7 @@ namespace HerhangiOT.GameServerLibrary
                             item.TransformToFree = ushort.Parse(valueAttribute.InnerText);
                             break;
                         case "walkstack":
-                            item.WallStack = int.Parse(valueAttribute.InnerText) != 0;
+                            item.WalkStack = int.Parse(valueAttribute.InnerText) != 0;
                             break;
                         case "blocking":
                             item.DoesBlockSolid = int.Parse(valueAttribute.InnerText) != 0;

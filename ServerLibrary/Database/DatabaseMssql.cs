@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Text;
-using System.Threading.Tasks;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Database.Model;
 
 namespace HerhangiOT.ServerLibrary.Database
 {
-    class DatabaseMssql : Database
+    public class DatabaseMssql : Database
     {
         private SqlConnection _connection; 
 
@@ -16,8 +14,8 @@ namespace HerhangiOT.ServerLibrary.Database
         {
             try
             {
-                string a = ConfigManager.Instance[ConfigStr.DATABASE_MSSQL_CONNECTION_STRING];
-                _connection = new SqlConnection(ConfigManager.Instance[ConfigStr.DATABASE_MSSQL_CONNECTION_STRING]);
+                string a = ConfigManager.Instance[ConfigStr.DatabaseMssqlConnectionString];
+                _connection = new SqlConnection(ConfigManager.Instance[ConfigStr.DatabaseMssqlConnectionString]);
                 _connection.Open();
             }
             catch (Exception e)
@@ -27,18 +25,18 @@ namespace HerhangiOT.ServerLibrary.Database
             }
         }
 
-        public override List<GameWorld> GetGameWorlds()
+        public override List<GameWorldModel> GetGameWorlds()
         {
             SqlCommand command = new SqlCommand("GetGameWorlds", _connection);
             command.CommandType = CommandType.StoredProcedure;
 
             SqlDataReader reader = command.ExecuteReader();
 
-            List<GameWorld> result = new List<GameWorld>();
+            List<GameWorldModel> result = new List<GameWorldModel>();
             
             while (reader.Read())
             {
-                GameWorld world = new GameWorld();
+                GameWorldModel world = new GameWorldModel();
                 world.GameWorldId = (byte)reader.GetInt32(0);
                 world.GameWorldName = reader.GetString(1);
                 world.GameWorldIP = reader.GetString(2);
@@ -47,7 +45,17 @@ namespace HerhangiOT.ServerLibrary.Database
             return result;
         }
 
-        public override Account GetAccountInformation(string username, string password)
+        public override AccountModel GetAccountInformation(string accountName, string password)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override AccountModel GetAccountInformationWithoutPassword(string accountName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override CharacterModel GetCharacterInformation(string characterName)
         {
             throw new NotImplementedException();
         }

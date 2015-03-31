@@ -1,4 +1,6 @@
-﻿namespace HerhangiOT.GameServerLibrary.Model
+﻿using System.Runtime.CompilerServices;
+
+namespace HerhangiOT.GameServerLibrary.Model
 {
     public class Position
     {
@@ -19,6 +21,19 @@
             Y = pos.Y;
             Z = pos.Z;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public static int GetOffsetX(Position p1, Position p2) {
+		    return p1.X - p2.X;
+	    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public static int GetOffsetY(Position p1, Position p2) {
+		    return p1.Y - p2.Y;
+	    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public static int GetOffsetZ(Position p1, Position p2) {
+		    return p1.Z - p2.Z;
+	    }
 
         public LocationType Type
         {

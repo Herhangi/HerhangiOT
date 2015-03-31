@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Database.Model;
 
 namespace HerhangiOT.ServerLibrary.Database
 {
     public abstract class Database
     {
-        private static bool _isInitialized;
+        protected static bool IsInitialized;
 
-        public static Database Instance { get; private set; }
+        public static Database Instance { get; protected set; }
 
         public static bool Initialize()
         {
-            if (_isInitialized)
+            if (IsInitialized)
                 return false;
 
-            Logger.LogOperationStart(string.Format("Initializing database connection<{0}>", ConfigManager.Instance[ConfigStr.DATABASE_TYPE]));
+            Logger.LogOperationStart(string.Format("Initializing database connection<{0}>", ConfigManager.Instance[ConfigStr.DatabaseType]));
 
             try
             {
-                switch (ConfigManager.Instance[ConfigStr.DATABASE_TYPE])
+                switch (ConfigManager.Instance[ConfigStr.DatabaseType])
                 {
                     case "mssql":
                         Instance = new DatabaseMssql();
@@ -39,7 +39,9 @@ namespace HerhangiOT.ServerLibrary.Database
             return true;
         }
 
-        public abstract List<GameWorld> GetGameWorlds();
-        public abstract Account GetAccountInformation(string username, string password);
+        public abstract List<GameWorldModel> GetGameWorlds();
+        public abstract AccountModel GetAccountInformation(string accountName, string password);
+        public abstract AccountModel GetAccountInformationWithoutPassword(string accountName);
+        public abstract CharacterModel GetCharacterInformation(string characterName);
     }
 }

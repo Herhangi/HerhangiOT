@@ -1,9 +1,14 @@
 ﻿{
+    "AccountId": 1,
+    "AccountName": "admin",
     "Password": "d033e22ae348aeb5660fc2140aec35850c4da997",
-    "PremiumUntil": "2014-10-15 00:00:00",
+    "AccountType": 5,
+    "Email": "admin@admin.com",
+    "CreatedOn" :  "2014-10-15 00:00:00",
+    "PremiumUntil": null,
     "BannedUntil": null,
     "Characters": [
-        { "CharacterName": "Admin Adonis", "ServerId" : 1 },
-        { "CharacterName": "Admin Babonis", "ServerId" : 1 }
+        { "CharacterName": "Admin Adonis", "ServerId": 1 },
+        { "CharacterName": "Admin Babonis", "ServerId": 1 }
     ]
 }

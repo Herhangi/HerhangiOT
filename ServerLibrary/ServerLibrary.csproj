@@ -50,13 +50,14 @@
     <Compile Include="Database\Database.cs" />
     <Compile Include="Database\DatabaseJson.cs" />
     <Compile Include="Database\DatabaseMssql.cs" />
+    <Compile Include="Database\Model\AccountCharacterModel.cs" />
+    <Compile Include="Database\Model\AccountModel.cs" />
+    <Compile Include="Database\Model\GameWorldModel.cs" />
+    <Compile Include="Database\Model\CharacterModel.cs" />
     <Compile Include="Enums\OperatingSystems.cs" />
     <Compile Include="ExternalMethods.cs" />
     <Compile Include="FileLoader.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="Model\Account.cs" />
-    <Compile Include="Model\AccountCharacter.cs" />
-    <Compile Include="Model\GameWorld.cs" />
     <Compile Include="Networking\NetworkEnums.cs" />
     <Compile Include="Networking\NetworkMessage.cs" />
     <Compile Include="Networking\OutputMessage.cs" />

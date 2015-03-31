@@ -7,104 +7,109 @@ namespace HerhangiOT.ServerLibrary
 {
     public enum ConfigInt
     {
-        GAME_SERVER_PORT = 0,
-        LOGIN_SERVER_PORT,
-        STATUS_SERVER_PORT,
-        LOGIN_SERVER_SECRET_PORT,
+        GameServerPort = 0,
+        LoginServerPort, //+
+        StatusServerPort, //+
+        LoginServerSecretPort, //+
 
-        MOTD_NUM,
+        MOTDNum, //+
 
-        GAME_SERVER_ID,
-        MAX_PLAYERS,
+        GameServerId, //+
+        MaxPlayers, //-
 
-        SQL_PORT,
-        PZ_LOCKED,
-        DEFAULT_DESPAWNRANGE,
-        DEFAULT_DESPAWNRADIUS,
-        RATE_EXPERIENCE,
-        RATE_SKILL,
-        RATE_LOOT,
-        RATE_MAGIC,
-        RATE_SPAWN,
-        HOUSE_PRICE,
-        KILLS_TO_RED,
-        KILLS_TO_BLACK,
-        MAX_MESSAGEBUFFER,
-        ACTIONS_DELAY_INTERVAL,
-        EX_ACTIONS_DELAY_INTERVAL,
-        KICK_AFTER_MINUTES,
-        PROTECTION_LEVEL,
-        DEATH_LOSE_PERCENT,
-        STATUSQUERY_TIMEOUT,
-        FRAG_TIME,
-        WHITE_SKULL_TIME,
-        STAIRHOP_DELAY,
-        MARKET_OFFER_DURATION,
-        CHECK_EXPIRED_MARKET_OFFERS_EACH_MINUTES,
-        MAX_MARKET_OFFERS_AT_A_TIME_PER_PLAYER,
-        EXP_FROM_PLAYERS_LEVEL_RANGE,
-        MAX_PACKETS_PER_SECOND,
-        LAST_INTEGER_CONFIG
+        DatabaseMysqlPort, //-
+        PzLocked, //-
+        DefaultDespawnrange, //-
+        DefaultDespawnradius, //-
+        RateExperience, //-
+        RateSkill, //-
+        RateLoot, //-
+        RateMagic, //-
+        RateSpawn, //-
+        HousePrice, //-
+        KillsToRed, //-
+        KillsToBlack, //-
+        MaxMessageBuffer, //-
+        ActionsDelayInterval, //-
+        ExActionsDelayInterval, //-
+        KickAfterMinutes, //-
+        ProtectionLevel, //-
+        DeathLosePercent, //-
+        StatusQueryTimeout, //-
+        FragTime, //-
+        WhiteSkullTime, //-
+        StairhopDelay, //-
+        MarketOfferDuration, //-
+        CheckExpiredMarketOffersEachMinutes, //-
+        MaxMarketOffersAtATimePerPlayer, //-
+        ExpFromPlayersLevelRange, //-
+        MaxPacketsPerSecond, //-
+
+        LastIntegerConfig
     }
 
     public enum ConfigStr
     {
-        GAME_SERVER_IP = 0,
-        LOGIN_SERVER_IP,
+        GameServerIP = 0,
+        LoginServerIP,
 
         MOTD,
-        DATABASE_TYPE,
-        DATABASE_MSSQL_CONNECTION_STRING,
+        DatabaseType,
+        DatabaseMssqlConnectionString,
 
-        DATABASE_JSON_ACCOUNT_PATH,
-        DATABASE_JSON_CHARACTER_PATH,
+        DatabaseJsonAccountPath,
+        DatabaseJsonCharacterPath,
 
-        PASSWORD_HASH_ALGORITHM,
-        GAME_SERVER_SECRET,
+        DatabaseMysqlHost,
+        DatabaseMysqlUser,
+        DatabaseMysqlPass,
+        DatabaseMysqlDb,
+        DatabaseMysqlSock,
 
-        MIN_CONSOLE_LOG_LEVEL,
+        PasswordHashAlgorithm,
+        GameServerSecret,
 
-        DUMMY_STR,
-        MAP_NAME,
-        HOUSE_RENT_PERIOD,
-        SERVER_NAME,
-        OWNER_NAME,
-        OWNER_EMAIL,
-        URL,
-        LOCATION,
-        WORLD_TYPE,
-        MYSQL_HOST,
-        MYSQL_USER,
-        MYSQL_PASS,
-        MYSQL_DB,
-        MYSQL_SOCK,
-        DEFAULT_PRIORITY,
-        MAP_AUTHOR,
-        LAST_STRING_CONFIG
+        MinConsoleLogLevel,
+
+        MapName,
+        MapAuthor,//-
+        WorldType,
+        DefaultPriority,
+        HouseRentPeriod, //-
+
+        StatusServerName, //-
+        StatusOwnerName, //-
+        StatusOwnerEmail, //-
+        StatusUrl, //-
+        StatusLocation,//-
+
+        LastStringConfig
     }
 
     public enum ConfigBool
     {
-        USE_EXTERNAL_LOGIN_SERVER,
+        UseExternalLoginServer = 0,
 
-        ALLOW_CHANGEOUTFIT,
-        CANNOT_ATTACK_SAME_LOOKFEET,
-        ONE_PLAYER_ON_ACCOUNT,
-        AIMBOT_HOTKEY_ENABLED,
-        REMOVE_AMMO,
-        REMOVE_RUNE_CHARGES,
-        EXPERIENCE_FROM_PLAYERS,
-        FREE_PREMIUM,
-        REPLACE_KICK_ON_LOGIN,
-        ALLOW_CLONES,
-        BIND_ONLY_GLOBAL_ADDRESS,
-        OPTIMIZE_DATABASE,
-        MARKET_PREMIUM,
-        EMOTE_SPELLS,
-        STAMINA_SYSTEM,
-        WARN_UNSAFE_SCRIPTS,
-        CONVERT_UNSAFE_SCRIPTS,
-        LAST_BOOLEAN_CONFIG
+        AllowChangeOutfit, //-
+        AimbotHotkeyEnabled, //-
+        RemoveAmmo, //-
+        RemoveRuneCharges,//-
+        ExperienceFromPlayers, //-
+        FreePremium, //-
+        ReplaceKickOnLogin, //-
+        BindOnlyGlobalAddress, //+
+        MarketPremium, //-
+        EmoteSpells, //-
+        StaminaSystem, //-
+        
+        LastBooleanConfig
+
+        // DISABLED FEATURES - Might be implemented in the future
+        //ALLOW_CLONES,
+        //ONE_PLAYER_ON_ACCOUNT,
+        //OPTIMIZE_DATABASE
+        //WARN_UNSAFE_SCRIPTS,
+        //CONVERT_UNSAFE_SCRIPTS,
     }
 
     public class ConfigManager
@@ -114,20 +119,20 @@ namespace HerhangiOT.ServerLibrary
         
         public int this[ConfigInt configName]
         {
-            get { return _intConfigs[configName]; }
+            get { return IntConfigs[configName]; }
         }
         public bool this[ConfigBool configName]
         {
-            get { return _boolConfigs[configName]; }
+            get { return BoolConfigs[configName]; }
         }
         public string this[ConfigStr configName]
         {
-            get { return _strConfigs[configName]; }
+            get { return StrConfigs[configName]; }
         }
 
-        private static readonly Dictionary<ConfigInt, int> _intConfigs = new Dictionary<ConfigInt, int>();
-        private static readonly Dictionary<ConfigBool, bool> _boolConfigs = new Dictionary<ConfigBool, bool>();        
-        private static readonly Dictionary<ConfigStr, string> _strConfigs = new Dictionary<ConfigStr, string>();
+        private static readonly Dictionary<ConfigInt, int> IntConfigs = new Dictionary<ConfigInt, int>();
+        private static readonly Dictionary<ConfigBool, bool> BoolConfigs = new Dictionary<ConfigBool, bool>();        
+        private static readonly Dictionary<ConfigStr, string> StrConfigs = new Dictionary<ConfigStr, string>();
 
         public static event Action ConfigsLoaded;
 
@@ -154,28 +159,27 @@ namespace HerhangiOT.ServerLibrary
             //info that must be loaded one time (unless we reset the modules involved)
             if (!_isLoaded)
             { 
-                _boolConfigs.Add(ConfigBool.BIND_ONLY_GLOBAL_ADDRESS, ReadBoolFromConfig(config, "bindOnlyGlobalAddress", false));
-                _boolConfigs.Add(ConfigBool.OPTIMIZE_DATABASE, ReadBoolFromConfig(config, "startupDatabaseOptimization", true));
-                _boolConfigs.Add(ConfigBool.USE_EXTERNAL_LOGIN_SERVER, ReadBoolFromConfig(config, "useExternalLoginServer", false));
+                BoolConfigs.Add(ConfigBool.BindOnlyGlobalAddress, ReadBoolFromConfig(config, "bindOnlyGlobalAddress", false));
+                BoolConfigs.Add(ConfigBool.UseExternalLoginServer, ReadBoolFromConfig(config, "useExternalLoginServer", false));
 
-                _strConfigs.Add(ConfigStr.DATABASE_TYPE, ReadStrFromConfig(config, "databaseType", "json"));
+                StrConfigs.Add(ConfigStr.DatabaseType, ReadStrFromConfig(config, "databaseType", "json"));
 
-                switch (_strConfigs[ConfigStr.DATABASE_TYPE])
+                switch (StrConfigs[ConfigStr.DatabaseType])
                 {
                     case "mssql":
-                        _strConfigs.Add(ConfigStr.DATABASE_MSSQL_CONNECTION_STRING, ReadStrFromConfig(config, "mssqlConnectionString"));
+                        StrConfigs.Add(ConfigStr.DatabaseMssqlConnectionString, ReadStrFromConfig(config, "mssqlConnectionString"));
                         break;
                     case "json":
-                        _strConfigs.Add(ConfigStr.DATABASE_JSON_ACCOUNT_PATH, ReadStrFromConfig(config, "jsonAccountPath", "Data/Account"));
-                        _strConfigs.Add(ConfigStr.DATABASE_JSON_CHARACTER_PATH, ReadStrFromConfig(config, "jsonCharacterPath", "Data/Character"));
+                        StrConfigs.Add(ConfigStr.DatabaseJsonAccountPath, ReadStrFromConfig(config, "jsonAccountPath", "Data/Account"));
+                        StrConfigs.Add(ConfigStr.DatabaseJsonCharacterPath, ReadStrFromConfig(config, "jsonCharacterPath", "Data/Character"));
                         break;
                     case "mysql":
-                        _strConfigs.Add(ConfigStr.MYSQL_HOST, ReadStrFromConfig(config, "mysqlHost", "127.0.0.1"));
-                        _strConfigs.Add(ConfigStr.MYSQL_USER, ReadStrFromConfig(config, "mysqlUser", "herhangi"));
-                        _strConfigs.Add(ConfigStr.MYSQL_PASS, ReadStrFromConfig(config, "mysqlPass"));
-                        _strConfigs.Add(ConfigStr.MYSQL_DB, ReadStrFromConfig(config, "mysqlDatabase", "herhangi"));
-                        _strConfigs.Add(ConfigStr.MYSQL_SOCK, ReadStrFromConfig(config, "mysqlSock"));
-                        _intConfigs.Add(ConfigInt.SQL_PORT, ReadIntFromConfig(config, "mysqlPort", 3306));                        
+                        StrConfigs.Add(ConfigStr.DatabaseMysqlHost, ReadStrFromConfig(config, "mysqlHost", "127.0.0.1"));
+                        StrConfigs.Add(ConfigStr.DatabaseMysqlUser, ReadStrFromConfig(config, "mysqlUser", "herhangi"));
+                        StrConfigs.Add(ConfigStr.DatabaseMysqlPass, ReadStrFromConfig(config, "mysqlPass"));
+                        StrConfigs.Add(ConfigStr.DatabaseMysqlDb, ReadStrFromConfig(config, "mysqlDatabase", "herhangi"));
+                        StrConfigs.Add(ConfigStr.DatabaseMysqlSock, ReadStrFromConfig(config, "mysqlSock"));
+                        IntConfigs.Add(ConfigInt.DatabaseMysqlPort, ReadIntFromConfig(config, "mysqlPort", 3306));                        
                         break;
                     default:
                         Logger.LogOperationFailed("config.lua contains invalid database type!");
@@ -183,75 +187,70 @@ namespace HerhangiOT.ServerLibrary
 
                 }
 
-                _strConfigs.Add(ConfigStr.PASSWORD_HASH_ALGORITHM, ReadStrFromConfig(config, "passwordHashAlgorithm", "sha1"));
-                _strConfigs.Add(ConfigStr.GAME_SERVER_IP, ReadStrFromConfig(config, "gameServerIp", "127.0.0.1"));
-                _strConfigs.Add(ConfigStr.LOGIN_SERVER_IP, ReadStrFromConfig(config, "loginServerIp", "127.0.0.1"));
-                _strConfigs.Add(ConfigStr.MAP_NAME, ReadStrFromConfig(config, "mapName", "forgotten"));
-                _strConfigs.Add(ConfigStr.MAP_AUTHOR, ReadStrFromConfig(config, "mapAuthor", "Unknown"));
-                _strConfigs.Add(ConfigStr.HOUSE_RENT_PERIOD, ReadStrFromConfig(config, "houseRentPeriod", "never"));
-                _strConfigs.Add(ConfigStr.GAME_SERVER_SECRET, ReadStrFromConfig(config, "gameServerSecret", ""));
+                StrConfigs.Add(ConfigStr.PasswordHashAlgorithm, ReadStrFromConfig(config, "passwordHashAlgorithm", "sha1"));
+                StrConfigs.Add(ConfigStr.GameServerIP, ReadStrFromConfig(config, "gameServerIp", "127.0.0.1"));
+                StrConfigs.Add(ConfigStr.LoginServerIP, ReadStrFromConfig(config, "loginServerIp", "127.0.0.1"));
+                StrConfigs.Add(ConfigStr.MapName, ReadStrFromConfig(config, "mapName", "forgotten"));
+                StrConfigs.Add(ConfigStr.MapAuthor, ReadStrFromConfig(config, "mapAuthor", "Unknown"));
+                StrConfigs.Add(ConfigStr.HouseRentPeriod, ReadStrFromConfig(config, "houseRentPeriod", "never"));
+                StrConfigs.Add(ConfigStr.GameServerSecret, ReadStrFromConfig(config, "gameServerSecret"));
 
-                _intConfigs.Add(ConfigInt.GAME_SERVER_ID, ReadIntFromConfig(config, "gameServerId", 1));
-                _intConfigs.Add(ConfigInt.GAME_SERVER_PORT, ReadIntFromConfig(config, "gameServerPort", 7172));
-                _intConfigs.Add(ConfigInt.LOGIN_SERVER_PORT, ReadIntFromConfig(config, "loginServerPort", 7171));
-                _intConfigs.Add(ConfigInt.STATUS_SERVER_PORT, ReadIntFromConfig(config, "statusServerPort", 7171));
-                _intConfigs.Add(ConfigInt.LOGIN_SERVER_SECRET_PORT, ReadIntFromConfig(config, "loginServerSecretPort", 7180));
-                _intConfigs.Add(ConfigInt.MARKET_OFFER_DURATION, ReadIntFromConfig(config, "marketOfferDuration", 30 * 24 * 60 * 60));
+                IntConfigs.Add(ConfigInt.GameServerId, ReadIntFromConfig(config, "gameServerId", 1));
+                IntConfigs.Add(ConfigInt.GameServerPort, ReadIntFromConfig(config, "gameServerPort", 7172));
+                IntConfigs.Add(ConfigInt.LoginServerPort, ReadIntFromConfig(config, "loginServerPort", 7171));
+                IntConfigs.Add(ConfigInt.StatusServerPort, ReadIntFromConfig(config, "statusServerPort", 7171));
+                IntConfigs.Add(ConfigInt.LoginServerSecretPort, ReadIntFromConfig(config, "loginServerSecretPort", 7180));
+                IntConfigs.Add(ConfigInt.MarketOfferDuration, ReadIntFromConfig(config, "marketOfferDuration", 30 * 24 * 60 * 60));
             }
 
-            _boolConfigs.Add(ConfigBool.ALLOW_CHANGEOUTFIT, ReadBoolFromConfig(config, "allowChangeOutfit", true));
-            _boolConfigs.Add(ConfigBool.ONE_PLAYER_ON_ACCOUNT, ReadBoolFromConfig(config, "onePlayerOnlinePerAccount", true));
-            _boolConfigs.Add(ConfigBool.CANNOT_ATTACK_SAME_LOOKFEET, ReadBoolFromConfig(config, "noDamageToSameLookfeet", false));
-            _boolConfigs.Add(ConfigBool.AIMBOT_HOTKEY_ENABLED, ReadBoolFromConfig(config, "hotkeyAimbotEnabled", true));
-            _boolConfigs.Add(ConfigBool.REMOVE_AMMO, ReadBoolFromConfig(config, "removeAmmoWhenUsingDistanceWeapon", true));
-            _boolConfigs.Add(ConfigBool.REMOVE_RUNE_CHARGES, ReadBoolFromConfig(config, "removeChargesFromRunes", true));
-            _boolConfigs.Add(ConfigBool.EXPERIENCE_FROM_PLAYERS, ReadBoolFromConfig(config, "experienceByKillingPlayers", false));
-            _boolConfigs.Add(ConfigBool.FREE_PREMIUM, ReadBoolFromConfig(config, "freePremium", false));
-            _boolConfigs.Add(ConfigBool.REPLACE_KICK_ON_LOGIN, ReadBoolFromConfig(config, "replaceKickOnLogin", true));
-            _boolConfigs.Add(ConfigBool.ALLOW_CLONES, ReadBoolFromConfig(config, "allowClones", false));
-            _boolConfigs.Add(ConfigBool.MARKET_PREMIUM, ReadBoolFromConfig(config, "premiumToCreateMarketOffer", true));
-            _boolConfigs.Add(ConfigBool.EMOTE_SPELLS, ReadBoolFromConfig(config, "emoteSpells", false));
-            _boolConfigs.Add(ConfigBool.STAMINA_SYSTEM, ReadBoolFromConfig(config, "staminaSystem", true));
-            _boolConfigs.Add(ConfigBool.WARN_UNSAFE_SCRIPTS, ReadBoolFromConfig(config, "warnUnsafeScripts", false));
-            _boolConfigs.Add(ConfigBool.CONVERT_UNSAFE_SCRIPTS, ReadBoolFromConfig(config, "convertUnsafeScripts", false));
+            BoolConfigs.Add(ConfigBool.AllowChangeOutfit, ReadBoolFromConfig(config, "allowChangeOutfit", true));
+            BoolConfigs.Add(ConfigBool.AimbotHotkeyEnabled, ReadBoolFromConfig(config, "hotkeyAimbotEnabled", true));
+            BoolConfigs.Add(ConfigBool.RemoveAmmo, ReadBoolFromConfig(config, "removeAmmoWhenUsingDistanceWeapon", true));
+            BoolConfigs.Add(ConfigBool.RemoveRuneCharges, ReadBoolFromConfig(config, "removeChargesFromRunes", true));
+            BoolConfigs.Add(ConfigBool.ExperienceFromPlayers, ReadBoolFromConfig(config, "experienceByKillingPlayers", false));
+            BoolConfigs.Add(ConfigBool.FreePremium, ReadBoolFromConfig(config, "freePremium", false));
+            BoolConfigs.Add(ConfigBool.ReplaceKickOnLogin, ReadBoolFromConfig(config, "replaceKickOnLogin", true));
+            BoolConfigs.Add(ConfigBool.MarketPremium, ReadBoolFromConfig(config, "premiumToCreateMarketOffer", true));
+            BoolConfigs.Add(ConfigBool.EmoteSpells, ReadBoolFromConfig(config, "emoteSpells", false));
+            BoolConfigs.Add(ConfigBool.StaminaSystem, ReadBoolFromConfig(config, "staminaSystem", true));
 
-            _strConfigs.Add(ConfigStr.MOTD, ReadStrFromConfig(config, "motd"));
-            _strConfigs.Add(ConfigStr.DEFAULT_PRIORITY, ReadStrFromConfig(config, "defaultPriority", "high"));
-            _strConfigs.Add(ConfigStr.SERVER_NAME, ReadStrFromConfig(config, "serverName"));
-            _strConfigs.Add(ConfigStr.OWNER_NAME, ReadStrFromConfig(config, "ownerName"));
-            _strConfigs.Add(ConfigStr.OWNER_EMAIL, ReadStrFromConfig(config, "ownerEmail"));
-            _strConfigs.Add(ConfigStr.URL, ReadStrFromConfig(config, "url"));
-            _strConfigs.Add(ConfigStr.LOCATION, ReadStrFromConfig(config, "location"));
-            _strConfigs.Add(ConfigStr.WORLD_TYPE, ReadStrFromConfig(config, "worldType", "pvp"));
-            _strConfigs.Add(ConfigStr.MIN_CONSOLE_LOG_LEVEL, ReadStrFromConfig(config, "minConsoleLogLevel", "information"));
+            StrConfigs.Add(ConfigStr.MOTD, ReadStrFromConfig(config, "motd"));
+            StrConfigs.Add(ConfigStr.DefaultPriority, ReadStrFromConfig(config, "defaultPriority", "high"));
+            StrConfigs.Add(ConfigStr.StatusServerName, ReadStrFromConfig(config, "serverName"));
+            StrConfigs.Add(ConfigStr.StatusOwnerName, ReadStrFromConfig(config, "ownerName"));
+            StrConfigs.Add(ConfigStr.StatusOwnerEmail, ReadStrFromConfig(config, "ownerEmail"));
+            StrConfigs.Add(ConfigStr.StatusUrl, ReadStrFromConfig(config, "url"));
+            StrConfigs.Add(ConfigStr.StatusLocation, ReadStrFromConfig(config, "location"));
+            StrConfigs.Add(ConfigStr.WorldType, ReadStrFromConfig(config, "worldType", "pvp"));
+            StrConfigs.Add(ConfigStr.MinConsoleLogLevel, ReadStrFromConfig(config, "minConsoleLogLevel", "information"));
 
-            _intConfigs.Add(ConfigInt.MOTD_NUM, ReadIntFromConfig(config, "motdNum"));
-            _intConfigs.Add(ConfigInt.MAX_PLAYERS, ReadIntFromConfig(config, "maxPlayers"));
-            _intConfigs.Add(ConfigInt.PZ_LOCKED, ReadIntFromConfig(config, "pzLocked", 60000));
-            _intConfigs.Add(ConfigInt.DEFAULT_DESPAWNRANGE, ReadIntFromConfig(config, "deSpawnRange", 2));
-            _intConfigs.Add(ConfigInt.DEFAULT_DESPAWNRADIUS, ReadIntFromConfig(config, "deSpawnRadius", 50));
-            _intConfigs.Add(ConfigInt.RATE_EXPERIENCE, ReadIntFromConfig(config, "rateExp", 5));
-            _intConfigs.Add(ConfigInt.RATE_SKILL, ReadIntFromConfig(config, "rateSkill", 3));
-            _intConfigs.Add(ConfigInt.RATE_LOOT, ReadIntFromConfig(config, "rateLoot", 2));
-            _intConfigs.Add(ConfigInt.RATE_MAGIC, ReadIntFromConfig(config, "rateMagic", 3));
-            _intConfigs.Add(ConfigInt.RATE_SPAWN, ReadIntFromConfig(config, "rateSpawn", 1));
-            _intConfigs.Add(ConfigInt.HOUSE_PRICE, ReadIntFromConfig(config, "housePriceEachSQM", 1000));
-            _intConfigs.Add(ConfigInt.KILLS_TO_RED, ReadIntFromConfig(config, "killsToRedSkull", 3));
-            _intConfigs.Add(ConfigInt.KILLS_TO_BLACK, ReadIntFromConfig(config, "killsToBlackSkull", 6));
-            _intConfigs.Add(ConfigInt.ACTIONS_DELAY_INTERVAL, ReadIntFromConfig(config, "timeBetweenActions", 200));
-            _intConfigs.Add(ConfigInt.EX_ACTIONS_DELAY_INTERVAL, ReadIntFromConfig(config, "timeBetweenExActions", 1000));
-            _intConfigs.Add(ConfigInt.MAX_MESSAGEBUFFER, ReadIntFromConfig(config, "maxMessageBuffer", 4));
-            _intConfigs.Add(ConfigInt.KICK_AFTER_MINUTES, ReadIntFromConfig(config, "kickIdlePlayerAfterMinutes", 15));
-            _intConfigs.Add(ConfigInt.PROTECTION_LEVEL, ReadIntFromConfig(config, "protectionLevel", 1));
-            _intConfigs.Add(ConfigInt.DEATH_LOSE_PERCENT, ReadIntFromConfig(config, "deathLosePercent", -1));
-            _intConfigs.Add(ConfigInt.STATUSQUERY_TIMEOUT, ReadIntFromConfig(config, "statusTimeout", 5000));
-            _intConfigs.Add(ConfigInt.FRAG_TIME, ReadIntFromConfig(config, "timeToDecreaseFrags", 24 * 60 * 60 * 1000));
-            _intConfigs.Add(ConfigInt.WHITE_SKULL_TIME, ReadIntFromConfig(config, "whiteSkullTime", 15 * 60 * 1000));
-            _intConfigs.Add(ConfigInt.STAIRHOP_DELAY, ReadIntFromConfig(config, "stairJumpExhaustion", 2000));
-            _intConfigs.Add(ConfigInt.EXP_FROM_PLAYERS_LEVEL_RANGE, ReadIntFromConfig(config, "expFromPlayersLevelRange", 75));
-            _intConfigs.Add(ConfigInt.CHECK_EXPIRED_MARKET_OFFERS_EACH_MINUTES, ReadIntFromConfig(config, "checkExpiredMarketOffersEachMinutes", 60));
-            _intConfigs.Add(ConfigInt.MAX_MARKET_OFFERS_AT_A_TIME_PER_PLAYER, ReadIntFromConfig(config, "maxMarketOffersAtATimePerPlayer", 100));
-            _intConfigs.Add(ConfigInt.MAX_PACKETS_PER_SECOND, ReadIntFromConfig(config, "maxPacketsPerSecond", 25));
+            IntConfigs.Add(ConfigInt.MOTDNum, ReadIntFromConfig(config, "motdNum"));
+            IntConfigs.Add(ConfigInt.MaxPlayers, ReadIntFromConfig(config, "maxPlayers"));
+            IntConfigs.Add(ConfigInt.PzLocked, ReadIntFromConfig(config, "pzLocked", 60000));
+            IntConfigs.Add(ConfigInt.DefaultDespawnrange, ReadIntFromConfig(config, "deSpawnRange", 2));
+            IntConfigs.Add(ConfigInt.DefaultDespawnradius, ReadIntFromConfig(config, "deSpawnRadius", 50));
+            IntConfigs.Add(ConfigInt.RateExperience, ReadIntFromConfig(config, "rateExp", 5));
+            IntConfigs.Add(ConfigInt.RateSkill, ReadIntFromConfig(config, "rateSkill", 3));
+            IntConfigs.Add(ConfigInt.RateLoot, ReadIntFromConfig(config, "rateLoot", 2));
+            IntConfigs.Add(ConfigInt.RateMagic, ReadIntFromConfig(config, "rateMagic", 3));
+            IntConfigs.Add(ConfigInt.RateSpawn, ReadIntFromConfig(config, "rateSpawn", 1));
+            IntConfigs.Add(ConfigInt.HousePrice, ReadIntFromConfig(config, "housePriceEachSQM", 1000));
+            IntConfigs.Add(ConfigInt.KillsToRed, ReadIntFromConfig(config, "killsToRedSkull", 3));
+            IntConfigs.Add(ConfigInt.KillsToBlack, ReadIntFromConfig(config, "killsToBlackSkull", 6));
+            IntConfigs.Add(ConfigInt.ActionsDelayInterval, ReadIntFromConfig(config, "timeBetweenActions", 200));
+            IntConfigs.Add(ConfigInt.ExActionsDelayInterval, ReadIntFromConfig(config, "timeBetweenExActions", 1000));
+            IntConfigs.Add(ConfigInt.MaxMessageBuffer, ReadIntFromConfig(config, "maxMessageBuffer", 4));
+            IntConfigs.Add(ConfigInt.KickAfterMinutes, ReadIntFromConfig(config, "kickIdlePlayerAfterMinutes", 15));
+            IntConfigs.Add(ConfigInt.ProtectionLevel, ReadIntFromConfig(config, "protectionLevel", 1));
+            IntConfigs.Add(ConfigInt.DeathLosePercent, ReadIntFromConfig(config, "deathLosePercent", -1));
+            IntConfigs.Add(ConfigInt.StatusQueryTimeout, ReadIntFromConfig(config, "statusTimeout", 5000));
+            IntConfigs.Add(ConfigInt.FragTime, ReadIntFromConfig(config, "timeToDecreaseFrags", 24 * 60 * 60 * 1000));
+            IntConfigs.Add(ConfigInt.WhiteSkullTime, ReadIntFromConfig(config, "whiteSkullTime", 15 * 60 * 1000));
+            IntConfigs.Add(ConfigInt.StairhopDelay, ReadIntFromConfig(config, "stairJumpExhaustion", 2000));
+            IntConfigs.Add(ConfigInt.ExpFromPlayersLevelRange, ReadIntFromConfig(config, "expFromPlayersLevelRange", 75));
+            IntConfigs.Add(ConfigInt.CheckExpiredMarketOffersEachMinutes, ReadIntFromConfig(config, "checkExpiredMarketOffersEachMinutes", 60));
+            IntConfigs.Add(ConfigInt.MaxMarketOffersAtATimePerPlayer, ReadIntFromConfig(config, "maxMarketOffersAtATimePerPlayer", 100));
+            IntConfigs.Add(ConfigInt.MaxPacketsPerSecond, ReadIntFromConfig(config, "maxPacketsPerSecond", 25));
 
             Logger.LogOperationDone();
             _isLoaded = true;

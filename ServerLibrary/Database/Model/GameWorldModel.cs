@@ -1,6 +1,6 @@
-﻿namespace HerhangiOT.ServerLibrary.Model
+﻿namespace HerhangiOT.ServerLibrary.Database.Model
 {
-    public class GameWorld
+    public class GameWorldModel
     {
         public byte GameWorldId { get; set; }
         public string GameWorldName { get; set; }

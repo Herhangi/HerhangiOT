@@ -174,10 +174,34 @@ namespace HerhangiOT.GameServerLibrary.Model
         }
 
         #region Template Attributes
+        public bool HasProperty(ItemProperties property)
+        {
+	        ItemTemplate it = ItemManager.Templates[Id];
+	        switch (property) {
+		        case ItemProperties.BlockSolid: return it.DoesBlockSolid;
+		        case ItemProperties.Moveable: return it.IsMoveable;// && !hasAttribute(ITEM_ATTRIBUTE_UNIQUEID); TODO: Attributes
+		        case ItemProperties.HasHeight: return it.HasHeight;
+		        case ItemProperties.BlockProjectile: return it.DoesBlockProjectile;
+		        case ItemProperties.BlockPath: return it.DoesBlockPathFinding;
+		        case ItemProperties.IsVertical: return it.IsVertical;
+		        case ItemProperties.IsHorizontal: return it.IsHorizontal;
+		        case ItemProperties.ImmovableBlockSolid: return it.DoesBlockSolid && (!it.IsMoveable);// || hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)); TODO: Attributes
+		        case ItemProperties.ImmovableBlockPath: return it.DoesBlockPathFinding && (!it.IsMoveable);// || hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)); TODO: Attributes
+		        case ItemProperties.ImmovableNoFieldBlockPath: return !IsMagicField && it.DoesBlockPathFinding && (!it.IsMoveable);// || hasAttribute(ITEM_ATTRIBUTE_UNIQUEID)); TODO: Attributes
+		        case ItemProperties.NoFieldBlockPath: return !IsMagicField && it.DoesBlockPathFinding;
+		        case ItemProperties.SupportHangable: return it.IsHorizontal || it.IsVertical;
+		        default: return false;
+	        }
+        }
+
         public bool IsMovable { get { return ItemManager.Templates[Id].IsMoveable; } }
         public bool IsGroundTile { get { return ItemManager.Templates[Id].Group == ItemGroup.Ground; } }
         public bool IsAlwaysOnTop { get { return ItemManager.Templates[Id].IsAlwaysOnTop; } }
-        public bool DoesBlockSolid { get { return ItemManager.Templates[Id].DoesBlockSolid; } }
+        public bool IsBlocking { get { return ItemManager.Templates[Id].DoesBlockSolid; } }
+        public bool IsHangable { get { return ItemManager.Templates[Id].IsHangable; } }
+        public bool IsPickupable { get { return ItemManager.Templates[Id].IsPickupable; } }
+        public bool IsMagicField { get { return ItemManager.Templates[Id].Type == ItemTypes.MagicField; } }
+        public bool HasWalkStack { get { return ItemManager.Templates[Id].WalkStack; } }
         public byte AlwaysOnTopOrder { get { return ItemManager.Templates[Id].AlwaysOnTopOrder; } }
         public FloorChangeDirection FloorChangeDirection { get { return ItemManager.Templates[Id].FloorChange; } }
 

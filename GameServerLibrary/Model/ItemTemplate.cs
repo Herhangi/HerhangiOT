@@ -68,7 +68,7 @@
         
         public FloorChangeDirection FloorChange = FloorChangeDirection.None;
         public bool HasHeight;
-        public bool WallStack;
+        public bool WalkStack;
 
         public bool DoesBlockSolid;
         public bool DoesBlockPickupable;

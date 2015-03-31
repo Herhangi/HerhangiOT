@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -50,6 +51,38 @@ namespace HerhangiOT.ServerLibrary.Utility
         {
             ushort len = reader.ReadUInt16();
             return Encoding.Default.GetString(reader.ReadBytes(len));
+        }
+
+        public static void Shuffle<T>(this IList<T> list)
+        {
+            Random rng = new Random();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
+        }
+
+        public static void Shuffle<T>(this IList<T> list, int index, int count)
+        {
+            Random rng = new Random();
+
+            if (index + count > list.Count)
+                count = list.Count - index;
+
+            int n = index + count;
+            while (n > index)
+            {
+                n--;
+                int k = rng.Next(index, n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
         }
     }
 }

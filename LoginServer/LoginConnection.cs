@@ -1,7 +1,6 @@
 ﻿using System;
 using HerhangiOT.ServerLibrary;
-using HerhangiOT.ServerLibrary.Database;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Database.Model;
 using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Threading;
 
@@ -43,15 +42,15 @@ namespace HerhangiOT.LoginServer
             XteaKey[3] = InMessage.GetUInt32();
             IsEncryptionEnabled = true;
             
-            string username = InMessage.GetString();
+            string accountName = InMessage.GetString();
             byte[] password = InMessage.GetBytes(InMessage.GetUInt16());
 
-            DispatcherManager.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(username, password)));
+            DispatcherManager.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(accountName, password)));
         }
 
-        private void HandleLoginPacket(string username, byte[] password)
+        private void HandleLoginPacket(string accountName, byte[] password)
         {
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrEmpty(accountName))
             {
                 Disconnect("Invalid account name.");
                 return;
@@ -62,7 +61,7 @@ namespace HerhangiOT.LoginServer
             foreach (byte b in hash)
                 hashedPassword += b.ToString("x2");
 
-            Account acc = LoginServerData.RetrieveAccountData(username, hashedPassword);
+            AccountModel acc = LoginServerData.RetrieveAccountData(accountName, hashedPassword);
 
             if (acc == null)
             {
@@ -76,7 +75,7 @@ namespace HerhangiOT.LoginServer
 
             message.AddByte((byte)ServerPacketType.CharacterList);
             message.AddByte((byte)LoginServer.GameWorlds.Count);
-            foreach (GameWorld world in LoginServer.GameWorlds.Values)
+            foreach (GameWorldModel world in LoginServer.GameWorlds.Values)
             {
                 message.AddByte(world.GameWorldId);
                 message.AddString(world.GameWorldName);
@@ -86,7 +85,7 @@ namespace HerhangiOT.LoginServer
             }
 
             message.AddByte((byte)acc.Characters.Count);
-            foreach (AccountCharacter character in acc.Characters)
+            foreach (AccountCharacterModel character in acc.Characters)
             {
                 message.AddByte((byte)character.ServerId);
                 message.AddString(character.CharacterName);

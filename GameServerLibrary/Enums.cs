@@ -169,7 +169,79 @@ namespace HerhangiOT.GameServerLibrary
         FluidType = 1 << 21,
         DoorId = 1 << 22
     }
+    [Flags]
+    enum PlayerFlags : ulong {
+	    CannotUseCombat = 1 << 0,
+	    CannotAttackPlayer = 1 << 1,
+        CannotAttackMonster = 1 << 2,
+        CannotBeAttacked = 1 << 3,
+        CanConvinceAll = 1 << 4,
+        CanSummonAll = 1 << 5,
+        CanIllusionAll = 1 << 6,
+        CanSenseInvisibility = 1 << 7,
+        IgnoredByMonsters = 1 << 8,
+        NotGainInFight = 1 << 9,
+        HasInfiniteMana = 1 << 10,
+        HasInfiniteSoul = 1 << 11,
+        HasNoExhaustion = 1 << 12,
+        CannotUseSpells = 1 << 13,
+        CannotPickupItem = 1 << 14,
+        CanAlwaysLogin = 1 << 15,
+        CanBroadcast = 1 << 16,
+        CanEditHouses = 1 << 17,
+        CannotBeBanned = 1 << 18,
+        CannotBePushed = 1 << 19,
+        HasInfiniteCapacity = 1 << 20,
+        CanPushAllCreatures = 1 << 21,
+        CanTalkRedPrivate = 1 << 22,
+        CanTalkRedChannel = 1 << 23,
+        TalkOrangeHelpChannel = 1 << 24,
+        NotGainExperience = 1 << 25,
+        NotGainMana = 1 << 26,
+        NotGainHealth = 1 << 27,
+        NotGainSkill = 1 << 28,
+        SetMaxSpeed = 1 << 29,
+        SpecialVIP = 1 << 30,
+        NotGenerateLoot = 1U << 31,
+        CanTalkRedChannelAnonymous = 1U << 33,
+        IgnoreProtectionZone = 1U << 33,
+        IgnoreSpellCheck = 1U << 34,
+        IgnoreWeaponCheck = 1U << 35,
+        CannotBeMuted = 1U << 36,
+        IsAlwaysPremium = 1U << 37
+    }
+    [Flags]
+    public enum CylinderFlags : byte
+    {
+        None = 0,
+        Nolimit = 1 << 0,		    //Bypass limits like capacity/container limits, blocking items/creatures etc.
+        IgnoreBlockItem = 1 << 1,	//Bypass movable blocking item checks
+        IgnoreBlockCreature = 1 << 2,//Bypass creature checks
+        ChildIsOwner = 1 << 3,		//Used by containers to query capacity of the carrier (player)
+        Pathfinding = 1 << 4,		//An additional check is done for floor changing/teleport items
+        IgnoreFieldDamage = 1 << 5,	//Bypass field damage checks
+        IgnoreNotMoveable = 1 << 6,	//Bypass check for mobility
+        IgnoreAutostack = 1 << 7    //queryDestination will not try to stack items together
+    };
     #endregion
+    
+    public enum AccountTypes : byte {
+	    Normal = 1,
+	    Tutor = 2,
+	    SeniorTutor = 3,
+	    GameMaster = 4,
+	    God = 5
+    }
+    public enum SkullTypes : byte {
+	    None = 0,
+	    Yellow = 1,
+	    Green = 2,
+	    White = 3,
+	    Red = 4,
+	    Black = 5,
+	    Orange = 6,
+	    Last = Orange
+    }
 
     public enum Direction : byte
     {
@@ -279,6 +351,21 @@ namespace HerhangiOT.GameServerLibrary
         Writeable3, //deprecated
 
         WareId
+    }
+    public enum ItemProperties : byte
+    {
+        BlockSolid = 0,
+        HasHeight,
+        BlockProjectile,
+        BlockPath,
+        IsVertical,
+        IsHorizontal,
+        Moveable,
+        ImmovableBlockSolid,
+        ImmovableBlockPath,
+        ImmovableNoFieldBlockPath,
+        NoFieldBlockPath,
+        SupportHangable
     }
 
     public enum FluidColors : byte {
@@ -532,4 +619,70 @@ namespace HerhangiOT.GameServerLibrary
         ShootRange = 33
     }
 
+    public enum ReturnTypes : byte
+    {
+        NoError = 0,
+        NotPossible = 1,
+        NotEnoughRoom = 2,
+        PlayerIsPZLocked = 3,
+        PlayerIsNotInvited = 4,
+        CannotThrow = 5,
+        ThereIsNoWay = 6,
+        DestinationOutOfReach = 7,
+        CreatureBlock = 8,
+        NotMoveable = 9,
+        DropTwoHandedItem = 10,
+        BothHandsNeedToBeFree = 11,
+        CanOnlyUseOneWeapon = 12,
+        NeedExchange = 13,
+        CannotBeDressed = 14,
+        PutThisObjectInYourHand = 15,
+        PutThisObjectInBothHands = 16,
+        TooFarAway = 17,
+        FirstGoDownstairs = 18,
+        FirstGoUpstairs = 19,
+        ContainerNotEnoughRoom = 20,
+        NotEnoughCapacity = 21,
+        CannotPickup = 22,
+        ThisIsImpossible = 23,
+        DepotIsFull = 24,
+        CreatureDoesNotExist = 25,
+        CannotUseThisObject = 26,
+        PlayerWithThisNameIsNotOnline = 27,
+        NotRequiredLevelToUseRune = 28,
+        YouAreAlreadyTrading = 29,
+        ThisPlayerIsAlreadyTrading = 30,
+        YouMayNotLogoutDuringAfFght = 31,
+        DirectPlayerShoot = 32,
+        NotEnoughLevel = 33,
+        NotEnoughMagicLevel = 34,
+        NotEnoughMana = 35,
+        NotEnoughSoul = 36,
+        YouAreExhausted = 37,
+        PlayerIsNotReachable = 38,
+        CanOnlyUseThisRuneOnCreatures = 39,
+        ActionNotPermittedInProtectionZone = 40,
+        YouMayNotAttackThisPlayer = 41,
+        YouMayNotAttackAPersonInProtectionZone = 42,
+        YouMayNotAttackAPersonWhileInProtectionZone = 43,
+        YouMayNotAttackThisCreature = 44,
+        YouCanOnlyUseItOnCreatures = 45,
+        CreatureIsNotReachable = 46,
+        TurnSecureModeToAttackUnmarkedPlayers = 47,
+        YouNeedPremiumAccount = 48,
+        YouNeedToLearnThisSpell = 49,
+        YourVocationCannotUseThisSpell = 50,
+        YouNeedAWeaponToUseThisSpell = 51,
+        PlayerIsPZLockedLeavePvpZone = 52,
+        PlayerIsPZLockedEnterPvpZone = 53,
+        ActionNotPermittedInANoPvpZone = 54,
+        YouCannotLogoutHere = 55,
+        YouNeedAMagicItemToCastSpell = 56,
+        CannotConjureItemHere = 57,
+        YouNeedToSplitYourSpears = 58,
+        NameIsTooAmbigious = 59,
+        CanOnlyUseOneShield = 60,
+        NoPartyMembersInRange = 61,
+        YouAreNotTheOwner = 62
+    }
 }

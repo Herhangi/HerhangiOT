@@ -19,6 +19,11 @@ namespace HerhangiOT.ScriptLibrary.Scripts.CLO
             _timer.Elapsed += new ElapsedEventHandler(TimerCallback);
         }
 
+        public override void Destroy()
+        {
+            _timer.Elapsed -= new ElapsedEventHandler(TimerCallback);
+        }
+
         public override void Operation(string[] args)
         {
             if (_isInCountdown)

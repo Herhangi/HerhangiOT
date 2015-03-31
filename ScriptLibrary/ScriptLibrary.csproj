@@ -59,6 +59,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GameServerLibrary\GameServerLibrary.csproj">
+      <Project>{159c19b7-7ea5-4293-84e1-795a4171e3e6}</Project>
+      <Name>GameServerLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ServerLibrary\ServerLibrary.csproj">
       <Project>{0A3749DF-D290-4F83-92A0-0950923E55ED}</Project>
       <Name>ServerLibrary</Name>

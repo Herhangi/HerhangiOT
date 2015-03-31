@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using HerhangiOT.GameServerLibrary.Model;
 using HerhangiOT.ServerLibrary;
@@ -28,9 +29,24 @@ namespace HerhangiOT.GameServerLibrary
         public ushort Width { get; protected set; }
         public ushort Height { get; protected set; }
 
+        public static readonly List<Tuple<int, int>> ExtendedRelList = new List<Tuple<int, int>>
+        {
+                                                                     new Tuple<int, int>(0, -2),
+                                        new Tuple<int, int>(-1, -1), new Tuple<int, int>(0, -1), new Tuple<int, int>(1, -1),
+            new Tuple<int, int>(-2, 0), new Tuple<int, int>(-1,  0),                             new Tuple<int, int>(1,  0), new Tuple<int, int>(2, 0),
+                                        new Tuple<int, int>(-1,  1), new Tuple<int, int>(0,  1), new Tuple<int, int>(1,  1),
+                                                                     new Tuple<int, int>(0,  2)
+        };
+        public static readonly List<Tuple<int, int>> NormalRelList = new List<Tuple<int, int>>
+        {
+            new Tuple<int, int>(-1, -1), new Tuple<int, int>(0, -1), new Tuple<int, int>(1, -1),
+            new Tuple<int, int>(-1,  0),                             new Tuple<int, int>(1,  0),
+            new Tuple<int, int>(-1,  1), new Tuple<int, int>(0,  1), new Tuple<int, int>(1,  1),
+        };
+
         public static bool Load()
         {
-            Logger.LogOperationStart("Loading Map");
+            Logger.LogOperationStart("Loading Map<"+ConfigManager.Instance[ConfigStr.MapName]+">");
             Instance = new Map();
             Instance.Floors = new Floor[MapMaxLayers];
             Instance.Towns = new Dictionary<uint, Town>();
@@ -88,12 +104,13 @@ namespace HerhangiOT.GameServerLibrary
             }
         }
 
+        #region OTBM Operations
         private bool LoadOtbm()
         {
             FileLoader fileLoader = new FileLoader();
-            if (!fileLoader.OpenFile("Data/World/"+ConfigManager.Instance[ConfigStr.MAP_NAME]+".otbm", "OTBM"))
+            if (!fileLoader.OpenFile("Data/World/"+ConfigManager.Instance[ConfigStr.MapName]+".otbm", "OTBM"))
             {
-                Logger.LogOperationFailed("Could not open map file: " + ConfigManager.Instance[ConfigStr.MAP_NAME]);
+                Logger.LogOperationFailed("Could not open map file: " + ConfigManager.Instance[ConfigStr.MapName]);
                 return false;
             }
 
@@ -452,6 +469,133 @@ namespace HerhangiOT.GameServerLibrary
             tile.InternalAddThing(ground);
             ground.StartDecaying();
             return tile;
+        }
+        #endregion
+
+        public Town GetTown(ushort townId)
+        {
+            if (Towns.ContainsKey(townId))
+                return Towns[townId];
+            return null;
+        }
+
+        public bool PlaceCreature(Position centerPosition, Creature creature, bool extendedPos = false, bool forceLogin = false)
+        {
+	        bool foundTile;
+	        bool placeInPZ;
+
+	        Tile tile = GetTile(centerPosition.X, centerPosition.Y, centerPosition.Z);
+	        if (tile != null)
+	        {
+	            placeInPZ = tile.Flags.HasFlag(TileFlags.ProtectionZone);
+		        ReturnTypes ret = tile.QueryAdd(creature, CylinderFlags.IgnoreBlockItem);
+		        foundTile = forceLogin || ret == ReturnTypes.NoError;
+	        }
+            else
+            {
+		        placeInPZ = false;
+		        foundTile = false;
+	        }
+
+	        if (!foundTile)
+            {
+		        List<Tuple<int, int>> relList = (extendedPos ? ExtendedRelList : NormalRelList);
+
+		        if (extendedPos)
+                {
+                    relList.Shuffle(0, 5);
+                    relList.Shuffle(5, 6);
+		        }
+                else
+		        {
+		            relList.Shuffle();
+		        }
+
+		        foreach (Tuple<int, int> pos in relList) {
+                    Position tryPos = new Position((ushort)(centerPosition.X + pos.Item1), (ushort)(centerPosition.Y + pos.Item2), centerPosition.Z);
+
+			        tile = GetTile(tryPos.X, tryPos.Y, tryPos.Z);
+			        if (tile == null || (placeInPZ && !tile.Flags.HasFlag(TileFlags.ProtectionZone)))
+				        continue;
+
+			        if (tile.QueryAdd(creature, CylinderFlags.None) == ReturnTypes.NoError) {
+				        if (!extendedPos || IsSightClear(centerPosition, tryPos, false)) {
+					        foundTile = true;
+					        break;
+				        }
+			        }
+		        }
+
+		        if (!foundTile) {
+			        return false;
+		        }
+	        }
+
+	        int index = 0;
+	        uint flags = 0;
+	        Item toItem = null;
+
+	        //Cylinder* toCylinder = tile->queryDestination(index, *creature, &toItem, flags); //TODO
+	        //toCylinder->internalAddThing(creature);
+
+	        tile.AddCreature(creature);
+	        return true;
+        }
+
+        private bool IsSightClear(Position fromPos, Position toPos, bool floorCheck)
+        {
+	        if (floorCheck && fromPos.Z != toPos.Z)
+		        return false;
+
+	        // Cast two converging rays and see if either yields a result.
+	        return CheckSightLine(fromPos, toPos) || CheckSightLine(toPos, fromPos);
+        }
+
+        private bool CheckSightLine(Position fromPos, Position toPos)
+        {
+	        if (fromPos == toPos)
+		        return true;
+
+	        Position start = new Position(fromPos.Z > toPos.Z ? toPos : fromPos);
+	        Position destination = new Position(fromPos.Z > toPos.Z ? fromPos : toPos);
+
+	        sbyte mx = (sbyte)(start.X < destination.X ? 1 : start.X == destination.X ? 0 : -1);
+	        sbyte my = (sbyte)(start.Y < destination.Y ? 1 : start.Y == destination.Y ? 0 : -1);
+
+	        int A = Position.GetOffsetY(destination, start);
+	        int B = Position.GetOffsetX(start, destination);
+	        int C = -(A * destination.X + B * destination.Y);
+
+	        while (start.X != destination.X || start.Y != destination.Y)
+            {
+		        int moveHor = Math.Abs(A * (start.X + mx) + B * (start.Y) + C);
+		        int moveVer = Math.Abs(A * (start.X) + B * (start.Y + my) + C);
+                int moveCross = Math.Abs(A * (start.X + mx) + B * (start.Y + my) + C);
+
+		        if (start.Y != destination.Y && (start.X == destination.X || moveHor > moveVer || moveHor > moveCross)) {
+			        start.Y += (ushort)my;
+		        }
+
+		        if (start.X != destination.X && (start.Y == destination.Y || moveVer > moveHor || moveVer > moveCross)) {
+			        start.X += (ushort)mx;
+		        }
+
+		        Tile tile = GetTile(start.X, start.Y, start.Z);
+		        if (tile != null && tile.HasProperty(ItemProperties.BlockProjectile))
+			        return false;
+	        }
+
+	        // now we need to perform a jump between floors to see if everything is clear (literally)
+	        while (start.Z != destination.Z) {
+		        Tile tile = GetTile(start.X, start.Y, start.Z);
+		        if (tile != null && tile.GetThingCount() > 0) {
+			        return false;
+		        }
+
+		        start.Z++;
+	        }
+
+	        return true;
         }
     }
 

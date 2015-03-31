@@ -365,6 +365,14 @@ namespace HerhangiOT.ServerLibrary.Networking
         }
 
         /// <summary>
+        /// Adds an unsigned integer to the content  
+        /// </summary>
+        public void AddUInt64(ulong value)
+        {
+            AddBytes(BitConverter.GetBytes(value));
+        }
+
+        /// <summary>
         /// Adds a short integer to the content  
         /// </summary>
         public void AddInt16(short value)

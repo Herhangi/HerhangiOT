@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Database.Model;
 using Newtonsoft.Json;
 
 namespace HerhangiOT.ServerLibrary.Database
@@ -12,29 +12,53 @@ namespace HerhangiOT.ServerLibrary.Database
             
         }
 
-        public override List<GameWorld> GetGameWorlds()
+        public override List<GameWorldModel> GetGameWorlds()
         {
             string json = File.ReadAllText("Data/gameworlds.json");
-            List<GameWorld> result = JsonConvert.DeserializeObject<List<GameWorld>>(json);
+            List<GameWorldModel> result = JsonConvert.DeserializeObject<List<GameWorldModel>>(json);
 
             return result;
         }
 
-        public override Account GetAccountInformation(string username, string password)
+        public override AccountModel GetAccountInformation(string accountName, string password)
         {
-            string filePath = ConfigManager.Instance[ConfigStr.DATABASE_JSON_ACCOUNT_PATH] + username + ".json"; 
+            string filePath = ConfigManager.Instance[ConfigStr.DatabaseJsonAccountPath] + accountName + ".json"; 
             if (!File.Exists(filePath))
             {
                 return null;
             }
 
             string json = File.ReadAllText(filePath);
-            Account result = JsonConvert.DeserializeObject<Account>(json);
+            AccountModel result = JsonConvert.DeserializeObject<AccountModel>(json);
 
             if (!result.Password.Equals(password))
                 return null;
 
             return result;
+        }
+
+        public override AccountModel GetAccountInformationWithoutPassword(string accountName)
+        {
+            string filePath = ConfigManager.Instance[ConfigStr.DatabaseJsonAccountPath] + accountName + ".json";
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            string json = File.ReadAllText(filePath);
+            return JsonConvert.DeserializeObject<AccountModel>(json);
+        }
+
+        public override CharacterModel GetCharacterInformation(string characterName)
+        {
+            string filePath = ConfigManager.Instance[ConfigStr.DatabaseJsonCharacterPath] + characterName + ".json";
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            string json = File.ReadAllText(filePath);
+            return JsonConvert.DeserializeObject<CharacterModel>(json);
         }
     }
 }

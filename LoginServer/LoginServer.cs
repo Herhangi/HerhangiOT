@@ -6,17 +6,17 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Database.Model;
 
 namespace HerhangiOT.LoginServer
 {
     public class LoginServer
     {
         public static string MOTD { get; private set; }
-        public static Dictionary<byte, GameWorld> GameWorlds { get; private set; }
+        public static Dictionary<byte, GameWorldModel> GameWorlds { get; private set; }
         public static Dictionary<byte, GameServerConnection> GameServerConnections { get; private set; }
 
-        public static Dictionary<string, Account> OnlineAccounts { get; private set; } 
+        public static Dictionary<string, AccountModel> OnlineAccounts { get; private set; } 
         public static HashAlgorithm PasswordHasher { get; protected set; }
 
         private TcpListener _listener;
@@ -29,30 +29,30 @@ namespace HerhangiOT.LoginServer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
-            OnlineAccounts = new Dictionary<string, Account>();
+            OnlineAccounts = new Dictionary<string, AccountModel>();
             GameServerConnections = new Dictionary<byte, GameServerConnection>();
-            if (ConfigManager.Instance[ConfigBool.USE_EXTERNAL_LOGIN_SERVER])
+            if (ConfigManager.Instance[ConfigBool.UseExternalLoginServer])
             {
                 GameWorlds = Database.Instance.GetGameWorlds().ToDictionary(i => i.GameWorldId);
             }
             else
             {
-                GameWorlds = new Dictionary<byte, GameWorld>
+                GameWorlds = new Dictionary<byte, GameWorldModel>
                 {
                     {
-                        (byte)ConfigManager.Instance[ConfigInt.GAME_SERVER_ID], new GameWorld
+                        (byte)ConfigManager.Instance[ConfigInt.GameServerId], new GameWorldModel
                         {
-                            GameWorldId = (byte)ConfigManager.Instance[ConfigInt.GAME_SERVER_ID],
-                            GameWorldName = ConfigManager.Instance[ConfigStr.SERVER_NAME],
-                            GameWorldIP = ConfigManager.Instance[ConfigStr.GAME_SERVER_IP],
-                            GameWorldPort = (ushort) ConfigManager.Instance[ConfigInt.GAME_SERVER_PORT],
-                            Secret = ConfigManager.Instance[ConfigStr.GAME_SERVER_SECRET]
+                            GameWorldId = (byte)ConfigManager.Instance[ConfigInt.GameServerId],
+                            GameWorldName = ConfigManager.Instance[ConfigStr.StatusServerName],
+                            GameWorldIP = ConfigManager.Instance[ConfigStr.GameServerIP],
+                            GameWorldPort = (ushort) ConfigManager.Instance[ConfigInt.GameServerPort],
+                            Secret = ConfigManager.Instance[ConfigStr.GameServerSecret]
                         }
                     }
                 };
             }
 
-            switch (ConfigManager.Instance[ConfigStr.PASSWORD_HASH_ALGORITHM])
+            switch (ConfigManager.Instance[ConfigStr.PasswordHashAlgorithm])
             {
                 case "sha1":
                     PasswordHasher = SHA1.Create();
@@ -66,12 +66,12 @@ namespace HerhangiOT.LoginServer
                     Logger.Log(LogLevels.Error, "Unknown password hash algorithm detected!");
                     return;
             }
-            MOTD = string.Format("{0}\n{1}", ConfigManager.Instance[ConfigInt.MOTD_NUM], ConfigManager.Instance[ConfigStr.MOTD]);
-            _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_SERVER_PORT]);
+            MOTD = string.Format("{0}\n{1}", ConfigManager.Instance[ConfigInt.MOTDNum], ConfigManager.Instance[ConfigStr.MOTD]);
+            _listener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LoginServerPort]);
             _listener.Start();
             _listener.BeginAcceptSocket(LoginListenerCallback, _listener);
 
-            _secretServerListener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LOGIN_SERVER_SECRET_PORT]);
+            _secretServerListener = new TcpListener(IPAddress.Any, ConfigManager.Instance[ConfigInt.LoginServerSecretPort]);
             _secretServerListener.Start();
             _secretServerListener.BeginAcceptSocket(MasterServerListenerCallback, _secretServerListener);
 
@@ -80,7 +80,7 @@ namespace HerhangiOT.LoginServer
 
         void ConfigManager_ConfigsLoaded()
         {
-            MOTD = string.Format("{0}\n{1}", ConfigManager.Instance[ConfigInt.MOTD_NUM], ConfigManager.Instance[ConfigStr.MOTD]);
+            MOTD = string.Format("{0}\n{1}", ConfigManager.Instance[ConfigInt.MOTDNum], ConfigManager.Instance[ConfigStr.MOTD]);
         }
 
         void CurrentDomain_ProcessExit(object sender, EventArgs e)

@@ -1,6 +1,6 @@
 ﻿using System;
 using HerhangiOT.ServerLibrary.Database;
-using HerhangiOT.ServerLibrary.Model;
+using HerhangiOT.ServerLibrary.Database.Model;
 
 namespace HerhangiOT.LoginServer
 {
@@ -8,42 +8,42 @@ namespace HerhangiOT.LoginServer
     {
         public const double DataValidityExtensionInMinutes = 2.5;
 
-        public static Account RetrieveAccountData(string username, string hashedPassword, bool useCache = false)
+        public static AccountModel RetrieveAccountData(string accountName, string hashedPassword, bool useCache = false)
         {
             if (useCache)
             {
-                if (LoginServer.OnlineAccounts.ContainsKey(username))
+                if (LoginServer.OnlineAccounts.ContainsKey(accountName))
                 {
-                    if(LoginServer.OnlineAccounts[username].Password.Equals(hashedPassword, StringComparison.InvariantCulture))
-                        return LoginServer.OnlineAccounts[username];
+                    if(LoginServer.OnlineAccounts[accountName].Password.Equals(hashedPassword, StringComparison.InvariantCulture))
+                        return LoginServer.OnlineAccounts[accountName];
                     return null; //Password is wrong!
                 }
             }
 
-            Account acc = Database.Instance.GetAccountInformation(username, hashedPassword);
+            AccountModel acc = Database.Instance.GetAccountInformation(accountName, hashedPassword);
 
             if (acc == null) return null;
 
             acc.ExpiresOn = DateTime.Now.AddMinutes(DataValidityExtensionInMinutes); //Expire
 
-            if (LoginServer.OnlineAccounts.ContainsKey(username))
+            if (LoginServer.OnlineAccounts.ContainsKey(accountName))
             {
-                acc.OnlineCharacter = LoginServer.OnlineAccounts[username].OnlineCharacter; //For another character online system!
-                LoginServer.OnlineAccounts.Remove(username);
+                acc.OnlineCharacter = LoginServer.OnlineAccounts[accountName].OnlineCharacter; //For another character online system!
+                LoginServer.OnlineAccounts.Remove(accountName);
             }
-            LoginServer.OnlineAccounts.Add(username, acc);
+            LoginServer.OnlineAccounts.Add(accountName, acc);
 
             return acc;
         }
 
-        public static void SetUserOnline(string username, string character)
+        public static void SetAccountOnline(string accountName, string character)
         {
-            if (!LoginServer.OnlineAccounts.ContainsKey(username))
+            if (!LoginServer.OnlineAccounts.ContainsKey(accountName))
                 return; //TODO: RETRIEVE ACCOUNT DATA
             
             // Extend account data expiration as it is still online
             // Store online character, it might be useful for statistics in the future
-            Account account = LoginServer.OnlineAccounts[username];
+            AccountModel account = LoginServer.OnlineAccounts[accountName];
             account.ExpiresOn = DateTime.Now.AddMinutes(DataValidityExtensionInMinutes);
             account.OnlineCharacter = character;
         }
