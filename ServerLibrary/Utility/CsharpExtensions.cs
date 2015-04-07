@@ -33,6 +33,14 @@ namespace HerhangiOT.ServerLibrary.Utility
             }
         }
 
+        public static void MemCpy<T>(this T[] destination, int index, T[] source, int num)
+        {
+            for (int i = 0; i < num; i++)
+            {
+                destination[index + i] = source[i];
+            }
+        }
+
         public static int MemCmp<T>(this T[] source, T[] target, int comparisonSize) where T : IComparable<T>
         {
             if(source.Length < comparisonSize || target.Length < comparisonSize)

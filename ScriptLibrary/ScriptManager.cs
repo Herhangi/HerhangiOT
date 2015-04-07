@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using HerhangiOT.GameServerLibrary.Model;
-using HerhangiOT.GameServerLibrary.Model.Vocations;
 using HerhangiOT.ServerLibrary;
 using Microsoft.CSharp;
 
@@ -76,7 +74,6 @@ namespace HerhangiOT.ScriptLibrary
             List<string> referencedAssemblies = new List<string>();
             referencedAssemblies.Add(Assembly.GetEntryAssembly().Location); // GameServer or LoginServer
             referencedAssemblies.Add(Assembly.GetAssembly(typeof(Constants)).Location); //ServerLibrary
-            referencedAssemblies.Add(Assembly.GetAssembly(typeof(Vocation)).Location); //GameServerLibrary
             referencedAssemblies.Add(Assembly.GetAssembly(typeof(CommandLineOperation)).Location); //ServiceLibrary
             //referencedAssemblies.Add("System.dll");
             if (externalAssemblies != null) referencedAssemblies.AddRange(externalAssemblies); //Assemblies sent from compilation requester
@@ -199,51 +196,5 @@ namespace HerhangiOT.ScriptLibrary
                .OrderByDescending(f => (f == null ? DateTime.MinValue : f.LastWriteTime))
                .FirstOrDefault();
         }
-
-        #region Vocations
-        public static bool LoadVocations(bool forceCompilation = false)
-        {
-            Logger.LogOperationStart("Loading vocations");
-            VocationNone none = new VocationNone();
-            none.AddToList();
-
-            Assembly vocationsAssembly;
-            List<string> externalAssemblies = new List<string>();
-            externalAssemblies.Add(Assembly.GetExecutingAssembly().Location);
-            bool redFromCache;
-
-            if (!CompileCsScripts("Data/Vocations", "Vocations.*.dll", externalAssemblies, out vocationsAssembly, out redFromCache, forceCompilation))
-                return false;
-
-            try
-            {
-                foreach (Type vocation in vocationsAssembly.GetTypes())
-                {
-                    if (vocation.BaseType == typeof(Vocation))
-                    {
-                        Vocation voc = (Vocation)Activator.CreateInstance(vocation);
-                        voc.AddToList();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                if (!forceCompilation)
-                {
-                    Vocation.Vocations.Clear();
-                    return LoadVocations(true);
-                }
-
-                Logger.LogOperationFailed(e.ToString());
-                return false;
-            }
-
-            if (redFromCache)
-                Logger.LogOperationCached();
-            else
-                Logger.LogOperationDone();
-            return true;
-        }
-        #endregion
     }
 }

@@ -8,25 +8,34 @@ namespace HerhangiOT.LoginServer
 {
     public class LoginConnection : Connection
     {
-        protected override void ProcessMessage()
-        {
-            InMessage.GetByte(); //Protocol Id
-            InMessage.GetUInt16(); //Client OS
-            ushort version = InMessage.GetUInt16(); //Client Version
+        protected ushort Version;
 
-            if (version < Constants.CLIENT_VERSION_MIN || version > Constants.CLIENT_VERSION_MAX)
+        protected override void ProcessFirstMessage(bool isChecksummed)
+        {
+            if (!isChecksummed)
             {
-                Disconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!");
+                ProcessStatusMessage();
                 return;
             }
 
-            //This is 10.41 server, only handling 10.41 client bytes 
+            InMessage.GetByte(); //Protocol Id
+            InMessage.GetUInt16(); //Client OS
+            Version = InMessage.GetUInt16(); //Client Version
+
+            if (Version < Constants.CLIENT_VERSION_MIN || Version > Constants.CLIENT_VERSION_MAX)
+            {
+                Disconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!", Version);
+                return;
+            }
+
+            //This is 10.76 server, only handling 10.76 client bytes
             InMessage.SkipBytes(17);
             /*
              * Skipped bytes:
-             * 4 bytes: protocolVersion (only 971+)
+             * 4 bytes: protocolVersion
              * 12 bytes: dat, spr, pic signatures (4 bytes each)
-             * 1 byte: 0 (only 971+)
+             * 1 byte: 0
+             * 
              */
             
             if (!InMessage.RsaDecrypt())
@@ -48,11 +57,18 @@ namespace HerhangiOT.LoginServer
             DispatcherManager.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(accountName, password)));
         }
 
+        private void ProcessStatusMessage()
+        {
+            Logger.Log(LogLevels.Information, "Status message handling is not implemented yet!");
+        }
+
         private void HandleLoginPacket(string accountName, byte[] password)
         {
+            //TODO: Check IP Ban
+
             if (string.IsNullOrEmpty(accountName))
             {
-                Disconnect("Invalid account name.");
+                Disconnect("Invalid account name.", Version);
                 return;
             }
 
@@ -61,17 +77,21 @@ namespace HerhangiOT.LoginServer
             foreach (byte b in hash)
                 hashedPassword += b.ToString("x2");
 
-            AccountModel acc = LoginServerData.RetrieveAccountData(accountName, hashedPassword);
+            string sessionKey;
+            AccountModel acc = LoginServerData.RetrieveAccountData(accountName, hashedPassword, out sessionKey);
 
             if (acc == null)
             {
-                Disconnect("Account name or password is not correct.");
+                Disconnect("Account name or password is not correct.", Version);
                 return;
             }
 
-            OutputMessage message = OutputMessagePool.GetOutputMessage();
+            OutputMessage message = OutputMessagePool.GetOutputMessage(this, false);
             message.AddByte((byte)ServerPacketType.MOTD);
             message.AddString(LoginServer.MOTD);
+
+            message.AddByte((byte)ServerPacketType.SessionKey);
+            message.AddString(sessionKey);
 
             message.AddByte((byte)ServerPacketType.CharacterList);
             message.AddByte((byte)LoginServer.GameWorlds.Count);
@@ -99,7 +119,6 @@ namespace HerhangiOT.LoginServer
                 message.AddUInt16((ushort)premiumLeft.TotalDays);
             }
 
-            message.MessageTarget = this;
             message.DisconnectAfterMessage = true;
             OutputMessagePool.AddToQueue(message);
         }

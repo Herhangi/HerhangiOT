@@ -8,44 +8,41 @@ namespace HerhangiOT.LoginServer
     {
         public const double DataValidityExtensionInMinutes = 2.5;
 
-        public static AccountModel RetrieveAccountData(string accountName, string hashedPassword, bool useCache = false)
+        public static AccountModel RetrieveAccountData(string sessionKey)
         {
-            if (useCache)
-            {
-                if (LoginServer.OnlineAccounts.ContainsKey(accountName))
-                {
-                    if(LoginServer.OnlineAccounts[accountName].Password.Equals(hashedPassword, StringComparison.InvariantCulture))
-                        return LoginServer.OnlineAccounts[accountName];
-                    return null; //Password is wrong!
-                }
-            }
+            if (LoginServer.OnlineAccounts.ContainsKey(sessionKey))
+                return LoginServer.OnlineAccounts[sessionKey];
+            return null;
+        }
 
+        public static AccountModel RetrieveAccountData(string accountName, string hashedPassword, out string sessionKey)
+        {
+            sessionKey = null;
             AccountModel acc = Database.Instance.GetAccountInformation(accountName, hashedPassword);
 
             if (acc == null) return null;
 
             acc.ExpiresOn = DateTime.Now.AddMinutes(DataValidityExtensionInMinutes); //Expire
 
-            if (LoginServer.OnlineAccounts.ContainsKey(accountName))
+            do
             {
-                acc.OnlineCharacter = LoginServer.OnlineAccounts[accountName].OnlineCharacter; //For another character online system!
-                LoginServer.OnlineAccounts.Remove(accountName);
-            }
-            LoginServer.OnlineAccounts.Add(accountName, acc);
+                sessionKey = Guid.NewGuid().ToString();
+            } while (LoginServer.OnlineAccounts.ContainsKey(sessionKey)); //We do not want sessionKeys to collide, this is too low probability, however can cause big time issue if not checked
 
+            LoginServer.OnlineAccounts[sessionKey] = acc;
             return acc;
         }
 
-        public static void SetAccountOnline(string accountName, string character)
+        public static void SetCharacterOnline(string sessionKey, string character)
         {
-            if (!LoginServer.OnlineAccounts.ContainsKey(accountName))
-                return; //TODO: RETRIEVE ACCOUNT DATA
+            if (!LoginServer.OnlineAccounts.ContainsKey(sessionKey))
+                return; //This should not happen
             
             // Extend account data expiration as it is still online
             // Store online character, it might be useful for statistics in the future
-            AccountModel account = LoginServer.OnlineAccounts[accountName];
-            account.ExpiresOn = DateTime.Now.AddMinutes(DataValidityExtensionInMinutes);
-            account.OnlineCharacter = character;
+            LoginServer.OnlineAccounts[sessionKey].ExpiresOn = DateTime.Now.AddMinutes(DataValidityExtensionInMinutes);
+            string accountName = LoginServer.OnlineAccounts[sessionKey].AccountName;
+            LoginServer.OnlineCharactersByAccount[accountName] = character;
         }
     }
 }

@@ -16,7 +16,8 @@ namespace HerhangiOT.LoginServer
         public static Dictionary<byte, GameWorldModel> GameWorlds { get; private set; }
         public static Dictionary<byte, GameServerConnection> GameServerConnections { get; private set; }
 
-        public static Dictionary<string, AccountModel> OnlineAccounts { get; private set; } 
+        public static Dictionary<string, AccountModel> OnlineAccounts { get; private set; } //Was storing account name, converted to sessionKey with 10.76 update
+        public static Dictionary<string, string> OnlineCharactersByAccount { get; private set; }
         public static HashAlgorithm PasswordHasher { get; protected set; }
 
         private TcpListener _listener;
@@ -30,6 +31,7 @@ namespace HerhangiOT.LoginServer
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
             OnlineAccounts = new Dictionary<string, AccountModel>();
+            OnlineCharactersByAccount = new Dictionary<string, string>();
             GameServerConnections = new Dictionary<byte, GameServerConnection>();
             if (ConfigManager.Instance[ConfigBool.UseExternalLoginServer])
             {

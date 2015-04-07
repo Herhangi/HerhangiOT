@@ -60,6 +60,18 @@ namespace HerhangiOT.ServerLibrary.Utility
             return (b << 16) | a;
         }
 
+        public static byte GetPercentage(ulong current, ulong max)
+        {
+            if (max == 0)
+                return 0;
+
+            byte result = (byte)((current * 100) / max);
+            if (result > 100)
+                return 0;
+
+            return result;
+        }
+
         public unsafe static bool EncryptXtea(OutputMessage msg, uint[] key)
         {
             if (key == null)

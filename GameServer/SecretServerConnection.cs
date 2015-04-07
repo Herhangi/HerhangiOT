@@ -22,6 +22,11 @@ namespace HerhangiOT.GameServer
             {SecretNetworkPacketType.Authentication, ProcessAuthenticationPacket}
         };
 
+        protected override void ProcessFirstMessage(bool isChecksummed)
+        {
+            
+        }
+
         protected override void ProcessMessage()
         {
             SecretNetworkPacketType packet = (SecretNetworkPacketType)InMessage.GetByte();

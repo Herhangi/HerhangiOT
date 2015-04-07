@@ -18,5 +18,6 @@
         InvalidAccountData = 20,
         AnotherCharacterOnline = 21,
         CharacterCouldNotBeFound = 22,
+        SessionCouldNotBeFound = 23,
     }
 }

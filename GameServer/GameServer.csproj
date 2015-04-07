@@ -73,8 +73,16 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Game.cs" />
+    <Compile Include="GameConnection.cs" />
+    <Compile Include="ItemManager.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="OutfitManager.cs" />
+    <Compile Include="SecretCommunication.cs" />
+    <Compile Include="Utility\ServerLibraryExtensions.cs" />
     <Content Include="Data\Items\items.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -84,9 +92,65 @@
     <Content Include="Data\Vocations\VocationDruid.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Compile Include="GameConnection.cs" />
-    <Compile Include="IO\IOMap.cs" />
-    <Compile Include="SecretCommunication.cs" />
+    <Compile Include="Enums\AccountTypes.cs" />
+    <Compile Include="Enums\AmmoTypes.cs" />
+    <Compile Include="Enums\AttributeTypes.cs" />
+    <Compile Include="Enums\CombatTypeFlags.cs" />
+    <Compile Include="Enums\ConditionFlags.cs" />
+    <Compile Include="Enums\CorpseTypes.cs" />
+    <Compile Include="Enums\CreatureTypes.cs" />
+    <Compile Include="Enums\CylinderFlags.cs" />
+    <Compile Include="Enums\Directions.cs" />
+    <Compile Include="Enums\FixedItems.cs" />
+    <Compile Include="Enums\FloorChangeDirections.cs" />
+    <Compile Include="Enums\FluidColors.cs" />
+    <Compile Include="Enums\FluidTypes.cs" />
+    <Compile Include="Enums\Genders.cs" />
+    <Compile Include="Enums\GuildEmblems.cs" />
+    <Compile Include="Enums\ItemAttributeFlags.cs" />
+    <Compile Include="Enums\ItemAttributes.cs" />
+    <Compile Include="Enums\ItemFlags.cs" />
+    <Compile Include="Enums\ItemGroups.cs" />
+    <Compile Include="Enums\ItemProperties.cs" />
+    <Compile Include="Enums\ItemTypes.cs" />
+    <Compile Include="Enums\LocationTypes.cs" />
+    <Compile Include="Enums\MagicEffects.cs" />
+    <Compile Include="Enums\PartyShields.cs" />
+    <Compile Include="Enums\PlayerFlags.cs" />
+    <Compile Include="Enums\ProjectileTypes.cs" />
+    <Compile Include="Enums\ReturnTypes.cs" />
+    <Compile Include="Enums\Skills.cs" />
+    <Compile Include="Enums\SkullTypes.cs" />
+    <Compile Include="Enums\SlotPositionFlags.cs" />
+    <Compile Include="Enums\SpeechBubbles.cs" />
+    <Compile Include="Enums\Stats.cs" />
+    <Compile Include="Enums\TileFlags.cs" />
+    <Compile Include="Enums\WeaponTypes.cs" />
+    <Compile Include="Model\Abilities.cs" />
+    <Compile Include="Model\Creature.cs" />
+    <Compile Include="Model\House.cs" />
+    <Compile Include="Model\HouseTile.cs" />
+    <Compile Include="Model\Item.cs" />
+    <Compile Include="Model\Items\BedItem.cs" />
+    <Compile Include="Model\Items\Container.cs" />
+    <Compile Include="Model\Items\DepotLocker.cs" />
+    <Compile Include="Model\Items\Door.cs" />
+    <Compile Include="Model\Items\MagicField.cs" />
+    <Compile Include="Model\Items\Mailbox.cs" />
+    <Compile Include="Model\Items\Teleport.cs" />
+    <Compile Include="Model\Items\TrashHolder.cs" />
+    <Compile Include="Model\ItemTemplate.cs" />
+    <Compile Include="Model\LightInfo.cs" />
+    <Compile Include="Model\Monster.cs" />
+    <Compile Include="Model\Outfit.cs" />
+    <Compile Include="Model\OutfitTemplate.cs" />
+    <Compile Include="Model\Player.cs" />
+    <Compile Include="Model\Position.cs" />
+    <Compile Include="Model\Thing.cs" />
+    <Compile Include="Model\Tile.cs" />
+    <Compile Include="Model\Town.cs" />
+    <Compile Include="Model\Vocation.cs" />
+    <Compile Include="Model\Vocations\VocationNone.cs" />
     <Compile Include="SecretServerConnection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -137,10 +201,6 @@
     <None Include="Properties\app.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GameServerLibrary\GameServerLibrary.csproj">
-      <Project>{159c19b7-7ea5-4293-84e1-795a4171e3e6}</Project>
-      <Name>GameServerLibrary</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LoginServer\LoginServer.csproj">
       <Project>{a55f171c-8903-43fa-96c7-f13fb2ecf970}</Project>
       <Name>LoginServer</Name>

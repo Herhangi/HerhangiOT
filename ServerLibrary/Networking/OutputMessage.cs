@@ -5,6 +5,14 @@ namespace HerhangiOT.ServerLibrary.Networking
 {
     public class OutputMessage : NetworkMessage
     {
+        #region Constants
+        public const int HeaderLength = 2;
+        public const int CryptoLength = 4;
+        public const int XteaMultiple = 8;
+        public const int MaxBodyLength = Constants.NETWORKMESSAGE_MAXSIZE - HeaderLength - CryptoLength - XteaMultiple;
+        public const int MaxProtocolBodyLength = MaxBodyLength - 10;
+        #endregion
+
         private int _headerPosition;
         /// <summary>
         /// Current position of header cursor 
@@ -33,7 +41,7 @@ namespace HerhangiOT.ServerLibrary.Networking
             MessageTarget = null;
             DisconnectAfterMessage = false;
 
-            Reset();
+            Reset(8);
         }
 
         public void WriteMessageLength()
@@ -75,6 +83,13 @@ namespace HerhangiOT.ServerLibrary.Networking
             AddHeaderBytes(BitConverter.GetBytes(value));
         }
         #endregion
+
+        public void Append(NetworkMessage msg) {
+			int msgLen = msg.Length;
+            Buffer.MemCpy(Position, msg.Buffer, msgLen);
+			Length += msgLen;
+			Position += msgLen;
+		}
 
         public void AddPaddingBytes(int count)
         {

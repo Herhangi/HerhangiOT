@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoginServer", "LoginServer\LoginServer.csproj", "{A55F171C-8903-43FA-96C7-F13FB2ECF970}"
 EndProject
@@ -10,8 +10,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerLibrary", "ServerLibrary\ServerLibrary.csproj", "{0A3749DF-D290-4F83-92A0-0950923E55ED}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScriptLibrary", "ScriptLibrary\ScriptLibrary.csproj", "{768CDD7D-78E0-4901-ADBC-884E07DEC3B9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameServerLibrary", "GameServerLibrary\GameServerLibrary.csproj", "{159C19B7-7EA5-4293-84E1-795A4171E3E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +33,6 @@ Global
 		{768CDD7D-78E0-4901-ADBC-884E07DEC3B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{768CDD7D-78E0-4901-ADBC-884E07DEC3B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{768CDD7D-78E0-4901-ADBC-884E07DEC3B9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{159C19B7-7EA5-4293-84E1-795A4171E3E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{159C19B7-7EA5-4293-84E1-795A4171E3E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{159C19B7-7EA5-4293-84E1-795A4171E3E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{159C19B7-7EA5-4293-84E1-795A4171E3E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

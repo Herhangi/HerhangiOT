@@ -21,6 +21,11 @@ namespace HerhangiOT.LoginServer
             IsSecretConnection = true;
         }
 
+        protected override void ProcessFirstMessage(bool isChecksummed)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void ProcessMessage()
         {
             SecretNetworkPacketType packet = (SecretNetworkPacketType) InMessage.GetByte();
@@ -57,7 +62,7 @@ namespace HerhangiOT.LoginServer
 
                     if (LoginServer.GameServerConnections.ContainsKey(gameServerId))
                     {
-                        LoginServer.GameServerConnections[gameServerId].Disconnect("NEW_CONNECTION_REPLACEMENT");
+                        LoginServer.GameServerConnections[gameServerId].Disconnect("NEW_CONNECTION_REPLACEMENT", Constants.CLIENT_VERSION_MIN);
                         LoginServer.GameServerConnections.Remove(gameServerId);
                         Logger.Log(LogLevels.Warning, "SECRET: Game server connection replaced! ID: " + gameServerId);
                     }

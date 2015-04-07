@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using HerhangiOT.GameServerLibrary;
+using HerhangiOT.GameServer.Model;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
@@ -27,6 +27,7 @@ namespace HerhangiOT.GameServer
             Game.Initialize();
             Tools.Initialize();
             OutputMessagePool.Initialize();
+            NetworkMessagePool.Initialize();
 
             Console.Title = Constants.STATUS_SERVER_NAME;
             Console.Clear();
@@ -72,7 +73,7 @@ namespace HerhangiOT.GameServer
             //DATABASE TASKS START
 
             // Loading vocations
-            if (!ScriptManager.LoadVocations())
+            if (!Vocation.LoadVocations())
                 ExitApplication();
 
             // Loading items
@@ -94,8 +95,8 @@ namespace HerhangiOT.GameServer
                 ExitApplication();
 
             // Loading map
-            //if (!Map.Load())
-            //    ExitApplication();
+            if (!Map.Load())
+                ExitApplication();
 
             // Setting game world type
             switch (ConfigManager.Instance[ConfigStr.WorldType])

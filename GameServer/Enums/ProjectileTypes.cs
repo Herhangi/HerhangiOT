@@ -1,0 +1,63 @@
+﻿namespace HerhangiOT.GameServer.Enums
+{
+    public enum ProjectileTypes : byte
+    {
+        None = 0,
+        Spear = 1,
+        Bolt = 2,
+        Arrow = 3,
+        Fire = 4,
+        Energy = 5,
+        PoisonArrow = 6,
+        BurstArrow = 7,
+        ThrowingStar = 8,
+        ThrowingKnife = 9,
+        SmallStone = 10,
+        Death = 11,
+        LargeRock = 12,
+        Snowball = 13,
+        PowerBolt = 14,
+        PoisonField = 15,
+        InfernalBolt = 16,
+        HuntingSpear = 17,
+        EnchantedSpear = 18,
+        RedStar = 19,
+        GreenStar = 20,
+        RoyalSpear = 21,
+        SniperArrow = 22,
+        OnyxArrow = 23,
+        PiercingBolt = 24,
+        WhirlwindSword = 25,
+        WhirlwindAxe = 26,
+        WhirlwindClub = 27,
+        EtherealSpear = 28,
+        Ice = 29,
+        Earth = 30,
+        Holy = 31,
+        SuddenDeath = 32,
+        FlashArrow = 33,
+        FlammingArrow = 34,
+        ShiverArrow = 35,
+        EnergyBall = 36,
+        SmallIce = 37,
+        SmallHoly = 38,
+        SmallEarth = 39,
+        EarthArrow = 40,
+        Explosion = 41,
+        Cake = 42,
+
+        TarsalArrow = 44,
+        VortexBolt = 45,
+
+        PrismaticBolt = 48,
+        CrystallineArrow = 49,
+        DrillBolt = 50,
+        EnvenomedArrow = 51,
+
+        GloothSpear = 53,
+        SimpleArrow = 54,
+
+        //for internal use, dont send to client
+        WeaponType = 0xFE,
+    }
+}

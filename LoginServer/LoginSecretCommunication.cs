@@ -6,24 +6,21 @@ namespace HerhangiOT.LoginServer
 {
     public class LoginSecretCommunication
     {
-        public static SecretNetworkResponseType CheckCharacterAuthenticity(string accountName, string character, byte[] password, out uint accountId)
+        public static SecretNetworkResponseType CheckCharacterAuthenticity(string sessionKey, string character, out string accountName, out uint accountId)
         {
-            byte[] hash = LoginServer.PasswordHasher.ComputeHash(password);
-            string hashedPassword = string.Empty;
-            foreach (byte b in hash)
-                hashedPassword += b.ToString("x2");
-
             accountId = 0;
+            accountName = string.Empty;
             SecretNetworkResponseType response = SecretNetworkResponseType.Success;
-            AccountModel account = LoginServerData.RetrieveAccountData(accountName, hashedPassword, true);
+            AccountModel account = LoginServerData.RetrieveAccountData(sessionKey);
             
             if (account == null)
-                response = SecretNetworkResponseType.InvalidAccountData;
+                response = SecretNetworkResponseType.SessionCouldNotBeFound;
             else
             {
                 accountId = account.AccountId;
+                accountName = account.AccountName;
 
-                if (!string.IsNullOrEmpty(account.OnlineCharacter) && !account.OnlineCharacter.Equals(character, StringComparison.InvariantCulture))
+                if (LoginServer.OnlineCharactersByAccount.ContainsKey(account.AccountName) && !LoginServer.OnlineCharactersByAccount[account.AccountName].Equals(character))
                     response = SecretNetworkResponseType.AnotherCharacterOnline;
                 else
                 {
@@ -33,7 +30,7 @@ namespace HerhangiOT.LoginServer
                         if (account.Characters[i].CharacterName.Equals(character, StringComparison.InvariantCulture))
                         {
                             isCharacterFound = true;
-                            LoginServerData.SetAccountOnline(accountName, character);
+                            LoginServerData.SetCharacterOnline(sessionKey, character);
                             break;
                         }
                     }

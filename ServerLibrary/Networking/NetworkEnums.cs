@@ -3,11 +3,15 @@
     public enum ServerPacketType : byte
     {
         Disconnect = 0x0A,
+        Disconnect1076 = 0x0B,
+
         MOTD = 0x14,
+        SessionKey = 0x28,
         CharacterList = 0x64,
 
         SelfAppear = 0x0A,
         GMAction = 0x0B,
+        EnterWorld = 0x0F,
         ErrorMessage = 0x14,
         FyiMessage = 0x15,
         WaitingList = 0x16,
@@ -44,7 +48,7 @@
         SafeTradeRequestNoAck = 0x7E,
         SafeTradeClose = 0x7F,
         WorldLight = 0x82,
-        Effect = 0x83,
+        MagicEffect = 0x83,
         AnimatedText = 0x84,
         Projectile = 0x85,
         CreatureSquare = 0x86,

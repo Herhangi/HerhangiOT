@@ -82,7 +82,8 @@ namespace HerhangiOT.ServerLibrary.Networking
         /// Resets network message's position
         /// </summary>
         /// <param name="position"></param>
-        public void Reset(int position = 8, int length = 0)
+        /// <param name="length"></param>
+        public void Reset(int position = 0, int length = 0)
         {
             _length = length;
             _position = position;
@@ -396,11 +397,21 @@ namespace HerhangiOT.ServerLibrary.Networking
             AddBytes(BitConverter.GetBytes(value));
         }
 
+        ///// <summary>
+        ///// Adds a double to the content  
+        ///// </summary>
+        //public void AddDouble(double value)
+        //{
+        //    AddBytes(BitConverter.GetBytes(value));
+        //}
+
         /// <summary>
         /// Adds a double to the content  
         /// </summary>
-        public void AddDouble(double value)
+        public void AddDouble(double value, byte precision = 2)
         {
+            AddByte(precision);
+            AddUInt32((uint)(value * Math.Pow(10, precision)) + int.MaxValue);
             AddBytes(BitConverter.GetBytes(value));
         }
 
@@ -551,7 +562,7 @@ namespace HerhangiOT.ServerLibrary.Networking
 
         public bool RsaDecrypt()
         {
-            if (_length - _position != 128)
+            if (_length - _position < 128)
                 return false;
 
             Rsa.Decrypt(ref _buffer, _position);

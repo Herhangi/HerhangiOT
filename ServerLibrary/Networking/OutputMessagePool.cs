@@ -31,7 +31,7 @@ namespace HerhangiOT.ServerLibrary.Networking
             Thread.Start();
         }
 
-        public static OutputMessage GetOutputMessage()
+        public static OutputMessage GetOutputMessage(Connection connection, bool autosend = true)
         {
             OutputMessage message;
 
@@ -48,6 +48,7 @@ namespace HerhangiOT.ServerLibrary.Networking
                 message = _emptyMessageQueue.Dequeue();
             }
 
+            message.MessageTarget = connection;
             return message;
         }
 

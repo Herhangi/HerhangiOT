@@ -60,6 +60,7 @@
     <Compile Include="Logger.cs" />
     <Compile Include="Networking\NetworkEnums.cs" />
     <Compile Include="Networking\NetworkMessage.cs" />
+    <Compile Include="Networking\NetworkMessagePool.cs" />
     <Compile Include="Networking\OutputMessage.cs" />
     <Compile Include="Networking\OutputMessagePool.cs" />
     <Compile Include="Networking\SecretNetworkEnums.cs" />

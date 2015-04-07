@@ -19,11 +19,11 @@ namespace HerhangiOT.ServerLibrary.Database.Model
         public int LookLegs { get; set; }
         public int LookType { get; set; }
         public int LookAddons { get; set; }
-        public uint MagicLevel { get; set; }
-        public int Mana { get; set; }
-        public int ManaMax { get; set; }
+        public byte MagicLevel { get; set; }
+        public ushort Mana { get; set; }
+        public ushort ManaMax { get; set; }
         public ulong ManaSpent { get; set; }
-        public int Soul { get; set; }
+        public byte Soul { get; set; }
         public ushort TownId { get; set; }
         public ushort PosX { get; set; }
         public ushort PosY { get; set; }

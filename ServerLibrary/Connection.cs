@@ -15,6 +15,8 @@ namespace HerhangiOT.ServerLibrary
         protected bool IsChecksumEnabled { get; set; }
         protected bool IsSecretConnection { get; set; }
         protected bool IsEncryptionEnabled { get; set; }
+        protected bool IsFirstMessageReceived { get; set; }
+        protected OutputMessage OutputBuffer { get; private set; }
 
         public virtual void HandleFirstConnection(IAsyncResult ar)
         {
@@ -52,16 +54,18 @@ namespace HerhangiOT.ServerLibrary
             }
             InMessage.Reset(2, size);
 
-            //I won't do checksum control as other servers do not care about it
-            if (!IsSecretConnection)
+            uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
+            uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
+            if (checksum != recvChecksum)
+                InMessage.SkipBytes(-4);   
+
+            if (!IsFirstMessageReceived)
             {
-                uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
-                uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
-                if (checksum != recvChecksum)
-                    InMessage.SkipBytes(-4);   
+                IsFirstMessageReceived = true;
+                ProcessFirstMessage(checksum == recvChecksum);
             }
-            
-            ProcessMessage();
+            else
+                ProcessMessage();
         }
 
         public void Disconnect()
@@ -70,24 +74,26 @@ namespace HerhangiOT.ServerLibrary
             Socket.Close();
         }
 
-        public void Disconnect(string reason)
+        public void Disconnect(string reason, uint version)
         {
-            OutputMessage message = OutputMessagePool.GetOutputMessage();
-            message.AddByte((byte)ServerPacketType.Disconnect);
+            OutputMessage message = OutputMessagePool.GetOutputMessage(this, false);
+
+            if(version > 1076)
+                message.AddByte((byte)ServerPacketType.Disconnect1076);
+            else
+                message.AddByte((byte)ServerPacketType.Disconnect);
             message.AddString(reason);
 
-            message.MessageTarget = this;
             message.DisconnectAfterMessage = true;
             OutputMessagePool.AddToQueue(message);
         }
 
         public void DispatchDisconnect(string reason)
         {
-            OutputMessage message = OutputMessagePool.GetOutputMessage();
+            OutputMessage message = OutputMessagePool.GetOutputMessage(this, false);
             message.AddByte((byte)ServerPacketType.ErrorMessage);
             message.AddString(reason);
 
-            message.MessageTarget = this;
             message.DisconnectAfterMessage = true;
             OutputMessagePool.AddToQueue(message);
         }
@@ -127,7 +133,31 @@ namespace HerhangiOT.ServerLibrary
             if(message.IsRecycledMessage)
                 OutputMessagePool.ReleaseMessage(message);
         }
+        
+        protected void WriteToOutputBuffer(NetworkMessage msg)
+        {
+	        OutputMessage @out = GetOutputBuffer(msg.Length);
+	        if (@out != null) {
+		        @out.Append(msg);
+	        }
+            NetworkMessagePool.ReleaseMessage(msg);
+        }
 
-        protected abstract void ProcessMessage();
+        private OutputMessage GetOutputBuffer(int size)
+        {
+	        if (OutputBuffer != null && OutputMessage.MaxProtocolBodyLength >= OutputBuffer.Length + size)
+		        return OutputBuffer;
+
+            if (Socket != null)
+            {
+		        OutputBuffer = OutputMessagePool.GetOutputMessage(this);
+		        return OutputBuffer;
+	        }
+
+            return null;
+        }
+
+        protected abstract void ProcessFirstMessage(bool isChecksummed);
+        protected virtual void ProcessMessage() { }
     }
 }

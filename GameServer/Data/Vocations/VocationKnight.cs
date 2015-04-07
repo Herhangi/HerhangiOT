@@ -1,6 +1,6 @@
-using HerhangiOT.GameServerLibrary.Model;
+using HerhangiOT.GameServer.Model;
 
-namespace HerhangiOT.GameServerLibrary.Model.Vocations
+namespace HerhangiOT.GameServer.Model.Vocations
 {
     public class VocationKnight : Vocation
     {

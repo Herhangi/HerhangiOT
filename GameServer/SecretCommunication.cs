@@ -8,15 +8,15 @@ namespace HerhangiOT.GameServer
     public class SecretCommunication
     {
         #region Character Authenticity
-        public delegate void CharacterAuthenticationResultDelegate(SecretNetworkResponseType response, string accountName, string character, uint accountId);
+        public delegate void CharacterAuthenticationResultDelegate(SecretNetworkResponseType response, string sessionKey, string accountName, string character, uint accountId);
         public static event CharacterAuthenticationResultDelegate OnCharacterAuthenticationResultArrived;
-        public static void FireOnCharacterAuthenticationResultArrivedEvent(SecretNetworkResponseType response, string accountName, string character, uint accountId)
+        public static void FireOnCharacterAuthenticationResultArrivedEvent(SecretNetworkResponseType response, string sessionKey, string accountName, string character, uint accountId)
         {
             if (OnCharacterAuthenticationResultArrived != null)
-                OnCharacterAuthenticationResultArrived(response, accountName, character, accountId);
+                OnCharacterAuthenticationResultArrived(response, sessionKey, accountName, character, accountId);
         }
 
-        public static void CheckCharacterAuthenticity(string accountName, string character, byte[] password)
+        public static void CheckCharacterAuthenticity(string sessionKey, string character)
         {
             if (ConfigManager.Instance[ConfigBool.UseExternalLoginServer])
             {
@@ -24,8 +24,9 @@ namespace HerhangiOT.GameServer
             else
             {
                 uint accountId;
-                SecretNetworkResponseType response = LoginSecretCommunication.CheckCharacterAuthenticity(accountName, character, password, out accountId);
-                FireOnCharacterAuthenticationResultArrivedEvent(response, accountName, character, accountId);
+                string accountName;
+                SecretNetworkResponseType response = LoginSecretCommunication.CheckCharacterAuthenticity(sessionKey, character, out accountName, out accountId);
+                FireOnCharacterAuthenticationResultArrivedEvent(response, sessionKey, accountName, character, accountId);
             }
         }
         #endregion
