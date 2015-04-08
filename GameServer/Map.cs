@@ -491,9 +491,9 @@ namespace HerhangiOT.GameServer
         private void GetSpectatorsInternal(ref HashSet<Creature> list, Position centerPos, int minRangeX, int maxRangeX, int minRangeY, int maxRangeY, int minRangeZ, int maxRangeZ, bool onlyPlayers)
         {
 	        int minY = centerPos.Y + minRangeY;
-	        int minX = centerPos.Y + minRangeX;
+	        int minX = centerPos.X + minRangeX;
 	        int maxY = centerPos.Y + maxRangeY;
-	        int maxX = centerPos.Y + maxRangeX;
+	        int maxX = centerPos.X + maxRangeX;
 
 	        int minoffset = centerPos.Z - maxRangeZ;
             ushort x1 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (minX + minoffset)));
@@ -510,13 +510,24 @@ namespace HerhangiOT.GameServer
 
             for (int nz = minRangeZ; nz <= maxRangeZ; nz++)
             {
+                Floor floor = Floors[nz];
                 for (int ny = starty1; ny <= endy2; ny++)
                 {
                     for (int nx = startx1; nx <= endx2; nx++)
                     {
-                        Floor floor = Floors[nz];
-                        Tile tile = floor.Tiles[ny][nx];
-                        if (tile.Creatures != null && tile.Creatures.Count > 0)
+                        if (nz == 7)
+                        {
+                            if (nx == 95)
+                            {
+                                if (ny == 117)
+                                {
+                                    
+                                }
+                            }
+                        }
+
+                        Tile tile = floor.Tiles[nx][ny];
+                        if (tile != null && tile.Creatures != null && tile.Creatures.Count > 0)
                         {
                             foreach (Creature creature in tile.Creatures)
                             {
@@ -695,7 +706,8 @@ namespace HerhangiOT.GameServer
 
 	        //Cylinder* toCylinder = tile->queryDestination(index, *creature, &toItem, flags); //TODO
 	        //toCylinder->internalAddThing(creature);
-
+            creature.Position = new Position(tile.Position);
+            creature.Parent = tile;
 	        tile.AddCreature(creature);
 	        return true;
         }

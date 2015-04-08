@@ -2,18 +2,18 @@
 
 namespace HerhangiOT.GameServer.Model
 {
-    public class Creature : Thing
+    public abstract class Creature : Thing
     {
         public const double SpeedA = 857.36;
         public const double SpeedB = 261.29;
         public const double SpeedC = -4795.01;
 
         public uint Id { get; protected set; }
-        public Tile Parent { get; protected set; }
-        public Position Position { get; protected set; }
+        public Tile Parent { get; set; }
+        public Position Position { get; set; }
 
-        public ushort Health { get; protected set; }
-        public ushort HealthMax { get; protected set; }
+        public virtual ushort Health { get; protected set; }
+        public virtual ushort HealthMax { get; protected set; }
         public Directions Direction { get; protected set; }
 
         public Outfit CurrentOutfit { get; protected set; }
@@ -30,6 +30,11 @@ namespace HerhangiOT.GameServer.Model
         public bool IsHealthHidden { get; protected set; }
         public bool IsInternalRemoved { get; protected set; }
 
+        public Creature()
+        {
+            InternalLight = new LightInfo {Color = 0, Level = 0};
+        }
+
         public virtual bool CanSeeInvisibility()
         {
             return false;
@@ -45,19 +50,15 @@ namespace HerhangiOT.GameServer.Model
             return false; //TODO: FILL METHOD
         }
 
-        public virtual string GetName()
-        {
-            return string.Empty;
-        }
-
-        public virtual CreatureTypes GetCreatureType()
-        {
-            return CreatureTypes.Player;
-        }
         
 		public virtual SpeechBubbles GetSpeechBubble()
         {
 			return SpeechBubbles.None;
 		}
+
+        public abstract CreatureTypes GetCreatureType();
+        public abstract string GetName();
+        public abstract void AddList();
+        public abstract void SetID();
     }
 }

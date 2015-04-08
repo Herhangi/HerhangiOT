@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.ServerLibrary.Networking
 {
@@ -9,7 +10,7 @@ namespace HerhangiOT.ServerLibrary.Networking
         private static object _waitingQueueLock;
 
         private static Queue<OutputMessage> _emptyMessageQueue;
-        private static List<OutputMessage> _waitingMessageQueue;
+        private static Deque<OutputMessage> _waitingMessageQueue;
 
         protected static Thread Thread;
         protected static AutoResetEvent Signaler;
@@ -22,7 +23,7 @@ namespace HerhangiOT.ServerLibrary.Networking
                 _emptyMessageQueue.Enqueue(new OutputMessage());
             }
 
-            _waitingMessageQueue = new List<OutputMessage>();
+            _waitingMessageQueue = new Deque<OutputMessage>();
             _emptyQueueLock = new object();
             _waitingQueueLock = new object();
 
@@ -63,7 +64,6 @@ namespace HerhangiOT.ServerLibrary.Networking
         public static void SendImmediately(OutputMessage msg)
         {
             msg.MessageTarget.Send(msg);
-            if (msg.DisconnectAfterMessage) msg.MessageTarget.Disconnect();
 
             ReleaseMessage(msg);
         }
@@ -77,9 +77,9 @@ namespace HerhangiOT.ServerLibrary.Networking
                 sendSignal = (_waitingMessageQueue.Count == 0);
 
                 if(pushFront)
-                    _waitingMessageQueue.Insert(0, msg);
+                    _waitingMessageQueue.AddToFront(msg);
                 else
-                    _waitingMessageQueue.Add(msg);
+                    _waitingMessageQueue.AddToBack(msg);
             }
 
             if (sendSignal)
@@ -98,8 +98,7 @@ namespace HerhangiOT.ServerLibrary.Networking
 
                 if (_waitingMessageQueue.Count != 0)
                 {
-                    msg = _waitingMessageQueue[0];
-                    _waitingMessageQueue.RemoveAt(0);
+                    msg = _waitingMessageQueue.RemoveFromFront();
                 }
                 else continue;
 

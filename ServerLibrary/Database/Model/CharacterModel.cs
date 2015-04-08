@@ -13,12 +13,12 @@ namespace HerhangiOT.ServerLibrary.Database.Model
         public ushort Health { get; set; }
         public ushort HealthMax { get; set; }
         public ulong Experience { get; set; }
-        public int LookBody { get; set; }
-        public int LookFeet { get; set; }
-        public int LookHead { get; set; }
-        public int LookLegs { get; set; }
-        public int LookType { get; set; }
-        public int LookAddons { get; set; }
+        public byte LookBody { get; set; }
+        public byte LookFeet { get; set; }
+        public byte LookHead { get; set; }
+        public byte LookLegs { get; set; }
+        public byte LookType { get; set; }
+        public byte LookAddons { get; set; }
         public byte MagicLevel { get; set; }
         public ushort Mana { get; set; }
         public ushort ManaMax { get; set; }
@@ -45,19 +45,19 @@ namespace HerhangiOT.ServerLibrary.Database.Model
         public ushort OfflineTrainingTime { get; set; }
         public int OfflineTrainingSkill { get; set; }
 
-        public uint SkillFist { get; set; }
+        public ushort SkillFist { get; set; }
         public ulong SkillFistTries { get; set; }
-        public uint SkillClub { get; set; }
+        public ushort SkillClub { get; set; }
         public ulong SkillClubTries { get; set; }
-        public uint SkillSword { get; set; }
+        public ushort SkillSword { get; set; }
         public ulong SkillSwordTries { get; set; }
-        public uint SkillAxe { get; set; }
+        public ushort SkillAxe { get; set; }
         public ulong SkillAxeTries { get; set; }
-        public uint SkillDistance { get; set; }
+        public ushort SkillDistance { get; set; }
         public ulong SkillDistanceTries { get; set; }
-        public uint SkillShielding { get; set; }
+        public ushort SkillShielding { get; set; }
         public ulong SkillShieldingTries { get; set; }
-        public uint SkillFishing { get; set; }
+        public ushort SkillFishing { get; set; }
         public ulong SkillFishingTries { get; set; }
     }
 }

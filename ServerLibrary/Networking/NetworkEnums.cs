@@ -60,6 +60,9 @@
         CreatureShield = 0x91,
         ItemTextWindow = 0x96,
         HouseTextWindow = 0x97,
+
+        BasicData = 0x9F,
+
         PlayerStatus = 0xA0,
         PlayerSkillsUpdate = 0xA1,
         PlayerFlags = 0xA2,

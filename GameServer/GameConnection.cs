@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Utility;
@@ -22,6 +23,8 @@ namespace HerhangiOT.GameServer
         public string PlayerName { get; private set; }
         public OperatingSystems ClientOs { get; private set; }
         public Player PlayerData { get; private set; }
+        
+        private HashSet<uint> _knownCreatureSet = new HashSet<uint>(); 
 
         private uint _challengeTimestamp;
         private byte _challengeRandom;
@@ -59,6 +62,14 @@ namespace HerhangiOT.GameServer
             message.AddUInt32(Tools.AdlerChecksum(message.Buffer, 12, message.Length - 4));
 
             Send(message);
+        }
+
+        protected override void ParseHeader(IAsyncResult ar)
+        {
+            base.ParseHeader(ar);
+
+            if(Stream.CanRead)
+                Stream.BeginRead(InMessage.Buffer, 0, 2, ParseHeader, null);
         }
 
         protected override void ProcessFirstMessage(bool isChecksummed)
@@ -139,6 +150,10 @@ namespace HerhangiOT.GameServer
 
             if(PacketHandlers.ContainsKey(requestType))
                 PacketHandlers[requestType].Invoke(this);
+            else
+            {
+                Logger.Log(LogLevels.Debug, "Unknown message arrived: " + requestType.ToString());
+            }
         }
 
         private void OnCharacterAuthenticationResultArrived(SecretNetworkResponseType response, string sessionKey, string accountName, string playerName, uint accountId)
@@ -157,7 +172,7 @@ namespace HerhangiOT.GameServer
                         disconnectMessage = "Your account information has been changed! Please log in again...";
                         break;
                     case SecretNetworkResponseType.AnotherCharacterOnline:
-                        disconnectMessage = "You are online with another playerName!";
+                        disconnectMessage = "You are online with another character!";
                         break;
                     case SecretNetworkResponseType.CharacterCouldNotBeFound:
                         disconnectMessage = "Character could not be found!";
@@ -181,7 +196,8 @@ namespace HerhangiOT.GameServer
 
         public void Login()
         {
-            if (!Game.OnlinePlayers.ContainsKey(PlayerName))
+            PlayerData = Game.Instance.GetPlayerByName(PlayerName);
+            if (PlayerData == null)
             {
                 PlayerData = new Player(this, AccountName, PlayerName);
 
@@ -227,8 +243,6 @@ namespace HerhangiOT.GameServer
             }
             else
             {
-                PlayerData = Game.OnlinePlayers[PlayerName];
-
                 if (ConfigManager.Instance[ConfigBool.ReplaceKickOnLogin])
                 {
                     if (PlayerData.Connection != null)
@@ -284,9 +298,16 @@ namespace HerhangiOT.GameServer
 
             //Condition* condition = player->getCondition(CONDITION_REGENERATION);
             message.AddUInt16(0);//condition ? condition->getTicks() / 1000 : 0x00); TODO: CONDITIONS
-            message.AddUInt16(character.OfflineTrainingTime);
+            message.AddUInt16((ushort)(character.OfflineTrainingTime / 60U));
 
             WriteToOutputBuffer(message);
+        }
+        
+        public void SendSkills()
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        AddPlayerSkills(msg);
+	        WriteToOutputBuffer(msg);
         }
         public void SendAddCreature(Creature creature, Position position, int stackpos, bool isLogin)
         {
@@ -335,8 +356,81 @@ namespace HerhangiOT.GameServer
 
             SendPendingStateEntered();
             SendEnterWorld();
+            SendMapDescription(position);
 
+            if (isLogin)
+                SendMagicEffect(position, MagicEffects.Teleport);
+
+            SendInventoryItem(Slots.Head, PlayerData.Inventory[(byte)Slots.Head]);
+            SendInventoryItem(Slots.Necklace, PlayerData.Inventory[(byte)Slots.Necklace]);
+            SendInventoryItem(Slots.Backpack, PlayerData.Inventory[(byte)Slots.Backpack]);
+            SendInventoryItem(Slots.Armor, PlayerData.Inventory[(byte)Slots.Armor]);
+            SendInventoryItem(Slots.Right, PlayerData.Inventory[(byte)Slots.Right]);
+            SendInventoryItem(Slots.Left, PlayerData.Inventory[(byte)Slots.Left]);
+            SendInventoryItem(Slots.Legs, PlayerData.Inventory[(byte)Slots.Legs]);
+            SendInventoryItem(Slots.Feet, PlayerData.Inventory[(byte)Slots.Feet]);
+            SendInventoryItem(Slots.Ring, PlayerData.Inventory[(byte)Slots.Ring]);
+            SendInventoryItem(Slots.Ammo, PlayerData.Inventory[(byte)Slots.Ammo]);
+
+            SendStats();
+            SendSkills();
+
+            SendWorldLight();
+            SendCreatureLight(creature);
+
+            //TODO: VIP LIST
+
+            SendBasicData();
+
+            //TODO: ICONS
+            OutputMessagePool.AddToQueue(OutputBuffer);
         }
+        
+        private void SendBasicData()
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.BasicData);
+            msg.AddBoolean(PlayerData.IsPremium());
+	        msg.AddUInt32(uint.MaxValue); //I do not know what this is?
+	        msg.AddByte(PlayerData.VocationData.ClientId);
+            msg.AddUInt16(0x00); //I do not know what this is?
+	        WriteToOutputBuffer(msg);
+        }
+
+        private void SendCreatureLight(Creature creature)
+        {
+	        if (!CanSee(creature))
+		        return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        AddCreatureLight(msg, creature);
+	        WriteToOutputBuffer(msg);
+        }
+
+        private void SendWorldLight()
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            AddWorldLight(msg, Game.Instance.WorldLight);
+            WriteToOutputBuffer(msg);
+        }
+
+        private void SendInventoryItem(Slots slot, Item item)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        if (item != null)
+            {
+                msg.AddByte((byte)ServerPacketType.InventorySetSlot);
+		        msg.AddByte((byte)slot);
+		        msg.AddItem(item);
+	        }
+            else
+            {
+		        msg.AddByte((byte)ServerPacketType.InventoryClearSlot);
+		        msg.AddByte((byte)slot);
+	        }
+	        WriteToOutputBuffer(msg);
+        }
+
         private void SendPendingStateEntered()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
@@ -356,7 +450,7 @@ namespace HerhangiOT.GameServer
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
             msg.AddByte((byte)ServerPacketType.MapDescription);
 	        msg.AddPosition(PlayerData.Position);
-	        //GetMapDescription(pos.x - 8, pos.y - 6, pos.z, 18, 14, msg);
+	        GetMapDescription(pos.X - 8, pos.Y - 6, pos.Z, 18, 14, msg);
 	        WriteToOutputBuffer(msg);
         }
 
@@ -458,6 +552,33 @@ namespace HerhangiOT.GameServer
 
             msg.AddBoolean(!PlayerData.CanWalkthroughEx(creature)); //msg.AddByte((byte)(PlayerData.CanWalkthroughEx(creature) ? 0x00 : 0x01));
         }
+
+        private void AddPlayerSkills(NetworkMessage msg)
+        {
+	        msg.AddByte((byte)ServerPacketType.PlayerSkillsUpdate);
+
+	        for (Skills i = Skills.First; i <= Skills.Last; ++i)
+            {
+		        msg.AddUInt16(PlayerData.GetSkillLevel(i));
+		        msg.AddUInt16(PlayerData.SkillLevels[(byte)i]);
+		        msg.AddByte(PlayerData.SkillPercents[(byte)i]);
+	        }
+        }
+        
+        private void AddWorldLight(NetworkMessage msg, LightInfo lightInfo)
+        {
+	        msg.AddByte((byte)ServerPacketType.WorldLight);
+            msg.AddByte(lightInfo.Level);// (player->isAccessPlayer() ? 0xFF : lightInfo.level)); TODO: ACCESS
+	        msg.AddByte(lightInfo.Color);
+        }
+
+        private void AddCreatureLight(NetworkMessage msg, Creature creature)
+        {
+	        msg.AddByte((byte)ServerPacketType.CreatureLight);
+	        msg.AddUInt32(creature.Id);
+            msg.AddByte(creature.InternalLight.Level);//(player->isAccessPlayer() ? 0xFF : lightInfo.level)); TODO: ACCESS
+            msg.AddByte(creature.InternalLight.Color);
+        }
         #endregion
 
         public void SendMagicEffect(Position position, MagicEffects type)
@@ -470,7 +591,125 @@ namespace HerhangiOT.GameServer
         }
 
 
-        private HashSet<uint> _knownCreatureSet = new HashSet<uint>(); 
+
+        
+        private void GetMapDescription(int x, int y, int z, int width, int height, NetworkMessage msg)
+        {
+	        int skip = -1;
+	        int startz, endz, zstep;
+
+	        if (z > 7)
+            {
+		        startz = z - 2;
+	            endz = Math.Min(Map.MapMaxLayers - 1, z + 2);
+                zstep = 1;
+	        }
+            else
+            {
+		        startz = 7;
+		        endz = 0;
+		        zstep = -1;
+	        }
+
+	        for (int nz = startz; nz != endz + zstep; nz += zstep)
+            {
+		        GetFloorDescription(msg, x, y, (byte)nz, width, height, z - nz, ref skip);
+	        }
+
+	        if (skip >= 0)
+            {
+		        msg.AddByte((byte)skip);
+		        msg.AddByte(0xFF);
+	        }
+        }
+
+        private void GetFloorDescription(NetworkMessage msg, int x, int y, byte z, int width, int height, int offset, ref int skip)
+        {
+	        for (int nx = 0; nx < width; nx++)
+            {
+		        for (int ny = 0; ny < height; ny++)
+                {
+			        Tile tile = Map.Instance.GetTile((ushort)(x + nx + offset), (ushort)(y + ny + offset), z);
+			        if (tile != null)
+                    {
+				        if (skip >= 0)
+                        {
+					        msg.AddByte((byte)skip);
+					        msg.AddByte(0xFF);
+				        }
+
+				        skip = 0;
+				        GetTileDescription(tile, msg);
+			        }
+                    else if (skip == 0xFE)
+                    {
+				        msg.AddByte(0xFF);
+				        msg.AddByte(0xFF);
+				        skip = -1;
+			        }
+                    else
+                    {
+				        ++skip;
+			        }
+		        }
+	        }
+        }
+
+        
+        private void GetTileDescription(Tile tile, NetworkMessage msg)
+        {
+	        msg.AddUInt16(0x00); //environmental effects
+
+	        int count;
+	        if (tile.Ground != null)
+            {
+		        msg.AddItem(tile.Ground);
+		        count = 1;
+	        }
+            else
+            {
+		        count = 0;
+	        }
+
+	        if (tile.Items != null)
+            {
+                for(int i = tile.TopItemsIndex; i < tile.Items.Count; i++)
+                {
+                    msg.AddItem(tile.Items[i]);
+
+                    if(++count == 10)
+                        return;
+                }
+	        }
+
+	        if (tile.Creatures != null)
+            {
+                foreach (Creature creature in tile.Creatures)
+                {
+			        if (!PlayerData.CanSeeCreature(creature))
+				        continue;
+
+			        bool known;
+			        uint removedKnown;
+			        CheckCreatureAsKnown(creature.Id, out known, out removedKnown);
+			        AddCreature(msg, creature, known, removedKnown);
+
+			        if (++count == 10)
+				        return;
+		        }
+	        }
+
+            if (tile.Items != null)
+            {
+                for(int i = 0; i < tile.TopItemsIndex; i++)
+                {
+			        msg.AddItem(tile.Items[i]);
+
+			        if (++count == 10)
+				        return;
+		        }
+	        }
+        }
 
         private void CheckCreatureAsKnown(uint id, out bool known, out uint removedKnown)
         {

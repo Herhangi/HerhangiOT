@@ -19,6 +19,18 @@ namespace HerhangiOT.GameServer
         public static Dictionary<ushort, ushort> ReverseItemDict = new Dictionary<ushort, ushort>(); //ClientId -> ServerId 
         public static readonly Dictionary<ushort, ItemTemplate> Templates = new Dictionary<ushort, ItemTemplate>();
 
+        public static readonly ClientFluidTypes[] FluidMap =
+        {
+            ClientFluidTypes.Empty,
+            ClientFluidTypes.Blue,
+            ClientFluidTypes.Red,
+            ClientFluidTypes.Brown1,
+            ClientFluidTypes.Green,
+            ClientFluidTypes.Yellow,
+            ClientFluidTypes.White,
+            ClientFluidTypes.Purple,
+        };
+
         public static bool Load()
         {
             Logger.LogOperationStart("Loading Items");

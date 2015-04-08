@@ -12,6 +12,8 @@ namespace HerhangiOT.GameServer.Model
         public uint ReferenceCounter { get; protected set; }
         public bool IsLoadedFromMap { get; set; }
 
+        public FluidTypes FluidType { get { return FluidTypes.None; } } //TODO: Attributes
+
         public Item(ushort id, byte count = 0)
         {
             Id = id;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Utility;
@@ -30,29 +31,12 @@ namespace HerhangiOT.ServerLibrary
             Stream.BeginRead(InMessage.Buffer, 0, 2, ParseHeader, null);
         }
 
-        protected void ParseHeader(IAsyncResult ar)
+        protected virtual void ParseHeader(IAsyncResult ar)
         {
-            int currentlyRead = Stream.EndRead(ar);
-            if (currentlyRead == 0)
-                Disconnect();
-
-            int size = BitConverter.ToUInt16(InMessage.Buffer, 0) + 2;
-            if(size <= 0 || size >= Constants.NETWORKMESSAGE_ERRORMAXSIZE)
-                Disconnect();
-
-            //TODO: MAX PACKETS PER SECOND CHECK
-
-            while (currentlyRead < size)
+            if (!EndRead(ar))
             {
-                if (Stream.CanRead)
-                    currentlyRead += Stream.Read(InMessage.Buffer, currentlyRead, size - currentlyRead);
-                else
-                {
-                    Disconnect();
-                    return;
-                }
+                return;
             }
-            InMessage.Reset(2, size);
 
             uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
             uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
@@ -66,6 +50,41 @@ namespace HerhangiOT.ServerLibrary
             }
             else
                 ProcessMessage();
+        }
+
+        protected bool EndRead(IAsyncResult ar)
+        {
+            try
+            {
+                int currentlyRead = Stream.EndRead(ar);
+                if (currentlyRead == 0)
+                    Disconnect();
+
+                int size = BitConverter.ToUInt16(InMessage.Buffer, 0) + 2;
+                if (size <= 0 || size >= Constants.NETWORKMESSAGE_ERRORMAXSIZE)
+                    Disconnect();
+
+                //TODO: MAX PACKETS PER SECOND CHECK
+
+                while (currentlyRead < size)
+                {
+                    if (Stream.CanRead)
+                        currentlyRead += Stream.Read(InMessage.Buffer, currentlyRead, size - currentlyRead);
+                    else
+                    {
+                        Disconnect();
+                        return false;
+                    }
+                }
+
+                InMessage.Reset(2, size);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Disconnect();
+                return false;
+            }
         }
 
         public void Disconnect()
@@ -150,6 +169,8 @@ namespace HerhangiOT.ServerLibrary
 
             if (Socket != null)
             {
+                if(OutputBuffer != null)
+                    OutputMessagePool.AddToQueue(OutputBuffer);
 		        OutputBuffer = OutputMessagePool.GetOutputMessage(this);
 		        return OutputBuffer;
 	        }

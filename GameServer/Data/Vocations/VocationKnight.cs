@@ -7,6 +7,7 @@ namespace HerhangiOT.GameServer.Model.Vocations
         public VocationKnight()
         {
             Id = 4;
+            ClientId = 1;
             Name = "Knight";
             ManaMultiplier = 3.0F;
             SkillMultipliers = new[] { 1.1F, 1.1F, 1.1F, 1.1F, 1.4F, 1.1F, 1.1F };

@@ -8,6 +8,8 @@ namespace HerhangiOT.GameServer.Model
 {
     public class Player : Creature
     {
+        public static uint PlayerAutoID = 0x10000000;
+
         #region Constants
         public const ushort PlayerMaxSpeed = 1500;
         public const ushort PlayerMinSpeed = 0;
@@ -34,23 +36,27 @@ namespace HerhangiOT.GameServer.Model
         public Genders Gender { get; private set; }
         public Position LoginPosition { get; private set; }
 
-        public ushort BaseSpeed { get; private set; }
         public Town Town { get; private set; }
+        public ushort[] VarSkillLevels { get; private set; }
+        public ushort[] SkillLevels { get; private set; }
         public byte[] SkillPercents { get; private set; }
         public uint FreeCapacity { get { return uint.MaxValue; } } //TODO: Calculate
+        public Item[] Inventory { get; private set; }
 
         public bool IsPzLocked { get; protected set; }
         protected long LastWalkthroughAttempt { get; set; }
         protected Position LastWalkthroughPosition { get; set; }
+		
+        public override ushort Health { get { return CharacterData.Health; } protected set { CharacterData.Health = value; } }
+        public override ushort HealthMax { get { return CharacterData.HealthMax; } protected set { CharacterData.HealthMax = value; } }
 
-        public new ushort Health { get { return CharacterData.Health; } protected set { CharacterData.Health = value; } }
-        public new ushort HealthMax { get { return CharacterData.HealthMax; } protected set { CharacterData.HealthMax = value; } }
-
-        public Player(GameConnection connection, string accountName, string characterName)
+        public Player(GameConnection connection, string accountName, string characterName) : base()
         {
             Connection = connection;
             AccountName = accountName;
             CharacterName = characterName;
+
+            Inventory = new Item[(byte)Slots.Last + 1];
         }
 
         public bool PreloadPlayer()
@@ -118,7 +124,16 @@ namespace HerhangiOT.GameServer.Model
             }
             MagicLevelPercent = GetPercentage(CharacterData.ManaSpent, nextMagicLevelMana);
 
-            //TODO: OUTFIT
+            DefaultOutfit = new Outfit
+            {
+                LookType = CharacterData.LookType,
+                LookHead = CharacterData.LookHead,
+                LookBody = CharacterData.LookBody,
+                LookLegs = CharacterData.LookLegs,
+                LookFeet = CharacterData.LookFeet,
+                LookAddons = CharacterData.LookAddons
+            };
+            CurrentOutfit = DefaultOutfit;
 
             if (Game.Instance.WorldType != GameWorldTypes.PvpEnforced)
             {
@@ -150,8 +165,18 @@ namespace HerhangiOT.GameServer.Model
 
             if (LoginPosition.X == 0 && LoginPosition.Y == 0 && LoginPosition.Z == 0)
             {
-                LoginPosition = Town.TemplePosition;
+                LoginPosition = new Position(Town.TemplePosition); //Breaking reference
             }
+
+            VarSkillLevels = new ushort[(byte)Skills.Last + 1];
+            SkillLevels = new ushort[(byte)Skills.Last + 1];
+            SkillLevels[(byte)Skills.Fist] = CharacterData.SkillFist;
+            SkillLevels[(byte)Skills.Club] = CharacterData.SkillClub;
+            SkillLevels[(byte)Skills.Sword] = CharacterData.SkillSword;
+            SkillLevels[(byte)Skills.Axe] = CharacterData.SkillAxe;
+            SkillLevels[(byte)Skills.Distance] = CharacterData.SkillDistance;
+            SkillLevels[(byte)Skills.Shield] = CharacterData.SkillShielding;
+            SkillLevels[(byte)Skills.Fishing] = CharacterData.SkillFishing;
 
             SkillPercents = new byte[(byte)Skills.Last + 1];
             SkillPercents[(byte)Skills.Fist] = GetPercentage(CharacterData.SkillFistTries, VocationData.GetSkillReq(Skills.Fist, CharacterData.SkillFist + 1U));
@@ -303,6 +328,36 @@ namespace HerhangiOT.GameServer.Model
         public sealed override CreatureTypes GetCreatureType()
         {
             return CreatureTypes.Player;
+        }
+
+        public override string GetName()
+        {
+            return CharacterName;
+        }
+
+        public override void AddList()
+        {
+            //TODO: VIP LIST
+            Game.Instance.AddPlayer(this);
+        }
+
+        public ushort GetSkillLevel(Skills skill)
+        {
+            return (ushort)(SkillLevels[(byte)skill] + VarSkillLevels[(byte)skill]);
+        }
+
+        public bool IsPremium()
+        {
+            if (ConfigManager.Instance[ConfigBool.FreePremium]) //hasFlag(PlayerFlag_IsAlwaysPremium)) { //TODO: PLAYER FLAGS
+                return true;
+
+            return PremiumDays > 0;
+        }
+
+        public sealed override void SetID()
+        {
+            if (Id == 0)
+                Id = PlayerAutoID++;
         }
 
         #region Static Methods

@@ -40,7 +40,7 @@ namespace HerhangiOT.ServerLibrary.Networking
         /// <summary>
         /// Maximum buffer size of empty instance
         /// </summary>
-        private const int BufferSize = 4096;
+        private const int BufferSize = Constants.NETWORKMESSAGE_MAXSIZE;
         #endregion
 
         #region Constructors
@@ -412,7 +412,6 @@ namespace HerhangiOT.ServerLibrary.Networking
         {
             AddByte(precision);
             AddUInt32((uint)(value * Math.Pow(10, precision)) + int.MaxValue);
-            AddBytes(BitConverter.GetBytes(value));
         }
 
         /// <summary>

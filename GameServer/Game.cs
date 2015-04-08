@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using HerhangiOT.GameServer.Model;
+using HerhangiOT.ServerLibrary;
 
 namespace HerhangiOT.GameServer
 {
@@ -55,11 +56,15 @@ namespace HerhangiOT.GameServer
         }
         public GameWorldTypes WorldType;
 
+        public LightInfo WorldLight { get; set; }
+
         public static Dictionary<string, Player> OnlinePlayers = new Dictionary<string, Player>();
+        public static Dictionary<uint, Player> OnlinePlayersById = new Dictionary<uint, Player>();
 
         public static void Initialize()
         {
             _instance = new Game { GameState = GameStates.Startup };
+            _instance.WorldLight = new LightInfo {Color = 0xD7, Level = Constants.LightLevelDay};
         }
         
 
@@ -73,8 +78,8 @@ namespace HerhangiOT.GameServer
 	        }
 
 	        //creature.IncrementReferenceCounter(); //TODO
-	        //creature->setID();
-	        //creature->addList();
+	        creature.SetID();
+	        creature.AddList();
 	        return true;
         }
 
@@ -95,7 +100,6 @@ namespace HerhangiOT.GameServer
                     tmpPlayer.SendCreatureAppear(creature, creature.Position, true);
                 }
             }
-
                 //for (Creature* spectator : list) {
                 //    spectator->onCreatureAppear(creature, true);
                 //}
@@ -107,9 +111,25 @@ namespace HerhangiOT.GameServer
 	            return true;
         }
 
+        public void AddPlayer(Player player)
+        {
+            string lowercaseName = player.CharacterName.ToLowerInvariant();
+            OnlinePlayers[lowercaseName] = player;
+            //TODO: Wildcard tree
+            OnlinePlayersById[player.Id] = player;
+        }
+
         public Creature GetCreatureById(uint id)
         {
             //TODO: Fill Method
+            return null;
+        }
+
+        public Player GetPlayerByName(string playerName)
+        {
+            string lowercaseName = playerName.ToLowerInvariant();
+            if (OnlinePlayers.ContainsKey(lowercaseName))
+                return OnlinePlayers[lowercaseName];
             return null;
         }
     }

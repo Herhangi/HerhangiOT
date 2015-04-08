@@ -14,6 +14,7 @@ namespace HerhangiOT.GameServer.Model
         public Item Ground { get; private set; }
 
         private int _downItemCount;
+        public int TopItemsIndex { get { return _downItemCount; } }
 
         public Tile(int x, int y, int z)
         {

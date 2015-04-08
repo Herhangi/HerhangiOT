@@ -18,5 +18,8 @@
 
         public const int NetworkMessagePoolSize = 100;
         public const int NetworkMessagePoolExpansionSize = 10;
+
+        public const byte LightLevelDay = 250;
+        public const byte LightLevelNight = 40;
     }
 }

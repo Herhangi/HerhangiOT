@@ -76,6 +76,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\ClientFluidTypes.cs" />
+    <Compile Include="Enums\Slots.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GameConnection.cs" />
     <Compile Include="ItemManager.cs" />
