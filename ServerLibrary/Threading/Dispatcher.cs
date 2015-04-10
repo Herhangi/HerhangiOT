@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Threading;
+using HerhangiOT.ServerLibrary.Networking;
 
 namespace HerhangiOT.ServerLibrary.Threading
 {
@@ -63,7 +62,7 @@ namespace HerhangiOT.ServerLibrary.Threading
         {
             State = DispatcherState.Running;
             Signaler = new AutoResetEvent(false);
-            Thread = new Thread(new ThreadStart(DispatcherThread));
+            Thread = new Thread(DispatcherThread);
             Thread.Start();
         }
 
@@ -113,7 +112,8 @@ namespace HerhangiOT.ServerLibrary.Threading
                 if (!task.IsExpired())
                 {
                     //outputPool->startExecutionFrame();
-                    task._action.Invoke();
+                    task.Action.Invoke();
+                    OutputMessagePool.Flush();
                     //outputPool->sendAll();
 
                     //g_game.clearSpectatorCache();

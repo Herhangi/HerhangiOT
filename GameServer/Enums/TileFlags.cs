@@ -17,7 +17,7 @@ namespace HerhangiOT.GameServer.Enums
         House = 1 << 6,
         FloorChange = 1 << 7,
         FloorChangeDown = 1 << 8,
-        FloorchangeNorth = 1 << 9,
+        FloorChangeNorth = 1 << 9,
         FloorChangeSouth = 1 << 10,
         FloorChangeEast = 1 << 11,
         FloorChangeWest = 1 << 12,

@@ -349,7 +349,7 @@ namespace HerhangiOT.GameServer
                             item.RuneSpellName = valueAttribute.InnerText;
                             break;
                         case "weight":
-                            item.Weight = double.Parse(valueAttribute.InnerText) / 100.0;
+                            item.Weight = uint.Parse(valueAttribute.InnerText);
                             break;
                         case "showcount":
                             item.ShowCount = int.Parse(valueAttribute.InnerText) != 0;

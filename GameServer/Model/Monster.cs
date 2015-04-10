@@ -6,6 +6,11 @@ namespace HerhangiOT.GameServer.Model
     {
         public static uint MonsterAutoID = 0x40000000;
 
+        public int StepDuration { get; set; }
+
+        public bool IsTargetNearby { get { return StepDuration >= 1; } }
+        public bool IsFleeing { get { return Health <= 0; } } //TODO: MONSTER TYPE
+
         public sealed override CreatureTypes GetCreatureType()
         {
             return CreatureTypes.Monster;

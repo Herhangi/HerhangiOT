@@ -1,6 +1,6 @@
 ﻿namespace HerhangiOT.GameServer.Enums
 {
-    enum Slots : byte
+    public enum Slots : byte
     {
 	    Wherever = 0,
 	    Head = 1,

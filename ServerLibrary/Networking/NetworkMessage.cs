@@ -567,5 +567,17 @@ namespace HerhangiOT.ServerLibrary.Networking
             Rsa.Decrypt(ref _buffer, _position);
             return GetByte() == 0;
         }
+
+        public bool XteaDecrypt(uint[] key)
+        {
+            bool result = Tools.DecryptXtea(ref _buffer, ref _length, _position, key);
+
+            ushort innerLength = GetUInt16();
+            if (innerLength > Length - 8)
+                result = false;
+
+            Length = innerLength + _position;
+            return result;
+        }
     }
 }

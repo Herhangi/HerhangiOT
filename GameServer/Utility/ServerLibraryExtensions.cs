@@ -35,6 +35,27 @@ namespace HerhangiOT.GameServer.Utility
 		        message.AddByte(0xFE);    // random phase (0xFF for async)
 	        }
         }
+        
+        public static void AddItem(this NetworkMessage message, ushort id, byte count)
+        {
+	        ItemTemplate it = ItemManager.Templates[id];
+
+            message.AddUInt16(it.ClientId);
+	        message.AddByte(0xFF);    // MARK_UNMARKED
+
+	        if (it.IsStackable)
+            {
+                message.AddByte(count);
+            }
+            else if (it.Group.HasFlag(ItemGroups.Splash) || it.Group.HasFlag(ItemGroups.Fluid))
+            {
+                message.AddByte((byte)ItemManager.FluidMap[count & 7]);
+	        }
+
+	        if (it.IsAnimation) {
+		        message.AddByte(0xFE);    // random phase (0xFF for async)
+	        }
+        }
 
         public static void AddItemId(this NetworkMessage message, ushort itemId)
         {

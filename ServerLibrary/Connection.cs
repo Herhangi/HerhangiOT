@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Utility;
@@ -41,7 +40,7 @@ namespace HerhangiOT.ServerLibrary
             uint recvChecksum = InMessage.GetUInt32(); //Adler Checksum
             uint checksum = Tools.AdlerChecksum(InMessage.Buffer, InMessage.Position, InMessage.Length - 6);
             if (checksum != recvChecksum)
-                InMessage.SkipBytes(-4);   
+                InMessage.SkipBytes(-4);
 
             if (!IsFirstMessageReceived)
             {
@@ -49,7 +48,12 @@ namespace HerhangiOT.ServerLibrary
                 ProcessFirstMessage(checksum == recvChecksum);
             }
             else
+            {
+                if(IsEncryptionEnabled && !InMessage.XteaDecrypt(XteaKey))
+                    return;
+
                 ProcessMessage();
+            }
         }
 
         protected bool EndRead(IAsyncResult ar)
@@ -80,7 +84,7 @@ namespace HerhangiOT.ServerLibrary
                 InMessage.Reset(2, size);
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Disconnect();
                 return false;
@@ -119,6 +123,9 @@ namespace HerhangiOT.ServerLibrary
 
         public bool Send(OutputMessage message)
         {
+            if (message == OutputBuffer)
+                OutputBuffer = null;
+
             PrepareMessageToSend(message);
             InternalSend(message);
 

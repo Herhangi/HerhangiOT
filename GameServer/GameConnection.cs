@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Policy;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
+using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.GameServer.Utility;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database.Model;
@@ -23,47 +23,35 @@ namespace HerhangiOT.GameServer
         public string PlayerName { get; private set; }
         public OperatingSystems ClientOs { get; private set; }
         public Player PlayerData { get; private set; }
+        public ClientPacketType LatestRequest { get; private set; }
         
-        private HashSet<uint> _knownCreatureSet = new HashSet<uint>(); 
+        private readonly HashSet<uint> _knownCreatureSet = new HashSet<uint>(); 
 
         private uint _challengeTimestamp;
         private byte _challengeRandom;
         
         private static readonly Dictionary<ClientPacketType, Action<GameConnection>> PacketHandlers = new Dictionary<ClientPacketType, Action<GameConnection>>
         {
+            { ClientPacketType.Disconnect, ProcessDisconnectPacket },
+            { ClientPacketType.PingBack, ProcessPingBackPacket },
+            { ClientPacketType.FightModes, ProcessFightModesPacket },
+            { ClientPacketType.MoveNorth, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveEast, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveSouth, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveWest, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveNorthEast, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveNorthWest, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveSouthEast, ProcessPlayerMovePacket },
+            { ClientPacketType.MoveSouthWest, ProcessPlayerMovePacket },
         };
 
+        #region Connection Overrides
         public override void HandleFirstConnection(IAsyncResult ar)
         {
             base.HandleFirstConnection(ar);
 
             SendWelcomeMessage();
         }
-
-        private void SendWelcomeMessage()
-        {
-            OutputMessage message = new OutputMessage();
-            message.FreeMessage();
-
-            message.SkipBytes(sizeof(uint));
-
-            //Message Length
-            message.AddUInt16(0x0006);
-            message.AddByte((byte)ServerPacketType.WelcomeToGameServer);
-
-            _challengeTimestamp = (uint)Environment.TickCount;
-            message.AddUInt32(_challengeTimestamp);
-
-            _challengeRandom = (byte)Rng.Next(0, 256);
-            message.AddByte(_challengeRandom);
-
-            // Write Adler Checksum
-            message.SkipBytes(-12);
-            message.AddUInt32(Tools.AdlerChecksum(message.Buffer, 12, message.Length - 4));
-
-            Send(message);
-        }
-
         protected override void ParseHeader(IAsyncResult ar)
         {
             base.ParseHeader(ar);
@@ -71,7 +59,6 @@ namespace HerhangiOT.GameServer
             if(Stream.CanRead)
                 Stream.BeginRead(InMessage.Buffer, 0, 2, ParseHeader, null);
         }
-
         protected override void ProcessFirstMessage(bool isChecksummed)
         {
             if (Game.Instance.GameState == GameStates.Shutdown)
@@ -143,19 +130,20 @@ namespace HerhangiOT.GameServer
             SecretCommunication.OnCharacterAuthenticationResultArrived += OnCharacterAuthenticationResultArrived;
             SecretCommunication.CheckCharacterAuthenticity(SessionKey, characterName);
         }
-
         protected override void ProcessMessage()
         {
-            ClientPacketType requestType = (ClientPacketType)InMessage.GetByte();
+            LatestRequest = (ClientPacketType)InMessage.GetByte();
 
-            if(PacketHandlers.ContainsKey(requestType))
-                PacketHandlers[requestType].Invoke(this);
+            if (PacketHandlers.ContainsKey(LatestRequest))
+                PacketHandlers[LatestRequest].Invoke(this);
             else
             {
-                Logger.Log(LogLevels.Debug, "Unknown message arrived: " + requestType.ToString());
+                Logger.Log(LogLevels.Debug, "Unknown message arrived: " + LatestRequest);
             }
         }
+        #endregion
 
+        #region Login Process
         private void OnCharacterAuthenticationResultArrived(SecretNetworkResponseType response, string sessionKey, string accountName, string playerName, uint accountId)
         {
             if (!SessionKey.Equals(sessionKey, StringComparison.InvariantCulture)) return;
@@ -190,10 +178,9 @@ namespace HerhangiOT.GameServer
                 AccountId = accountId;
                 PlayerName = playerName;
                 AccountName = accountName;
-                Login();
+                DispatcherManager.GameDispatcher.AddTask(new Task(Login));
             }
         }
-
         public void Login()
         {
             PlayerData = Game.Instance.GetPlayerByName(PlayerName);
@@ -260,12 +247,92 @@ namespace HerhangiOT.GameServer
                 }
             }
         }
-
         private void Connect()
         {
             
         }
+        #endregion
 
+        #region Process Packets
+        private static void ProcessDisconnectPacket(GameConnection conn)
+        {
+            if (conn.PlayerData == null || conn.PlayerData.Health <= 0) //TODO: Player Removed
+            {
+                conn.Disconnect();
+            }
+        }
+        private static void ProcessPingBackPacket(GameConnection conn)
+        {
+            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.PlayerReceivePingBack(conn.PlayerData.Id)));
+        }
+        private static void ProcessFightModesPacket(GameConnection conn)
+        {
+            FightModes fightMode = (FightModes) conn.InMessage.GetByte(); // 1 - offensive, 2 - balanced, 3 - defensive
+            ChaseModes chaseMode = (ChaseModes) conn.InMessage.GetByte(); // 0 - stand while fightning, 1 - chase opponent
+	        SecureModes secureMode = (SecureModes) conn.InMessage.GetByte(); // 0 - can't attack unmarked, 1 - can attack unmarked
+	        // uint8_t rawPvpMode = msg.getByte(); // pvp mode introduced in 10.0
+
+            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
+        }
+        private static void ProcessPlayerMovePacket(GameConnection conn)
+        {
+            Directions direction = Directions.None;
+            switch (conn.LatestRequest)
+            {
+                case ClientPacketType.MoveNorth:
+                    direction = Directions.North;
+                    break;
+                case ClientPacketType.MoveEast:
+                    direction = Directions.East;
+                    break;
+                case ClientPacketType.MoveSouth:
+                    direction = Directions.South;
+                    break;
+                case ClientPacketType.MoveWest:
+                    direction = Directions.West;
+                    break;
+                case ClientPacketType.MoveNorthWest:
+                    direction = Directions.NorthWest;
+                    break;
+                case ClientPacketType.MoveNorthEast:
+                    direction = Directions.NorthEast;
+                    break;
+                case ClientPacketType.MoveSouthWest:
+                    direction = Directions.SouthWest;
+                    break;
+                case ClientPacketType.MoveSouthEast:
+                    direction = Directions.SouthEast;
+                    break;
+            }
+
+            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.PlayerMove(conn.PlayerData.Id, direction)));
+        }
+        #endregion
+
+        #region Send Messages
+        public void SendWelcomeMessage()
+        {
+            OutputMessage message = new OutputMessage();
+            message.FreeMessage();
+
+            message.SkipBytes(sizeof(uint));
+
+            //Message Length
+            message.AddUInt16(0x0006);
+            message.AddByte((byte)ServerPacketType.WelcomeToGameServer);
+
+            _challengeTimestamp = (uint)Environment.TickCount;
+            message.AddUInt32(_challengeTimestamp);
+
+            _challengeRandom = (byte)Rng.Next(0, 256);
+            message.AddByte(_challengeRandom);
+
+            // Write Adler Checksum
+            message.SkipBytes(-12);
+            message.AddUInt32(Tools.AdlerChecksum(message.Buffer, 12, message.Length - 4));
+
+            Send(message);
+        }
         public void SendStats()
         {
             NetworkMessage message = NetworkMessagePool.GetEmptyMessage();
@@ -302,7 +369,6 @@ namespace HerhangiOT.GameServer
 
             WriteToOutputBuffer(message);
         }
-        
         public void SendSkills()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
@@ -383,10 +449,9 @@ namespace HerhangiOT.GameServer
             SendBasicData();
 
             //TODO: ICONS
-            OutputMessagePool.AddToQueue(OutputBuffer);
+            //OutputMessagePool.AddToQueue(OutputBuffer);
         }
-        
-        private void SendBasicData()
+        public void SendBasicData()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
 	        msg.AddByte((byte)ServerPacketType.BasicData);
@@ -396,8 +461,7 @@ namespace HerhangiOT.GameServer
             msg.AddUInt16(0x00); //I do not know what this is?
 	        WriteToOutputBuffer(msg);
         }
-
-        private void SendCreatureLight(Creature creature)
+        public void SendCreatureLight(Creature creature)
         {
 	        if (!CanSee(creature))
 		        return;
@@ -406,15 +470,13 @@ namespace HerhangiOT.GameServer
 	        AddCreatureLight(msg, creature);
 	        WriteToOutputBuffer(msg);
         }
-
-        private void SendWorldLight()
+        public void SendWorldLight()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
             AddWorldLight(msg, Game.Instance.WorldLight);
             WriteToOutputBuffer(msg);
         }
-
-        private void SendInventoryItem(Slots slot, Item item)
+        public void SendInventoryItem(Slots slot, Item item)
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
 	        if (item != null)
@@ -430,22 +492,19 @@ namespace HerhangiOT.GameServer
 	        }
 	        WriteToOutputBuffer(msg);
         }
-
-        private void SendPendingStateEntered()
+        public void SendPendingStateEntered()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
 	        msg.AddByte((byte)ServerPacketType.SelfAppear);
 	        WriteToOutputBuffer(msg);
         }
-
-        private void SendEnterWorld()
+        public void SendEnterWorld()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
             msg.AddByte((byte)ServerPacketType.EnterWorld);
 	        WriteToOutputBuffer(msg);
         }
-
-        private void SendMapDescription(Position pos)
+        public void SendMapDescription(Position pos)
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
             msg.AddByte((byte)ServerPacketType.MapDescription);
@@ -453,6 +512,279 @@ namespace HerhangiOT.GameServer
 	        GetMapDescription(pos.X - 8, pos.Y - 6, pos.Z, 18, 14, msg);
 	        WriteToOutputBuffer(msg);
         }
+        public void SendMagicEffect(Position position, MagicEffects type)
+        {
+            NetworkMessage msg = new NetworkMessage();
+            msg.AddByte((byte)ServerPacketType.MagicEffect);
+            msg.AddPosition(position);
+            msg.AddByte((byte)type);
+            WriteToOutputBuffer(msg);
+        }
+        public void SendPingBack()
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.Ping);
+            WriteToOutputBuffer(msg);
+        }
+        public void SendAddContainerItem(byte cid, ushort slot, Item item)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ContainerAddItem);
+	        msg.AddByte(cid);
+	        msg.AddUInt16(slot);
+	        msg.AddItem(item);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendUpdateContainerItem(byte cid, ushort slot, Item item)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ContainerUpdateItem);
+	        msg.AddByte(cid);
+	        msg.AddUInt16(slot);
+	        msg.AddItem(item);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendRemoveContainerItem(byte cid, ushort slot, Item lastItem)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ContainerRemoveItem);
+	        msg.AddByte(cid);
+	        msg.AddUInt16(slot);
+	        if (lastItem != null)
+		        msg.AddItem(lastItem);
+	        else
+		        msg.AddUInt16(0x00);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendContainer(byte cid, Container container, bool hasParent, ushort firstIndex)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ContainerOpen);
+	        msg.AddByte(cid);
+
+	        if (container.Id == (ushort)FixedItems.BrowseField)
+            {
+		        msg.AddItem(1987, 1);
+		        msg.AddString("Browse Field");
+	        }
+            else
+            {
+		        msg.AddItem(container);
+		        msg.AddString(container.GetName());
+	        }
+
+	        msg.AddByte((byte)container.MaxSize);
+            msg.AddBoolean(hasParent);
+            msg.AddBoolean(container.IsUnlocked); // Drag and drop
+            msg.AddBoolean(container.HasPagination); // Pagination
+
+	        ushort containerSize = (ushort)container.ItemList.Count;
+	        msg.AddUInt16(containerSize);
+	        msg.AddUInt16(firstIndex);
+	        if (firstIndex < containerSize)
+	        {
+	            byte itemsToSend = (byte)Math.Min(Math.Min(container.MaxSize, containerSize - firstIndex), byte.MaxValue);
+
+		        msg.AddByte(itemsToSend);
+                foreach (Item item in container.ItemList)
+                {
+                    msg.AddItem(item);
+                }
+	        }
+            else
+            {
+		        msg.AddByte(0x00);
+	        }
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendAddTileItem(Position pos, byte stackpos, Item item)
+        {
+	        if (!CanSee(pos))
+		        return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.TileAddThing);
+	        msg.AddPosition(pos);
+	        msg.AddByte(stackpos);
+	        msg.AddItem(item);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendUpdateTileItem(Position pos, byte stackpos, Item item)
+        {
+            if (!CanSee(pos))
+                return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.TileUpdateThing);
+            msg.AddPosition(pos);
+            msg.AddByte(stackpos);
+            msg.AddItem(item);
+            WriteToOutputBuffer(msg);
+        }
+        public void SendRemoveTileThing(Position pos, byte stackpos)
+        {
+	        if (!CanSee(pos))
+		        return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        RemoveTileThing(msg, pos, stackpos);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendTextMessage(TextMessage message)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.TextMessage);
+	        msg.AddByte((byte)message.Type);
+	        switch (message.Type)
+            {
+		        case MessageTypes.DamageDealt:
+		        case MessageTypes.DamageReceived:
+		        case MessageTypes.DamageOthers:
+			        msg.AddPosition(message.Position);
+			        msg.AddUInt32(message.PrimaryValue);
+			        msg.AddByte((byte)message.PrimaryColor);
+			        msg.AddUInt32(message.SecondaryValue);
+			        msg.AddByte((byte)message.SecondaryColor);
+			        break;
+		        case MessageTypes.Healed:
+		        case MessageTypes.HealedOthers:
+		        case MessageTypes.Experience:
+		        case MessageTypes.ExperienceOthers:
+			        msg.AddPosition(message.Position);
+			        msg.AddUInt32(message.PrimaryValue);
+			        msg.AddByte((byte)message.PrimaryColor);
+		            break;
+	        }
+	        msg.AddString(message.Text);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendCancelWalk()
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.PlayerWalkCancel);
+	        msg.AddByte((byte)PlayerData.Direction);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendUpdateTile(Tile tile, Position pos)
+        {
+	        if (!CanSee(pos))
+		        return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.TileUpdate);
+	        msg.AddPosition(pos);
+
+	        if (tile != null)
+            {
+		        GetTileDescription(tile, msg);
+		        msg.AddByte(0x00);
+		        msg.AddByte(0xFF);
+	        }
+            else
+            {
+		        msg.AddByte(0x01);
+		        msg.AddByte(0xFF);
+	        }
+
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendCloseContainer(byte cid)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ContainerClose);
+	        msg.AddByte(cid);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendMoveCreature(Creature creature, Position newPos, int newStackPos, Position oldPos, byte oldStackPos, bool teleport)
+        {
+	        if (creature == PlayerData)
+            {
+		        if (oldStackPos >= 10)
+                {
+			        SendMapDescription(newPos);
+		        }
+                else if (teleport)
+		        {
+		            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+			        RemoveTileThing(msg, oldPos, oldStackPos);
+			        WriteToOutputBuffer(msg);
+			        SendMapDescription(newPos);
+		        }
+                else
+		        {
+		            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+			        if (oldPos.Z == 7 && newPos.Z >= 8)
+                    {
+				        RemoveTileThing(msg, oldPos, oldStackPos);
+			        }
+                    else
+                    {
+				        msg.AddByte((byte)ServerPacketType.CreatureMove);
+				        msg.AddPosition(oldPos);
+				        msg.AddByte(oldStackPos);
+				        msg.AddPosition(newPos);
+			        }
+
+			        if (newPos.Z > oldPos.Z)
+                    {
+				        MoveDownCreature(msg, creature, newPos, oldPos);
+			        }
+                    else if (newPos.Z < oldPos.Z)
+                    {
+				        MoveUpCreature(msg, creature, newPos, oldPos);
+			        }
+
+			        if (oldPos.Y > newPos.Y)
+                    { // north, for old x
+                        msg.AddByte((byte)ServerPacketType.MapSliceNorth);
+				        GetMapDescription(oldPos.X - 8, newPos.Y - 6, newPos.Z, 18, 1, msg);
+			        }
+                    else if (oldPos.Y < newPos.Y)
+                    { // south, for old x
+                        msg.AddByte((byte)ServerPacketType.MapSliceSouth);
+				        GetMapDescription(oldPos.X - 8, newPos.Y + 7, newPos.Z, 18, 1, msg);
+			        }
+
+			        if (oldPos.X < newPos.X)
+                    { // east, [with new y]
+                        msg.AddByte((byte)ServerPacketType.MapSliceEast);
+				        GetMapDescription(newPos.X + 9, newPos.Y - 6, newPos.Z, 1, 14, msg);
+			        }
+                    else if (oldPos.X > newPos.X)
+                    { // west, [with new y]
+                        msg.AddByte((byte)ServerPacketType.MapSliceWest);
+				        GetMapDescription(newPos.X - 8, newPos.Y - 6, newPos.Z, 1, 14, msg);
+			        }
+			        WriteToOutputBuffer(msg);
+		        }
+	        }
+            else if (CanSee(oldPos) && CanSee(creature.Position))
+            {
+		        if (teleport || (oldPos.Z == 7 && newPos.Z >= 8) || oldStackPos >= 10)
+                {
+			        SendRemoveTileThing(oldPos, oldStackPos);
+			        SendAddCreature(creature, newPos, newStackPos, false);
+		        }
+                else
+		        {
+		            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+			        msg.AddByte((byte)ServerPacketType.CreatureMove);
+			        msg.AddPosition(oldPos);
+			        msg.AddByte(oldStackPos);
+			        msg.AddPosition(creature.Position);
+			        WriteToOutputBuffer(msg);
+		        }
+	        }
+            else if (CanSee(oldPos))
+            {
+		        SendRemoveTileThing(oldPos, oldStackPos);
+	        }
+            else if (CanSee(creature.Position))
+            {
+		        SendAddCreature(creature, newPos, newStackPos, false);
+	        }
+        }
+        #endregion
 
         #region Add Messages
         private void AddOutfit(NetworkMessage msg, Outfit outfit)
@@ -474,7 +806,6 @@ namespace HerhangiOT.GameServer
 
 	        msg.AddUInt16(outfit.LookMount);
         }
-
         private void AddCreature(NetworkMessage msg, Creature creature, bool known, uint remove)
         {
 	        CreatureTypes creatureType = creature.GetCreatureType();
@@ -552,7 +883,6 @@ namespace HerhangiOT.GameServer
 
             msg.AddBoolean(!PlayerData.CanWalkthroughEx(creature)); //msg.AddByte((byte)(PlayerData.CanWalkthroughEx(creature) ? 0x00 : 0x01));
         }
-
         private void AddPlayerSkills(NetworkMessage msg)
         {
 	        msg.AddByte((byte)ServerPacketType.PlayerSkillsUpdate);
@@ -564,14 +894,12 @@ namespace HerhangiOT.GameServer
 		        msg.AddByte(PlayerData.SkillPercents[(byte)i]);
 	        }
         }
-        
         private void AddWorldLight(NetworkMessage msg, LightInfo lightInfo)
         {
 	        msg.AddByte((byte)ServerPacketType.WorldLight);
             msg.AddByte(lightInfo.Level);// (player->isAccessPlayer() ? 0xFF : lightInfo.level)); TODO: ACCESS
 	        msg.AddByte(lightInfo.Color);
         }
-
         private void AddCreatureLight(NetworkMessage msg, Creature creature)
         {
 	        msg.AddByte((byte)ServerPacketType.CreatureLight);
@@ -579,20 +907,111 @@ namespace HerhangiOT.GameServer
             msg.AddByte(creature.InternalLight.Level);//(player->isAccessPlayer() ? 0xFF : lightInfo.level)); TODO: ACCESS
             msg.AddByte(creature.InternalLight.Color);
         }
+
+        private void RemoveTileThing(NetworkMessage msg, Position pos, byte stackpos)
+        {
+	        if (stackpos >= 10)
+		        return;
+
+	        msg.AddByte(0x6C);
+	        msg.AddPosition(pos);
+	        msg.AddByte(stackpos);
+        }
+        
+        private void MoveUpCreature(NetworkMessage msg, Creature creature, Position newPos, Position oldPos)
+        {
+	        if (creature != PlayerData)
+		        return;
+
+	        //floor change up
+	        msg.AddByte((byte)ServerPacketType.FloorChangeUp);
+
+	        //going to surface
+	        if (newPos.Z == 7)
+            {
+		        int skip = -1;
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, 5, 18, 14, 3, ref skip); //(floor 7 and 6 already set)
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, 4, 18, 14, 4, ref skip);
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, 3, 18, 14, 5, ref skip);
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, 2, 18, 14, 6, ref skip);
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, 1, 18, 14, 7, ref skip);
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, 0, 18, 14, 8, ref skip);
+
+		        if (skip >= 0)
+                {
+			        msg.AddByte((byte)skip);
+			        msg.AddByte(0xFF);
+		        }
+	        }
+	        //underground, going one floor up (still underground)
+	        else if (newPos.Z > 7)
+            {
+		        int skip = -1;
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, (byte)(oldPos.Z - 3), 18, 14, 3, ref skip);
+
+		        if (skip >= 0)
+                {
+			        msg.AddByte((byte)skip);
+			        msg.AddByte(0xFF);
+		        }
+	        }
+
+	        //moving up a floor up makes us out of sync
+            //west
+            msg.AddByte((byte)ServerPacketType.MapSliceWest);
+	        GetMapDescription(oldPos.X - 8, oldPos.Y - 5, newPos.Z, 1, 14, msg);
+
+            //north
+            msg.AddByte((byte)ServerPacketType.MapSliceNorth);
+	        GetMapDescription(oldPos.X - 8, oldPos.Y - 6, newPos.Z, 18, 1, msg);
+        }
+        private void MoveDownCreature(NetworkMessage msg, Creature creature, Position newPos, Position oldPos)
+        {
+	        if (creature != PlayerData)
+		        return;
+
+	        //floor change down
+	        msg.AddByte((byte)ServerPacketType.FloorChangeDown);
+
+	        //going from surface to underground
+	        if (newPos.Z == 8)
+            {
+		        int skip = -1;
+
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, newPos.Z, 18, 14, -1, ref skip);
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, (byte)(newPos.Z + 1), 18, 14, -2, ref skip);
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, (byte)(newPos.Z + 2), 18, 14, -3, ref skip);
+
+		        if (skip >= 0)
+                {
+			        msg.AddByte((byte)skip);
+			        msg.AddByte(0xFF);
+		        }
+	        }
+	        //going further down
+	        else if (newPos.Z > oldPos.Z && newPos.Z > 8 && newPos.Z < 14)
+            {
+		        int skip = -1;
+		        GetFloorDescription(msg, oldPos.X - 8, oldPos.Y - 6, (byte)(newPos.Z + 2), 18, 14, -3, ref skip);
+
+		        if (skip >= 0)
+                {
+			        msg.AddByte((byte)skip);
+			        msg.AddByte(0xFF);
+		        }
+	        }
+
+	        //moving down a floor makes us out of sync
+	        //east
+	        msg.AddByte((byte)ServerPacketType.MapSliceEast);
+	        GetMapDescription(oldPos.X + 9, oldPos.Y - 7, newPos.Z, 1, 14, msg);
+
+            //south
+            msg.AddByte((byte)ServerPacketType.MapSliceSouth);
+	        GetMapDescription(oldPos.X - 8, oldPos.Y + 7, newPos.Z, 18, 1, msg);
+        }
         #endregion
 
-        public void SendMagicEffect(Position position, MagicEffects type)
-        {
-	        NetworkMessage msg = new NetworkMessage();
-	        msg.AddByte((byte)ServerPacketType.MagicEffect);
-	        msg.AddPosition(position);
-	        msg.AddByte((byte)type);
-	        WriteToOutputBuffer(msg);
-        }
-
-
-
-        
         private void GetMapDescription(int x, int y, int z, int width, int height, NetworkMessage msg)
         {
 	        int skip = -1;
@@ -622,7 +1041,6 @@ namespace HerhangiOT.GameServer
 		        msg.AddByte(0xFF);
 	        }
         }
-
         private void GetFloorDescription(NetworkMessage msg, int x, int y, byte z, int width, int height, int offset, ref int skip)
         {
 	        for (int nx = 0; nx < width; nx++)
@@ -654,8 +1072,6 @@ namespace HerhangiOT.GameServer
 		        }
 	        }
         }
-
-        
         private void GetTileDescription(Tile tile, NetworkMessage msg)
         {
 	        msg.AddUInt16(0x00); //environmental effects
@@ -789,6 +1205,13 @@ namespace HerhangiOT.GameServer
 		        return true;
 	        }
 	        return false;
+        }
+
+        public override string ToString()
+        {
+            if(AccountName != null)
+                return AccountName + " - " + PlayerName;
+            return base.ToString();
         }
     }
 }

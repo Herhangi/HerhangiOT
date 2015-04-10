@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using HerhangiOT.ServerLibrary.Networking;
 
 namespace HerhangiOT.ServerLibrary.Utility
@@ -103,7 +104,7 @@ namespace HerhangiOT.ServerLibrary.Utility
             return true;
         }
 
-        public unsafe static bool Decrypt(ref byte[] buffer, ref int length, int index, uint[] key)
+        public unsafe static bool DecryptXtea(ref byte[] buffer, ref int length, int index, uint[] key)
         {
             if (length <= index || (length - index) % 8 > 0 || key == null)
                 return false;
@@ -130,6 +131,40 @@ namespace HerhangiOT.ServerLibrary.Utility
 
             length = (BitConverter.ToUInt16(buffer, index) + 2 + index);
             return true;
+        }
+
+        public unsafe static bool DecryptXtea(NetworkMessage msg, uint[] key)
+        {
+            if ((msg.Length - msg.Position) % 8 > 0 || key == null)
+                return false;
+
+            fixed (byte* bufferPtr = msg.Buffer)
+            {
+                uint* words = (uint*)(bufferPtr + msg.Position);
+                int msgSize = msg.Length - msg.Position;
+
+                for (int pos = 0; pos < msgSize / 4; pos += 2)
+                {
+                    uint x_count = 32, x_sum = 0xC6EF3720, x_delta = 0x9E3779B9;
+
+                    while (x_count-- > 0)
+                    {
+                        words[pos + 1] -= (words[pos] << 4 ^ words[pos] >> 5) + words[pos] ^ x_sum
+                            + key[x_sum >> 11 & 3];
+                        x_sum -= x_delta;
+                        words[pos] -= (words[pos + 1] << 4 ^ words[pos + 1] >> 5) + words[pos + 1] ^ x_sum
+                            + key[x_sum & 3];
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long GetSystemMilliseconds()
+        {
+            return DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond;
         }
     }
 }

@@ -1,28 +1,34 @@
 ﻿using System;
+using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.ServerLibrary.Threading
 {
     public class Task
     {
-        private int _expiration;
-        public Action _action;
+        public long Expiration { get; protected set; }
+        public Action Action { get; protected set; }
 
         public Task(int time, Action action)
         {
-            _expiration = Environment.TickCount + time;
-            _action = action;
+            Expiration = Tools.GetSystemMilliseconds() + time;
+            Action = action;
         }
 
         public Task(Action action)
         {
-            _expiration = -1;
-            _action = action;
+            Expiration = -1;
+            Action = action;
+        }
+
+        public void SetNotToExpire()
+        {
+            Expiration = -1;
         }
 
         public bool IsExpired()
         {
-            if (_expiration == -1) return false;
-            return (_expiration > Environment.TickCount);
+            if (Expiration == -1) return false;
+            return (Expiration > Tools.GetSystemMilliseconds());
         }
     }
 }

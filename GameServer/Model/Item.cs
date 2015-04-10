@@ -11,8 +11,14 @@ namespace HerhangiOT.GameServer.Model
         public byte Count { get; set; }
         public uint ReferenceCounter { get; protected set; }
         public bool IsLoadedFromMap { get; set; }
+        public Thing Parent { get; protected set; }
 
         public FluidTypes FluidType { get { return FluidTypes.None; } } //TODO: Attributes
+
+        public virtual bool CanRemove()
+        {
+            return true;
+        }
 
         public Item(ushort id, byte count = 0)
         {
@@ -56,6 +62,11 @@ namespace HerhangiOT.GameServer.Model
         public override string GetDescription(int lookDistance = 0)
         {
             throw new System.NotImplementedException();
+        }
+
+        public override void SetParent(Thing parent)
+        {
+            Parent = parent;
         }
 
         public static Item CreateItem(BinaryReader reader)
@@ -176,6 +187,86 @@ namespace HerhangiOT.GameServer.Model
             //TODO: GAME DECAYING
         }
 
+        private uint GetBaseWeight()
+        {
+            //if (HasA(ITEM_ATTRIBUTE_WEIGHT)) { //TODO: Attributes
+            //    return getIntAttr(ITEM_ATTRIBUTE_WEIGHT);
+            //}
+            
+			return ItemManager.Templates[Id].Weight;
+		}
+
+        public uint GetWeight()
+        {
+	        uint weight = GetBaseWeight();
+
+	        if (IsStackable)
+	            return weight * Count;
+
+	        return weight;
+        }
+
+        public string GetName()
+        {
+            //if (hasAttribute(ITEM_ATTRIBUTE_NAME)) //TODO: Attributes
+            //{
+            //    return getStrAttr(ITEM_ATTRIBUTE_NAME);
+            //}
+
+            return ItemManager.Templates[Id].Name;
+        }
+
+        public string GetPluralName()
+        {
+            //if (hasAttribute(ITEM_ATTRIBUTE_PLURALNAME)) //TODO: Attributes
+            //{
+            //    return getStrAttr(ITEM_ATTRIBUTE_PLURALNAME);
+            //}
+
+            return ItemManager.Templates[Id].GetPluralName();
+        }
+
+        public Player GetHoldingPlayer()
+        {
+	        Thing p = Parent;
+	        while (p != null)
+            {
+		        if (p is Creature)
+                {
+			        return p as Player;
+		        }
+
+		        p = ((Item)p).Parent;
+	        }
+	        return null;
+        }
+
+        public override Thing GetParent()
+        {
+            return Parent;
+        }
+
+        public Thing GetTopParent()
+        {
+	        Thing aux = GetParent();
+	        Thing prevaux = this;
+
+	        if (aux == null)
+		        return prevaux;
+
+	        while (aux.GetParent() != null)
+            {
+		        prevaux = aux;
+		        aux = aux.GetParent();
+	        }
+
+		    return prevaux;
+        }
+
+        public override bool IsRemoved()
+        {
+            return Parent == null || Parent.IsRemoved();
+        }
         #region Template Attributes
         public bool HasProperty(ItemProperties property)
         {
@@ -203,7 +294,10 @@ namespace HerhangiOT.GameServer.Model
         public bool IsBlocking { get { return ItemManager.Templates[Id].DoesBlockSolid; } }
         public bool IsHangable { get { return ItemManager.Templates[Id].IsHangable; } }
         public bool IsPickupable { get { return ItemManager.Templates[Id].IsPickupable; } }
+        public bool IsStackable { get { return ItemManager.Templates[Id].IsStackable; } }
+        public bool IsSplash { get { return ItemManager.Templates[Id].Group == ItemGroups.Splash; } }
         public bool IsMagicField { get { return ItemManager.Templates[Id].Type == ItemTypes.MagicField; } }
+        public bool IsReplaceable { get { return ItemManager.Templates[Id].IsReplaceable; } }
         public bool HasWalkStack { get { return ItemManager.Templates[Id].WalkStack; } }
         public byte AlwaysOnTopOrder { get { return ItemManager.Templates[Id].AlwaysOnTopOrder; } }
         public FloorChangeDirections FloorChangeDirection { get { return ItemManager.Templates[Id].FloorChange; } }

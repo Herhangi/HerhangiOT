@@ -23,7 +23,7 @@ namespace HerhangiOT.GameServer.Model
         public Abilities Abilities { get; private set; }
         //ConditionDamage
 
-        public double Weight = 0.0;
+        public uint Weight = 0;
         public uint LevelDoor;
         public uint DecayTime;
         public uint WieldInfo;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
@@ -11,6 +12,7 @@ namespace HerhangiOT.ServerLibrary.Networking
 
         private static Queue<OutputMessage> _emptyMessageQueue;
         private static Deque<OutputMessage> _waitingMessageQueue;
+        private static Queue<OutputMessage> _autosendMessageQueue; 
 
         protected static Thread Thread;
         protected static AutoResetEvent Signaler;
@@ -24,11 +26,12 @@ namespace HerhangiOT.ServerLibrary.Networking
             }
 
             _waitingMessageQueue = new Deque<OutputMessage>();
+            _autosendMessageQueue = new Queue<OutputMessage>();
             _emptyQueueLock = new object();
             _waitingQueueLock = new object();
 
             Signaler = new AutoResetEvent(false);
-            Thread = new Thread(new ThreadStart(ProcessWaitingQueue));
+            Thread = new Thread(ProcessWaitingQueue);
             Thread.Start();
         }
 
@@ -50,6 +53,7 @@ namespace HerhangiOT.ServerLibrary.Networking
             }
 
             message.MessageTarget = connection;
+            if(autosend) _autosendMessageQueue.Enqueue(message);
             return message;
         }
 
@@ -86,6 +90,19 @@ namespace HerhangiOT.ServerLibrary.Networking
                 Signaler.Set();
         }
 
+        public static void Flush()
+        {
+            lock (_waitingQueueLock)
+            {
+                while (_autosendMessageQueue.Count != 0)
+                {
+                    _waitingMessageQueue.AddToBack(_autosendMessageQueue.Dequeue());
+                }
+            }
+
+            Signaler.Set();
+        }
+
         private static void ProcessWaitingQueue()
         {
             while (true)
@@ -104,7 +121,8 @@ namespace HerhangiOT.ServerLibrary.Networking
 
                 //if (!msg.IsExpired())
                 {
-                    //outputPool->startExecutionFrame();
+                    //outputPool->startExecutionFrame();s
+                    Console.WriteLine("Message sent to: " + msg.MessageTarget);
                     msg.MessageTarget.Send(msg);
 
                     //MESSAGE RELEASE AND CLIENT DISCONNECT MOVED TO STREAM END

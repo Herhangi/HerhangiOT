@@ -544,7 +544,89 @@ namespace HerhangiOT.GameServer
                 }    
             }
         }
+        
+        public void ClearSpectatorCache()
+        {
+	        SpectatorCache.Clear();
+	        PlayersSpectatorCache.Clear();
+        }
+        
+        public void MoveCreature(Creature creature, Tile newTile, bool forceTeleport = false)
+        {
+	        Tile oldTile = creature.Parent;
 
+	        Position oldPos = oldTile.Position;
+	        Position newPos = newTile.Position;
+
+	        bool teleport = forceTeleport || newTile.Ground == null || !Position.AreInRange(oldPos, newPos, 1, 1, 0);
+
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        GetSpectators(ref list, oldPos, true);
+	        GetSpectators(ref list, newPos, true);
+
+            List<int> oldStackPosVector = new List<int>();
+	        foreach (Creature spectator in list)
+	        {
+	            Player tmpPlayer = spectator as Player;
+		        if (tmpPlayer != null)
+                {
+			        if (tmpPlayer.CanSeeCreature(creature))
+                    {
+				        oldStackPosVector.Add(oldTile.GetClientIndexOfCreature(tmpPlayer, creature));
+			        }
+                    else
+                    {
+				        oldStackPosVector.Add(-1);
+			        }
+		        }
+	        }
+
+	        //remove the creature
+	        oldTile.RemoveThing(creature, 0);
+
+            //TODO: LEAF CREATURE STORAGE
+            
+	        //add the creature
+	        newTile.AddThing(creature);
+
+	        if (!teleport)
+            {
+		        if (oldPos.Y > newPos.Y)
+			        creature.Direction = Directions.North;
+		        else if (oldPos.Y < newPos.Y)
+			        creature.Direction = Directions.South;
+
+		        if (oldPos.X < newPos.X)
+			        creature.Direction = Directions.East;
+		        else if (oldPos.X > newPos.X)
+			        creature.Direction = Directions.West;
+	        }
+
+	        //send to client
+	        int i = 0;
+            foreach (Creature spectator in list)
+            {
+                Player tmpPlayer = spectator as Player;
+		        if (tmpPlayer != null)
+                {
+			        //Use the correct stackpos
+			        int stackpos = oldStackPosVector[i++];
+			        if (stackpos != -1)
+                    {
+				        tmpPlayer.SendCreatureMove(creature, newPos, newTile.GetStackposOfCreature(tmpPlayer, creature), oldPos, stackpos, teleport);
+			        }
+		        }
+	        }
+
+	        //event method
+	        foreach (Creature spectator in list)
+            {
+		        spectator.OnCreatureMove(creature, newTile, newPos, oldTile, oldPos, teleport);
+	        }
+
+	        oldTile.PostRemoveNotification(creature, newTile, 0);
+	        newTile.PostAddNotification(creature, oldTile, 0);
+        }
 
         public void GetSpectators(ref HashSet<Creature> list, Position position, bool multifloor = false, bool onlyPlayers = false,
             int minRangeX = 0, int maxRangeX = 0, int minRangeY = 0, int maxRangeY = 0)
@@ -657,7 +739,7 @@ namespace HerhangiOT.GameServer
 	        if (tile != null)
 	        {
 	            placeInPZ = tile.Flags.HasFlag(TileFlags.ProtectionZone);
-		        ReturnTypes ret = tile.QueryAdd(creature, CylinderFlags.IgnoreBlockItem);
+		        ReturnTypes ret = tile.QueryAdd(0, creature, 1, CylinderFlags.IgnoreBlockItem);
 		        foundTile = forceLogin || ret == ReturnTypes.NoError;
 	        }
             else
@@ -687,7 +769,7 @@ namespace HerhangiOT.GameServer
 			        if (tile == null || (placeInPZ && !tile.Flags.HasFlag(TileFlags.ProtectionZone)))
 				        continue;
 
-			        if (tile.QueryAdd(creature, CylinderFlags.None) == ReturnTypes.NoError) {
+			        if (tile.QueryAdd(0, creature, 1, CylinderFlags.None) == ReturnTypes.NoError) {
 				        if (!extendedPos || IsSightClear(centerPosition, tryPos, false)) {
 					        foundTile = true;
 					        break;
@@ -712,7 +794,7 @@ namespace HerhangiOT.GameServer
 	        return true;
         }
 
-        private bool IsSightClear(Position fromPos, Position toPos, bool floorCheck)
+        public bool IsSightClear(Position fromPos, Position toPos, bool floorCheck)
         {
 	        if (floorCheck && fromPos.Z != toPos.Z)
 		        return false;

@@ -76,12 +76,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Enums\ChaseModes.cs" />
     <Compile Include="Enums\ClientFluidTypes.cs" />
+    <Compile Include="Enums\CylinderLinks.cs" />
+    <Compile Include="Enums\FightModes.cs" />
+    <Compile Include="Enums\MessageTypes.cs" />
+    <Compile Include="Enums\SecureModes.cs" />
     <Compile Include="Enums\Slots.cs" />
+    <Compile Include="Enums\TextColors.cs" />
+    <Compile Include="Enums\TradeStates.cs" />
+    <Compile Include="Enums\ZoneTypes.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="GameConnection.cs" />
     <Compile Include="ItemManager.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="Model\Items\DepotChest.cs" />
+    <Compile Include="Model\Npc.cs" />
+    <Compile Include="Model\TextMessage.cs" />
     <Compile Include="OutfitManager.cs" />
     <Compile Include="SecretCommunication.cs" />
     <Compile Include="Utility\ServerLibraryExtensions.cs" />
