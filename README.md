@@ -1,4 +1,4 @@
-HerhangiOT
+HerhangiOT [![Build Status](https://travis-ci.org/Herhangi/HerhangiOT.svg?branch=master)](https://travis-ci.org/Herhangi/HerhangiOT)
 ===============
 
 HerhangiOT is open-source server emulator written in C# for MMORPG called [Tibia](http://www.tibia.com) currently working with 10.76 protocol. HerhangiOT is mainly developed on [The Forgotten Server](https://www.github.com/otland/forgottenserver) project and inspired by [SharpOT](https://github.com/sharpot/sharpot) project. Huge thanks to contributors of these project for creating this opportunity.
