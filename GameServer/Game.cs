@@ -24,15 +24,13 @@ namespace HerhangiOT.GameServer
         Maintain
     }
 
-    public class Game
+    public static class Game
     {
         #region Singleton Implementation
-        private static Game _instance;
-        public static Game Instance { get { return _instance; } }
         #endregion
 
-        private GameStates _gameState;
-        public GameStates GameState
+        private static GameStates _gameState;
+        public static GameStates GameState
         {
             get { return _gameState; }
             set
@@ -56,22 +54,22 @@ namespace HerhangiOT.GameServer
                 }
             }
         }
-        public GameWorldTypes WorldType;
+        public static GameWorldTypes WorldType { get; set; }
 
-        public LightInfo WorldLight { get; set; }
+        public static LightInfo WorldLight { get; set; }
 
         public static Dictionary<string, Player> OnlinePlayers = new Dictionary<string, Player>();
         public static Dictionary<uint, Player> OnlinePlayersById = new Dictionary<uint, Player>();
 
-        public Dictionary<Tile, Container> BrowseFields = new Dictionary<Tile, Container>(); 
+        public static Dictionary<Tile, Container> BrowseFields = new Dictionary<Tile, Container>(); 
 
         public static void Initialize()
         {
-            _instance = new Game { GameState = GameStates.Startup };
-            _instance.WorldLight = new LightInfo {Color = 0xD7, Level = Constants.LightLevelDay};
+            GameState = GameStates.Startup;
+            WorldLight = new LightInfo {Color = 0xD7, Level = Constants.LightLevelDay};
         }
 
-        public ReturnTypes InternalMoveCreature(Creature creature, Directions direction, CylinderFlags flags = CylinderFlags.None)
+        public static ReturnTypes InternalMoveCreature(Creature creature, Directions direction, CylinderFlags flags = CylinderFlags.None)
         {
 	        Position currentPos = creature.Position;
 	        Position destPos = Position.GetNextPosition(direction, currentPos);
@@ -82,9 +80,9 @@ namespace HerhangiOT.GameServer
 		        //try go up
 		        if (currentPos.Z != 8 && creature.Parent.HasHeight(3))
                 {
-			        Tile tmpTile = Map.Instance.GetTile(currentPos.Z, currentPos.Y, (byte)(currentPos.Z - 1));
+			        Tile tmpTile = Map.GetTile(currentPos.Z, currentPos.Y, (byte)(currentPos.Z - 1));
 			        if (tmpTile == null || (tmpTile.Ground == null && !tmpTile.HasProperty(ItemProperties.BlockSolid))) {
-				        tmpTile = Map.Instance.GetTile(destPos.X, destPos.Y, (byte)(destPos.Z - 1));
+				        tmpTile = Map.GetTile(destPos.X, destPos.Y, (byte)(destPos.Z - 1));
 				        if (tmpTile != null && tmpTile.Ground != null && !tmpTile.HasProperty(ItemProperties.BlockSolid)) {
                             flags |= CylinderFlags.IgnoreBlockItem | CylinderFlags.IgnoreBlockCreature;
 
@@ -98,10 +96,10 @@ namespace HerhangiOT.GameServer
                 else
                 {
 			        //try go down
-			        Tile tmpTile = Map.Instance.GetTile(destPos.X, destPos.Y, destPos.Z);
+			        Tile tmpTile = Map.GetTile(destPos.X, destPos.Y, destPos.Z);
 			        if (currentPos.Z != 7 && (tmpTile == null || (tmpTile.Ground == null && !tmpTile.HasProperty(ItemProperties.BlockSolid))))
                     {
-				        tmpTile = Map.Instance.GetTile(destPos.X, destPos.Y, (byte)(destPos.Z + 1));
+				        tmpTile = Map.GetTile(destPos.X, destPos.Y, (byte)(destPos.Z + 1));
 				        if (tmpTile != null && tmpTile.HasHeight(3))
                         {
 					        flags |= CylinderFlags.IgnoreBlockItem | CylinderFlags.IgnoreBlockCreature;
@@ -111,21 +109,21 @@ namespace HerhangiOT.GameServer
 		        }
 	        }
 
-	        Tile toTile = Map.Instance.GetTile(destPos.X, destPos.Y, destPos.Z);
+	        Tile toTile = Map.GetTile(destPos.X, destPos.Y, destPos.Z);
 	        if (toTile == null)
 		        return ReturnTypes.NotPossible;
 
 	        return InternalMoveCreature(creature, toTile, flags);
         }
         
-        ReturnTypes InternalMoveCreature(Creature creature, Tile toTile, CylinderFlags flags = CylinderFlags.None)
+        private static ReturnTypes InternalMoveCreature(Creature creature, Tile toTile, CylinderFlags flags = CylinderFlags.None)
         {
 	        //check if we can move the creature to the destination
 	        ReturnTypes ret = toTile.QueryAdd(0, creature, 1, flags);
 	        if (ret != ReturnTypes.NoError)
 		        return ret;
 
-	        Map.Instance.MoveCreature(creature, toTile);
+	        Map.MoveCreature(creature, toTile);
 	        if (creature.Parent != toTile) {
 		        return ReturnTypes.NoError;
 	        }
@@ -138,7 +136,7 @@ namespace HerhangiOT.GameServer
 
 	        while ((subCylinder = toTile.QueryDestination(ref index, creature, ref toItem, ref flags) as Tile) != toCylinder)
             {
-		        Map.Instance.MoveCreature(creature, subCylinder);
+		        Map.MoveCreature(creature, subCylinder);
 
 		        if (creature.GetParent() != subCylinder) {
 			        //could happen if a script move the creature
@@ -157,12 +155,12 @@ namespace HerhangiOT.GameServer
         }
 
 
-        private bool InternalPlaceCreature(Creature creature,Position position, bool extendedPosition = false, bool forced = false)
+        private static bool InternalPlaceCreature(Creature creature,Position position, bool extendedPosition = false, bool forced = false)
         {
 	        if (creature.Parent != null)
 		        return false;
 
-	        if (!Map.Instance.PlaceCreature(position, creature, extendedPosition, forced)) {
+	        if (!Map.PlaceCreature(position, creature, extendedPosition, forced)) {
 		        return false;
 	        }
 
@@ -172,19 +170,19 @@ namespace HerhangiOT.GameServer
 	        return true;
         }
 
-        public void InternalCloseTrade(Player player)
+        public static void InternalCloseTrade(Player player)
         {
             //TODO: FILL THIS METHOD
         }
 
-        public bool PlaceCreature(Creature creature, Position position, bool extendedPosition = false, bool forced = false)
+        public static bool PlaceCreature(Creature creature, Position position, bool extendedPosition = false, bool forced = false)
         {
             if (!InternalPlaceCreature(creature, position, extendedPosition, forced)) {
 		        return false;
 	        }
 
             HashSet<Creature> spectators = new HashSet<Creature>();
-            Map.Instance.GetSpectators(ref spectators, creature.Position, true);
+            Map.GetSpectators(ref spectators, creature.Position, true);
             foreach (Creature spectator in spectators)
             {
                 Player tmpPlayer = spectator as Player;
@@ -205,7 +203,7 @@ namespace HerhangiOT.GameServer
 	            return true;
         }
 
-        public void AddPlayer(Player player)
+        public static void AddPlayer(Player player)
         {
             string lowercaseName = player.CharacterName.ToLowerInvariant();
             OnlinePlayers[lowercaseName] = player;
@@ -213,7 +211,7 @@ namespace HerhangiOT.GameServer
             OnlinePlayersById[player.Id] = player;
         }
 
-        public Creature GetCreatureById(uint id)
+        public static Creature GetCreatureById(uint id)
         {
             if (id <= Player.PlayerAutoID)
                 return GetPlayerById(id);
@@ -223,7 +221,7 @@ namespace HerhangiOT.GameServer
             return null;
         }
 
-        public Player GetPlayerByName(string playerName)
+        public static Player GetPlayerByName(string playerName)
         {
             string lowercaseName = playerName.ToLowerInvariant();
             if (OnlinePlayers.ContainsKey(lowercaseName))
@@ -231,14 +229,14 @@ namespace HerhangiOT.GameServer
             return null;
         }
 
-        public Player GetPlayerById(uint playerId)
+        public static Player GetPlayerById(uint playerId)
         {
             if (OnlinePlayersById.ContainsKey(playerId))
                 return OnlinePlayersById[playerId];
             return null;
         }
      
-        public void CheckCreatureWalk(uint creatureId)
+        public static void CheckCreatureWalk(uint creatureId)
         {
 	        Creature creature = GetCreatureById(creatureId);
 	        if (creature != null && creature.Health > 0)
@@ -248,7 +246,7 @@ namespace HerhangiOT.GameServer
 	        }
         }
         
-        public void CheckCreatureAttack(uint creatureId)
+        public static void CheckCreatureAttack(uint creatureId)
         {
             Creature creature = GetCreatureById(creatureId);
 	        if (creature != null && creature.Health > 0)
@@ -257,7 +255,7 @@ namespace HerhangiOT.GameServer
 	        }
         }
 
-        private void Cleanup()
+        private static void Cleanup()
         {
             //TODO: free memory, MICRO MEMORY MANAGEMENT, WE MIGHT NOT NEED THIS
             //for (auto creature : ToReleaseCreatures) {
@@ -281,17 +279,17 @@ namespace HerhangiOT.GameServer
             //toDecayItems.clear();
         }
 
-        public void ReleaseCreature(Creature creature)
+        public static void ReleaseCreature(Creature creature)
         {
 	        //ToReleaseCreatures.push_back(creature); //TODO: MICRO MEMORY MANAGEMENT, WE MIGHT NOT NEED THIS
         }
-        public void ReleaseItem(Item item)
+        public static void ReleaseItem(Item item)
         {
             //ToReleaseItems.push_back(item); //TODO: MICRO MEMORY MANAGEMENT, WE MIGHT NOT NEED THIS
         }
 
         #region Game Operations
-        public void PlayerReceivePingBack(uint playerId)
+        public static void PlayerReceivePingBack(uint playerId)
         {
             Player player = GetPlayerById(playerId);
             if (player == null)
@@ -300,7 +298,7 @@ namespace HerhangiOT.GameServer
             player.SendPingBack();
         }
 
-        public void PlayerSetFightModes(uint playerId, FightModes fightMode, ChaseModes chaseMode, SecureModes secureMode)
+        public static void PlayerSetFightModes(uint playerId, FightModes fightMode, ChaseModes chaseMode, SecureModes secureMode)
         {
             Player player = GetPlayerById(playerId);
             if (player == null)
@@ -311,7 +309,7 @@ namespace HerhangiOT.GameServer
             player.SecureMode = secureMode;
         }
 
-        public void PlayerMove(uint playerId, Directions direction)
+        public static void PlayerMove(uint playerId, Directions direction)
         {
             Player player = GetPlayerById(playerId);
             if (player == null)

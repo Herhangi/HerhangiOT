@@ -102,23 +102,23 @@ namespace HerhangiOT.GameServer
             switch (ConfigManager.Instance[ConfigStr.WorldType])
             {
                 case "pvp":
-                    Game.Instance.WorldType = GameWorldTypes.Pvp;
+                    Game.WorldType = GameWorldTypes.Pvp;
                     break;
                 case "no-pvp":
-                    Game.Instance.WorldType = GameWorldTypes.NoPvp;
+                    Game.WorldType = GameWorldTypes.NoPvp;
                     break;
                 case "pvp-enforced":
-                    Game.Instance.WorldType = GameWorldTypes.PvpEnforced;
+                    Game.WorldType = GameWorldTypes.PvpEnforced;
                     break;
                 default:
                     Logger.Log(LogLevels.Error, "Invalid game world type: " + ConfigManager.Instance[ConfigStr.WorldType]);
                     ExitApplication();
                     break;
             }
-            Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.Instance.WorldType);
+            Logger.Log(LogLevels.Operation, "Setting Game World Type: " + Game.WorldType);
 
             // Initialize Game State
-            Game.Instance.GameState = GameStates.Init;
+            Game.GameState = GameStates.Init;
 
             //TODO: HOUSE RENTS
             //TODO: MARKET CHECK OFFERS
@@ -139,7 +139,7 @@ namespace HerhangiOT.GameServer
             }
 
             GameServer.Start();
-            Game.Instance.GameState = GameStates.Normal;
+            Game.GameState = GameStates.Normal;
             //TODO: FIRE SERVER RUNNING EVENT
 
             while (true)

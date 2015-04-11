@@ -174,7 +174,7 @@ namespace HerhangiOT.GameServer.Model
             };
             CurrentOutfit = DefaultOutfit;
 
-            if (Game.Instance.WorldType != GameWorldTypes.PvpEnforced)
+            if (Game.WorldType != GameWorldTypes.PvpEnforced)
             {
                 if (CharacterData.SkullUntil.HasValue && CharacterData.SkullUntil > DateTime.Now)
                 {
@@ -195,7 +195,7 @@ namespace HerhangiOT.GameServer.Model
 
             LoginPosition = new Position(CharacterData.PosX, CharacterData.PosY, CharacterData.PosZ);
 
-            Town = Map.Instance.GetTown(CharacterData.TownId);
+            Town = Map.GetTown(CharacterData.TownId);
             if (Town == null)
             {
                 Logger.Log(LogLevels.Error, "Character("+CharacterName+") has TownId("+CharacterData.TownId+") which doesn't exist!");
@@ -378,7 +378,7 @@ namespace HerhangiOT.GameServer.Model
         public override void AddList()
         {
             //TODO: VIP LIST
-            Game.Instance.AddPlayer(this);
+            Game.AddPlayer(this);
         }
         
         public sealed override void OnWalk(ref Directions dir)
@@ -483,16 +483,14 @@ namespace HerhangiOT.GameServer.Model
             foreach (KeyValuePair<byte, OpenContainer> it in OpenContainers)
             {
                 OpenContainer openContainer = it.Value;
-
                 if (openContainer.Container != container)
                     continue;
 
 		        ushort slot = openContainer.Index;
-
 		        if (container.Id == (ushort)FixedItems.BrowseField)
                 {
 			        ushort containerSize = (ushort)(container.ItemList.Count - 1);
-			        ushort pageEnd = (ushort)(openContainer.Index + container.MaxSize);
+			        ushort pageEnd = (ushort)(openContainer.Index + container.MaxSize - 1);
 
 			        if (containerSize > pageEnd)
                     {
@@ -510,7 +508,8 @@ namespace HerhangiOT.GameServer.Model
 		        }
 
 		        Connection.SendAddContainerItem(it.Key, slot, item);
-	        }
+                break;
+            }
         }
 
         public void SendUpdateContainerItem(Container container, ushort slot, Item newItem)
@@ -773,7 +772,7 @@ namespace HerhangiOT.GameServer.Model
 		        return;
 
 	        if (TradeItem == item)
-		        Game.Instance.InternalCloseTrade(this);
+		        Game.InternalCloseTrade(this);
 	        else
 	        {
 	            Container container = item.Parent as Container; 
@@ -781,7 +780,7 @@ namespace HerhangiOT.GameServer.Model
                 {
 			        if (container == TradeItem)
                     {
-				        Game.Instance.InternalCloseTrade(this);
+				        Game.InternalCloseTrade(this);
 				        break;
 			        }
 
@@ -820,7 +819,7 @@ namespace HerhangiOT.GameServer.Model
             {
                 if (TradeItem.Parent != container && container.IsHoldingItem(TradeItem))
                 {
-				    Game.Instance.InternalCloseTrade(this);
+				    Game.InternalCloseTrade(this);
 			    }
 		    }
         }

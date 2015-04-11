@@ -61,7 +61,7 @@ namespace HerhangiOT.GameServer
         }
         protected override void ProcessFirstMessage(bool isChecksummed)
         {
-            if (Game.Instance.GameState == GameStates.Shutdown)
+            if (Game.GameState == GameStates.Shutdown)
             {
                 Disconnect();
                 return;
@@ -113,13 +113,13 @@ namespace HerhangiOT.GameServer
                 return;
             }
 
-            if (Game.Instance.GameState == GameStates.Startup)
+            if (Game.GameState == GameStates.Startup)
             {
                 DispatchDisconnect("Gameworld is starting up. Please wait.");
                 return;
             }
 
-            if (Game.Instance.GameState == GameStates.Maintain)
+            if (Game.GameState == GameStates.Maintain)
             {
                 DispatchDisconnect("Gameworld is under maintenance. Please re-connect in a while.");
                 return;
@@ -183,7 +183,7 @@ namespace HerhangiOT.GameServer
         }
         public void Login()
         {
-            PlayerData = Game.Instance.GetPlayerByName(PlayerName);
+            PlayerData = Game.GetPlayerByName(PlayerName);
             if (PlayerData == null)
             {
                 PlayerData = new Player(this, AccountName, PlayerName);
@@ -196,14 +196,14 @@ namespace HerhangiOT.GameServer
                 //CHECK NAMELOCK
 
                 //TODO: GROUP FLAGS
-                if (Game.Instance.GameState == GameStates.Closing)
+                if (Game.GameState == GameStates.Closing)
                 {
                     DispatchDisconnect("The game is just going down.\nPlease try again later.");
                     return;
                 }
 
                 //TODO: GROUP FLAGS
-                if (Game.Instance.GameState == GameStates.Closed)
+                if (Game.GameState == GameStates.Closed)
                 {
                     DispatchDisconnect("Server is currently closed.\nPlease try again later.");
                     return;
@@ -217,9 +217,9 @@ namespace HerhangiOT.GameServer
                     return;
                 }
 
-                if (!Game.Instance.PlaceCreature(PlayerData, PlayerData.LoginPosition))
+                if (!Game.PlaceCreature(PlayerData, PlayerData.LoginPosition))
                 {
-                    if (!Game.Instance.PlaceCreature(PlayerData, PlayerData.LoginPosition, false, true))
+                    if (!Game.PlaceCreature(PlayerData, PlayerData.LoginPosition, false, true))
                     {
                         DispatchDisconnect("Temple position is wrong. Contact the administrator!");
                         return;
@@ -263,7 +263,7 @@ namespace HerhangiOT.GameServer
         }
         private static void ProcessPingBackPacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.PlayerReceivePingBack(conn.PlayerData.Id)));
+            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.PlayerReceivePingBack(conn.PlayerData.Id)));
         }
         private static void ProcessFightModesPacket(GameConnection conn)
         {
@@ -272,7 +272,7 @@ namespace HerhangiOT.GameServer
 	        SecureModes secureMode = (SecureModes) conn.InMessage.GetByte(); // 0 - can't attack unmarked, 1 - can attack unmarked
 	        // uint8_t rawPvpMode = msg.getByte(); // pvp mode introduced in 10.0
 
-            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
+            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
         }
         private static void ProcessPlayerMovePacket(GameConnection conn)
         {
@@ -305,7 +305,7 @@ namespace HerhangiOT.GameServer
                     break;
             }
 
-            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.PlayerMove(conn.PlayerData.Id, direction)));
+            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.PlayerMove(conn.PlayerData.Id, direction)));
         }
         #endregion
 
@@ -473,7 +473,7 @@ namespace HerhangiOT.GameServer
         public void SendWorldLight()
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
-            AddWorldLight(msg, Game.Instance.WorldLight);
+            AddWorldLight(msg, Game.WorldLight);
             WriteToOutputBuffer(msg);
         }
         public void SendInventoryItem(Slots slot, Item item)
@@ -1047,7 +1047,7 @@ namespace HerhangiOT.GameServer
             {
 		        for (int ny = 0; ny < height; ny++)
                 {
-			        Tile tile = Map.Instance.GetTile((ushort)(x + nx + offset), (ushort)(y + ny + offset), z);
+			        Tile tile = Map.GetTile((ushort)(x + nx + offset), (ushort)(y + ny + offset), z);
 			        if (tile != null)
                     {
 				        if (skip >= 0)
@@ -1142,7 +1142,7 @@ namespace HerhangiOT.GameServer
             {
                 foreach (uint idToRemove in _knownCreatureSet)
                 {
-                    Creature creature = Game.Instance.GetCreatureById(idToRemove);
+                    Creature creature = Game.GetCreatureById(idToRemove);
                     if (!CanSee(creature))
                     {
                         removedKnown = idToRemove;

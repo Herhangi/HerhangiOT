@@ -146,7 +146,7 @@ namespace HerhangiOT.GameServer.Model.Items
         private void OnAddContainerItem(Item item)
         {
 	        HashSet<Creature> spectators = new HashSet<Creature>();
-	        Map.Instance.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
+	        Map.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
 
 	        //send to client
 	        foreach (Player spectator in spectators)
@@ -164,7 +164,7 @@ namespace HerhangiOT.GameServer.Model.Items
         private void OnUpdateContainerItem(ushort index, Item oldItem, Item newItem)
         {
 	        HashSet<Creature> spectators = new HashSet<Creature>();
-	        Map.Instance.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
+	        Map.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
 
 	        //send to client
 	        foreach (Player spectator in spectators)
@@ -182,7 +182,7 @@ namespace HerhangiOT.GameServer.Model.Items
         private void OnRemoveContainerItem(ushort index, Item item)
         {
 	        HashSet<Creature> list = new HashSet<Creature>();
-	        Map.Instance.GetSpectators(ref list, GetPosition(), false, true, 2, 2, 2, 2);
+	        Map.GetSpectators(ref list, GetPosition(), false, true, 2, 2, 2, 2);
 
 	        //send change to client
 	        foreach (Player spectator in list)

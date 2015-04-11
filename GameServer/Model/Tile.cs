@@ -379,23 +379,23 @@ namespace HerhangiOT.GameServer.Model
                 ushort dy = Position.Y;
                 byte dz = (byte)(Position.Z + 1);
 
-                Tile southDownTile = Map.Instance.GetTile(dx, (ushort)(dy - 1), dz);
+                Tile southDownTile = Map.GetTile(dx, (ushort)(dy - 1), dz);
                 if (southDownTile != null && southDownTile.FloorChange(Directions.SouthAlt))
                 {
                     dy -= 2;
-                    destTile = Map.Instance.GetTile(dx, dy, dz);
+                    destTile = Map.GetTile(dx, dy, dz);
                 }
                 else
                 {
-                    Tile eastDownTile = Map.Instance.GetTile((ushort)(dx - 1), dy, dz);
+                    Tile eastDownTile = Map.GetTile((ushort)(dx - 1), dy, dz);
                     if (eastDownTile != null && eastDownTile.FloorChange(Directions.EastAlt))
                     {
                         dx -= 2;
-                        destTile = Map.Instance.GetTile(dx, dy, dz);
+                        destTile = Map.GetTile(dx, dy, dz);
                     }
                     else
                     {
-                        Tile downTile = Map.Instance.GetTile(dx, dy, dz);
+                        Tile downTile = Map.GetTile(dx, dy, dz);
                         if (downTile != null)
                         {
                             if (downTile.FloorChange(Directions.North))
@@ -428,7 +428,7 @@ namespace HerhangiOT.GameServer.Model
                                 ++dx;
                             }
 
-                            destTile = Map.Instance.GetTile(dx, dy, dz);
+                            destTile = Map.GetTile(dx, dy, dz);
                         }
                     }
                 }
@@ -469,7 +469,7 @@ namespace HerhangiOT.GameServer.Model
                     dx += 2;
                 }
 
-                destTile = Map.Instance.GetTile(dx, dy, dz);
+                destTile = Map.GetTile(dx, dy, dz);
             }
 
             if (destTile == null)
@@ -507,7 +507,7 @@ namespace HerhangiOT.GameServer.Model
             Creature creature = thing as Creature;
 	        if (creature != null)
             {
-		        Map.Instance.ClearSpectatorCache();
+		        Map.ClearSpectatorCache();
 		        creature.SetParent(this);
                 MakeCreatureList();
 		        Creatures.Insert(0, creature);
@@ -539,7 +539,7 @@ namespace HerhangiOT.GameServer.Model
 
 				        Item oldGround = Ground;
                         Ground.SetParent(null);
-                        Game.Instance.ReleaseItem(Ground);
+                        Game.ReleaseItem(Ground);
 				        Ground = item;
 				        ResetFlags(oldGround);
 				        SetFlags(item);
@@ -561,7 +561,7 @@ namespace HerhangiOT.GameServer.Model
                                 {
 							        RemoveThing(oldSplash, 1);
 							        oldSplash.SetParent(null);
-							        Game.Instance.ReleaseItem(oldSplash);
+							        Game.ReleaseItem(oldSplash);
 							        PostRemoveNotification(oldSplash, null, 0);
 							        break;
 						        }
@@ -613,7 +613,7 @@ namespace HerhangiOT.GameServer.Model
 								        RemoveThing(oldField, 1);
 
 								        oldField.SetParent(null);
-								        Game.Instance.ReleaseItem(oldField);
+								        Game.ReleaseItem(oldField);
 								        PostRemoveNotification(oldField, null, 0);
 								        break;
 							        }
@@ -621,7 +621,7 @@ namespace HerhangiOT.GameServer.Model
                                     {
 								        //This magic field cannot be replaced.
 								        item.SetParent(null);
-								        Game.Instance.ReleaseItem(item);
+								        Game.ReleaseItem(item);
 								        return;
 							        }
 						        }
@@ -665,7 +665,7 @@ namespace HerhangiOT.GameServer.Model
 		        Ground = null;
 
 		        HashSet<Creature> spectators = new HashSet<Creature>();
-		        Map.Instance.GetSpectators(ref spectators, Position, true);
+		        Map.GetSpectators(ref spectators, Position, true);
 		        OnRemoveTileItem(spectators, new List<int>(spectators.Count), item);
 		        return;
 	        }
@@ -682,7 +682,7 @@ namespace HerhangiOT.GameServer.Model
 	            List<int> oldStackPosVector = new List<int>();
 
 		        HashSet<Creature> spectators = new HashSet<Creature>();
-		        Map.Instance.GetSpectators(ref spectators, Position, true);
+		        Map.GetSpectators(ref spectators, Position, true);
 		        foreach (Creature spectator in spectators)
 		        {
 		            Player tmpPlayer = spectator as Player;
@@ -714,7 +714,7 @@ namespace HerhangiOT.GameServer.Model
                     List<int> oldStackPosVector = new List<int>();
 
                     HashSet<Creature> spectators = new HashSet<Creature>();
-			        Map.Instance.GetSpectators(ref spectators, Position, true);
+			        Map.GetSpectators(ref spectators, Position, true);
                     foreach (Creature spectator in spectators)
                     {
                         Player tmpPlayer = spectator as Player;
@@ -736,7 +736,7 @@ namespace HerhangiOT.GameServer.Model
 	        if (item.HasProperty(ItemProperties.Moveable) || item is Container)
             {
 	            Container fieldContainer;
-                if (Game.Instance.BrowseFields.TryGetValue(this, out fieldContainer))
+                if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                 {
                     fieldContainer.AddItemBack(item);
                     item.SetParent(this);
@@ -748,7 +748,7 @@ namespace HerhangiOT.GameServer.Model
 	        Position cylinderMapPos = GetPosition();
 
             HashSet<Creature> spectators = new HashSet<Creature>();
-	        Map.Instance.GetSpectators(ref spectators, cylinderMapPos, true);
+	        Map.GetSpectators(ref spectators, cylinderMapPos, true);
 
 	        //send to client
 	        foreach (Creature spectator in spectators)
@@ -767,7 +767,7 @@ namespace HerhangiOT.GameServer.Model
 	        if (newItem.HasProperty(ItemProperties.Moveable) || newItem is Container)
             {
 	            Container fieldContainer;
-                if (Game.Instance.BrowseFields.TryGetValue(this, out fieldContainer))
+                if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                 {
                     int index = fieldContainer.GetThingIndex(oldItem);
                     if (index != -1)
@@ -780,7 +780,7 @@ namespace HerhangiOT.GameServer.Model
             else if (oldItem.HasProperty(ItemProperties.Moveable) || oldItem is Container)
             {
 	            Container fieldContainer;
-                if (Game.Instance.BrowseFields.TryGetValue(this, out fieldContainer))
+                if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                 {
                     Thing oldParent = oldItem.Parent;
                     fieldContainer.RemoveThing(oldItem, oldItem.Count);
@@ -791,7 +791,7 @@ namespace HerhangiOT.GameServer.Model
 	        Position cylinderMapPos = GetPosition();
 
 	        HashSet<Creature> list = new HashSet<Creature>();
-	        Map.Instance.GetSpectators(ref list, cylinderMapPos, true);
+	        Map.GetSpectators(ref list, cylinderMapPos, true);
 
 	        //send to client
             foreach (Creature spectator in list)
@@ -814,7 +814,7 @@ namespace HerhangiOT.GameServer.Model
 	        if (item.HasProperty(ItemProperties.Moveable) || item is Container)
 	        {
 	            Container fieldContainer;
-                if(Game.Instance.BrowseFields.TryGetValue(this, out fieldContainer))
+                if(Game.BrowseFields.TryGetValue(this, out fieldContainer))
                     fieldContainer.RemoveThing(item, item.Count);
 	        }
 
@@ -854,7 +854,7 @@ namespace HerhangiOT.GameServer.Model
         public sealed override void PostRemoveNotification(Thing thing, Thing newParent, int index, CylinderLinks link = CylinderLinks.Owner)
         {
             HashSet<Creature> list = new HashSet<Creature>();
-	        Map.Instance.GetSpectators(ref list, GetPosition(), true, true);
+	        Map.GetSpectators(ref list, GetPosition(), true, true);
 
 	        if (GetThingCount() > 8)
             {

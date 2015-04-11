@@ -131,7 +131,7 @@ namespace HerhangiOT.GameServer.Model
 
 		        if (GetNextStep(ref dir, ref flags))
                 {
-			        ReturnTypes ret = Game.Instance.InternalMoveCreature(this, dir, flags);
+			        ReturnTypes ret = Game.InternalMoveCreature(this, dir, flags);
 			        if (ret != ReturnTypes.NoError)
 			        {
 			            Player player = this as Player;
@@ -174,7 +174,7 @@ namespace HerhangiOT.GameServer.Model
 	        OnAttacked();
 	        AttackedCreature.OnAttacked();
 
-	        if (Map.Instance.IsSightClear(GetPosition(), AttackedCreature.GetPosition(), true))
+	        if (Map.IsSightClear(GetPosition(), AttackedCreature.GetPosition(), true))
             {
 		        DoAttacking(interval);
 	        }
@@ -279,7 +279,7 @@ namespace HerhangiOT.GameServer.Model
 					        //update 0
 					        for (int x = -MaxWalkCacheWidth; x <= MaxWalkCacheWidth; ++x)
                             {
-						        tile = Map.Instance.GetTile((ushort)(myPos.X + x), (ushort)(myPos.Y - MaxWalkCacheHeight), myPos.Z);
+						        tile = Map.GetTile((ushort)(myPos.X + x), (ushort)(myPos.Y - MaxWalkCacheHeight), myPos.Z);
 						        UpdateTileCache(tile, x, -MaxWalkCacheHeight);
 					        }
 				        }
@@ -294,7 +294,7 @@ namespace HerhangiOT.GameServer.Model
 					        //update mapWalkHeight - 1
 					        for (int x = -MaxWalkCacheWidth; x <= MaxWalkCacheWidth; ++x)
                             {
-						        tile = Map.Instance.GetTile((ushort)(myPos.X + x), (ushort)(myPos.Y + MaxWalkCacheHeight), myPos.Z);
+						        tile = Map.GetTile((ushort)(myPos.X + x), (ushort)(myPos.Y + MaxWalkCacheHeight), myPos.Z);
 						        UpdateTileCache(tile, x, MaxWalkCacheHeight);
 					        }
 				        }
@@ -322,7 +322,7 @@ namespace HerhangiOT.GameServer.Model
 					        //update mapWalkWidth - 1
 					        for (int y = -MaxWalkCacheHeight; y <= MaxWalkCacheHeight; ++y)
                             {
-						        tile = Map.Instance.GetTile((ushort)(myPos.X + MaxWalkCacheWidth), (ushort)(myPos.Y + y), myPos.Z);
+						        tile = Map.GetTile((ushort)(myPos.X + MaxWalkCacheWidth), (ushort)(myPos.Y + y), myPos.Z);
 						        UpdateTileCache(tile, MaxWalkCacheWidth, y);
 					        }
 				        }
@@ -349,7 +349,7 @@ namespace HerhangiOT.GameServer.Model
 					        //update 0
 					        for (int y = -MaxWalkCacheHeight; y <= MaxWalkCacheHeight; ++y)
                             {
-						        tile = Map.Instance.GetTile((ushort)(myPos.X - MaxWalkCacheWidth), (ushort)(myPos.Y + y), myPos.Z);
+						        tile = Map.GetTile((ushort)(myPos.X - MaxWalkCacheWidth), (ushort)(myPos.Y + y), myPos.Z);
 						        UpdateTileCache(tile, -MaxWalkCacheWidth, y);
 					        }
 				        }
@@ -394,7 +394,7 @@ namespace HerhangiOT.GameServer.Model
 			        if (HasExtraSwing())
                     {
 				        //our target is moving lets see if we can get in hit
-                        DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.Instance.CheckCreatureAttack(Id)));
+                        DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.CheckCreatureAttack(Id)));
 			        }
 
 			        if (newTile.GetZone() != oldTile.GetZone())
@@ -427,10 +427,10 @@ namespace HerhangiOT.GameServer.Model
 	        // Take first step right away, but still queue the next
 	        if (ticks == 1)
 	        {
-	            Game.Instance.CheckCreatureWalk(Id);
+	            Game.CheckCreatureWalk(Id);
 	        }
 
-	        EventWalk = DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask((uint)ticks, () => Game.Instance.CheckCreatureWalk(Id)));
+	        EventWalk = DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask((uint)ticks, () => Game.CheckCreatureWalk(Id)));
         }
         
         private void StopEventWalk()
@@ -453,7 +453,7 @@ namespace HerhangiOT.GameServer.Model
                 {
 			        pos.X = (ushort)(myPos.X + x);
                     pos.Y = (ushort)(myPos.Y + y);
-			        tile = Map.Instance.GetTile(pos.X, pos.Y, pos.Z);
+			        tile = Map.GetTile(pos.X, pos.Y, pos.Z);
 			        UpdateTileCache(tile, pos);
 		        }
 	        }

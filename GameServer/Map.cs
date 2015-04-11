@@ -8,10 +8,8 @@ using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
 {
-    public class Map
+    public static class Map
     {
-        public static Map Instance { get; private set; }
-
         public const int MaxViewportX = 11;
         public const int MaxViewportY = 11;
         public const int MaxClientViewportX = 8;
@@ -22,20 +20,20 @@ namespace HerhangiOT.GameServer
         public const int FloorSize = 1 << FloorBits;
         public const int FloorMask = FloorSize - 1;
 
-        protected Dictionary<uint, Town> Towns;
-        protected Dictionary<uint, House> Houses; 
-        protected Dictionary<string, Position> Waypoints;
+        private static Dictionary<uint, Town> Towns { get; set; }
+        private static Dictionary<uint, House> Houses { get; set; }
+        private static Dictionary<string, Position> Waypoints { get; set; }
 
-        protected Dictionary<Position, HashSet<Creature>> SpectatorCache = new Dictionary<Position, HashSet<Creature>>(); 
-        protected Dictionary<Position, HashSet<Creature>> PlayersSpectatorCache = new Dictionary<Position, HashSet<Creature>>(); 
- 
-        protected Floor[] Floors;
-        protected string SpawnFile;
-        protected string HouseFile;
-        protected string Description;
+        private static readonly Dictionary<Position, HashSet<Creature>> SpectatorCache = new Dictionary<Position, HashSet<Creature>>(); 
+        private static readonly Dictionary<Position, HashSet<Creature>> PlayersSpectatorCache = new Dictionary<Position, HashSet<Creature>>();
 
-        public ushort Width { get; protected set; }
-        public ushort Height { get; protected set; }
+        private static Floor[] Floors { get; set; }
+        private static string SpawnFile { get; set; }
+        private static string HouseFile { get; set; }
+        private static string Description { get; set; }
+
+        public static ushort Width { get; private set; }
+        public static ushort Height { get; private set; }
 
         public static readonly List<Tuple<int, int>> ExtendedRelList = new List<Tuple<int, int>>
         {
@@ -55,13 +53,12 @@ namespace HerhangiOT.GameServer
         public static bool Load()
         {
             Logger.LogOperationStart("Loading Map<"+ConfigManager.Instance[ConfigStr.MapName]+">");
-            Instance = new Map();
-            Instance.Floors = new Floor[MapMaxLayers];
-            Instance.Towns = new Dictionary<uint, Town>();
-            Instance.Houses = new Dictionary<uint, House>();
-            Instance.Waypoints = new Dictionary<string, Position>();
+            Floors = new Floor[MapMaxLayers];
+            Towns = new Dictionary<uint, Town>();
+            Houses = new Dictionary<uint, House>();
+            Waypoints = new Dictionary<string, Position>();
 
-            if (!Instance.LoadOtbm())
+            if (!LoadOtbm())
                 return false;
 
             //LOAD SPAWNS
@@ -76,7 +73,7 @@ namespace HerhangiOT.GameServer
             return true;
         }
 
-        public Tile GetTile(ushort x, ushort y, byte z)
+        public static Tile GetTile(ushort x, ushort y, byte z)
         {
             if(Floors[z] == null)
                 return null;
@@ -84,7 +81,7 @@ namespace HerhangiOT.GameServer
             return floor.Tiles[x][y];
         }
 
-        public void SetTile(Tile tile)
+        public static void SetTile(Tile tile)
         {
             Position pos = tile.Position;
             if (pos.Z > MapMaxLayers)
@@ -100,20 +97,20 @@ namespace HerhangiOT.GameServer
             floor.Tiles[pos.X][pos.Y] = tile;
         }
 
-        protected class Floor
+        public class Floor
         {
             public Tile[][] Tiles;
 
             public Floor()
             {
-                Tiles = new Tile[Instance.Width][];
-                for(int i = 0; i < Instance.Width; i++)
-                    Tiles[i] = new Tile[Instance.Height];
+                Tiles = new Tile[Width][];
+                for(int i = 0; i < Width; i++)
+                    Tiles[i] = new Tile[Height];
             }
         }
 
         #region OTBM Operations
-        private bool LoadOtbm()
+        private static bool LoadOtbm()
         {
             FileLoader fileLoader = new FileLoader();
             if (!fileLoader.OpenFile("Data/World/"+ConfigManager.Instance[ConfigStr.MapName]+".otbm", "OTBM"))
@@ -247,7 +244,7 @@ namespace HerhangiOT.GameServer
             return true;
         }
 
-        private bool ParseTileArea(NodeStruct node, FileLoader fileLoader)
+        private static bool ParseTileArea(NodeStruct node, FileLoader fileLoader)
         {
             byte type;
 
@@ -415,7 +412,7 @@ namespace HerhangiOT.GameServer
             return true;
         }
 
-        private bool ParseTowns(NodeStruct node, FileLoader fileLoader)
+        private static bool ParseTowns(NodeStruct node, FileLoader fileLoader)
         {
             byte type;
             NodeStruct nodeTown = fileLoader.GetChildNode(node, out type);
@@ -443,7 +440,7 @@ namespace HerhangiOT.GameServer
             return true;
         }
 
-        private bool ParseWaypoints(NodeStruct node, FileLoader fileLoader)
+        private static bool ParseWaypoints(NodeStruct node, FileLoader fileLoader)
         {
             byte type;
             NodeStruct nodeWaypoint = fileLoader.GetChildNode(node, out type);
@@ -480,7 +477,7 @@ namespace HerhangiOT.GameServer
         }
         #endregion
 
-        public Town GetTown(ushort townId)
+        public static Town GetTown(ushort townId)
         {
             if (Towns.ContainsKey(townId))
                 return Towns[townId];
@@ -488,7 +485,7 @@ namespace HerhangiOT.GameServer
         }
 
         //TODO: CHANGE FLOORING AND MAP STORAGE SYSTEM
-        private void GetSpectatorsInternal(ref HashSet<Creature> list, Position centerPos, int minRangeX, int maxRangeX, int minRangeY, int maxRangeY, int minRangeZ, int maxRangeZ, bool onlyPlayers)
+        private static void GetSpectatorsInternal(ref HashSet<Creature> list, Position centerPos, int minRangeX, int maxRangeX, int minRangeY, int maxRangeY, int minRangeZ, int maxRangeZ, bool onlyPlayers)
         {
 	        int minY = centerPos.Y + minRangeY;
 	        int minX = centerPos.X + minRangeX;
@@ -545,13 +542,13 @@ namespace HerhangiOT.GameServer
             }
         }
         
-        public void ClearSpectatorCache()
+        public static void ClearSpectatorCache()
         {
 	        SpectatorCache.Clear();
 	        PlayersSpectatorCache.Clear();
         }
         
-        public void MoveCreature(Creature creature, Tile newTile, bool forceTeleport = false)
+        public static void MoveCreature(Creature creature, Tile newTile, bool forceTeleport = false)
         {
 	        Tile oldTile = creature.Parent;
 
@@ -628,7 +625,7 @@ namespace HerhangiOT.GameServer
 	        newTile.PostAddNotification(creature, oldTile, 0);
         }
 
-        public void GetSpectators(ref HashSet<Creature> list, Position position, bool multifloor = false, bool onlyPlayers = false,
+        public static void GetSpectators(ref HashSet<Creature> list, Position position, bool multifloor = false, bool onlyPlayers = false,
             int minRangeX = 0, int maxRangeX = 0, int minRangeY = 0, int maxRangeY = 0)
         {
             if (position.Z >= MapMaxLayers)
@@ -730,7 +727,7 @@ namespace HerhangiOT.GameServer
 	        }
         }
 
-        public bool PlaceCreature(Position centerPosition, Creature creature, bool extendedPos = false, bool forceLogin = false)
+        public static bool PlaceCreature(Position centerPosition, Creature creature, bool extendedPos = false, bool forceLogin = false)
         {
 	        bool foundTile;
 	        bool placeInPZ;
@@ -794,7 +791,7 @@ namespace HerhangiOT.GameServer
 	        return true;
         }
 
-        public bool IsSightClear(Position fromPos, Position toPos, bool floorCheck)
+        public static bool IsSightClear(Position fromPos, Position toPos, bool floorCheck)
         {
 	        if (floorCheck && fromPos.Z != toPos.Z)
 		        return false;
@@ -803,7 +800,7 @@ namespace HerhangiOT.GameServer
 	        return CheckSightLine(fromPos, toPos) || CheckSightLine(toPos, fromPos);
         }
 
-        private bool CheckSightLine(Position fromPos, Position toPos)
+        private static bool CheckSightLine(Position fromPos, Position toPos)
         {
 	        if (fromPos == toPos)
 		        return true;
