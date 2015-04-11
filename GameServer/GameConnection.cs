@@ -21,8 +21,8 @@ namespace HerhangiOT.GameServer
         public string SessionKey { get; private set; }
         public string AccountName { get; private set; }
         public string PlayerName { get; private set; }
-        public OperatingSystems ClientOs { get; private set; }
         public Player PlayerData { get; private set; }
+        public OperatingSystems ClientOs { get; private set; }
         public ClientPacketType LatestRequest { get; private set; }
         
         private readonly HashSet<uint> _knownCreatureSet = new HashSet<uint>(); 
@@ -133,6 +133,8 @@ namespace HerhangiOT.GameServer
         protected override void ProcessMessage()
         {
             LatestRequest = (ClientPacketType)InMessage.GetByte();
+
+            Logger.Log(LogLevels.Development, "Player({0}) sent request({1})!", PlayerName, LatestRequest);
 
             if (PacketHandlers.ContainsKey(LatestRequest))
                 PacketHandlers[LatestRequest].Invoke(this);

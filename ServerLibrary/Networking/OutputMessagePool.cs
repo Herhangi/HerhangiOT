@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
@@ -61,6 +62,7 @@ namespace HerhangiOT.ServerLibrary.Networking
         {
             lock (_emptyQueueLock)
             {
+                msg.FreeMessage();
                 _emptyMessageQueue.Enqueue(msg);
             }
         }
@@ -122,7 +124,7 @@ namespace HerhangiOT.ServerLibrary.Networking
                 //if (!msg.IsExpired())
                 {
                     //outputPool->startExecutionFrame();s
-                    Console.WriteLine("Message sent to: " + msg.MessageTarget);
+                    Logger.Log(LogLevels.Development, "Message sent to: {0}", msg.MessageTarget);
                     msg.MessageTarget.Send(msg);
 
                     //MESSAGE RELEASE AND CLIENT DISCONNECT MOVED TO STREAM END

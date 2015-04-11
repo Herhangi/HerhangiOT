@@ -335,9 +335,9 @@ namespace HerhangiOT.GameServer.Model
 	        if (playerTileGround == null || !playerTileGround.HasWalkStack)
 		        return false;
 
-            if ((DateTime.Now.Ticks - LastWalkthroughAttempt) > 2000)
+            if ((Tools.GetSystemMilliseconds() - LastWalkthroughAttempt) > 2000)
             {
-                LastWalkthroughAttempt = DateTime.Now.Ticks;
+                LastWalkthroughAttempt = Tools.GetSystemMilliseconds();
 		        return false;
 	        }
 
@@ -508,7 +508,6 @@ namespace HerhangiOT.GameServer.Model
 		        }
 
 		        Connection.SendAddContainerItem(it.Key, slot, item);
-                break;
             }
         }
 
@@ -623,7 +622,8 @@ namespace HerhangiOT.GameServer.Model
         
         public void SetNextWalkActionTask(SchedulerTask task)
         {
-	        if (WalkTaskEvent != 0) {
+	        if (WalkTaskEvent != 0)
+            {
 		        DispatcherManager.Scheduler.StopEvent(WalkTaskEvent);
 		        WalkTaskEvent = 0;
 	        }

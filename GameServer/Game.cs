@@ -61,6 +61,9 @@ namespace HerhangiOT.GameServer
         public static Dictionary<string, Player> OnlinePlayers = new Dictionary<string, Player>();
         public static Dictionary<uint, Player> OnlinePlayersById = new Dictionary<uint, Player>();
 
+        public static Dictionary<uint, Monster> Monsters = new Dictionary<uint, Monster>();
+        public static Dictionary<uint, Npc> Npcs = new Dictionary<uint, Npc>();
+
         public static Dictionary<Tile, Container> BrowseFields = new Dictionary<Tile, Container>(); 
 
         public static void Initialize()
@@ -69,6 +72,7 @@ namespace HerhangiOT.GameServer
             WorldLight = new LightInfo {Color = 0xD7, Level = Constants.LightLevelDay};
         }
 
+        #region Internal Operations
         public static ReturnTypes InternalMoveCreature(Creature creature, Directions direction, CylinderFlags flags = CylinderFlags.None)
         {
 	        Position currentPos = creature.Position;
@@ -154,7 +158,6 @@ namespace HerhangiOT.GameServer
 	        return ReturnTypes.NoError;
         }
 
-
         private static bool InternalPlaceCreature(Creature creature,Position position, bool extendedPosition = false, bool forced = false)
         {
 	        if (creature.Parent != null)
@@ -174,6 +177,7 @@ namespace HerhangiOT.GameServer
         {
             //TODO: FILL THIS METHOD
         }
+        #endregion
 
         public static bool PlaceCreature(Creature creature, Position position, bool extendedPosition = false, bool forced = false)
         {
@@ -211,31 +215,47 @@ namespace HerhangiOT.GameServer
             OnlinePlayersById[player.Id] = player;
         }
 
+        #region Get Operations
+        // Using TryGetValue as it seems faster: http://stackoverflow.com/questions/9382681/what-is-more-efficient-dictionary-trygetvalue-or-containskeyitem
         public static Creature GetCreatureById(uint id)
         {
             if (id <= Player.PlayerAutoID)
                 return GetPlayerById(id);
             if (id <= Monster.MonsterAutoID)
-                return null;
-            //TODO: Monster and NPC
+                return GetMonsterById(id);
+            if (id <= Npc.NpcAutoID)
+                return GetNpcById(id);
             return null;
         }
 
         public static Player GetPlayerByName(string playerName)
         {
             string lowercaseName = playerName.ToLowerInvariant();
-            if (OnlinePlayers.ContainsKey(lowercaseName))
-                return OnlinePlayers[lowercaseName];
-            return null;
+            Player player;
+            OnlinePlayers.TryGetValue(lowercaseName, out player);
+            return player;
         }
 
+        public static Npc GetNpcById(uint npcId)
+        {
+            Npc npc;
+            Npcs.TryGetValue(npcId, out npc);
+            return npc;
+        }
         public static Player GetPlayerById(uint playerId)
         {
-            if (OnlinePlayersById.ContainsKey(playerId))
-                return OnlinePlayersById[playerId];
-            return null;
+            Player player;
+            OnlinePlayersById.TryGetValue(playerId, out player);
+            return player;
         }
-     
+        public static Monster GetMonsterById(uint monsterId)
+        {
+            Monster monster;
+            Monsters.TryGetValue(monsterId, out monster);
+            return monster;
+        }
+        #endregion
+
         public static void CheckCreatureWalk(uint creatureId)
         {
 	        Creature creature = GetCreatureById(creatureId);

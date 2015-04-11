@@ -59,8 +59,8 @@ mysqlSock = ""
 -- END DATABASE
 
 -- START LOGGING
--- LogLevels: Error, Operation, Warning, Information, Debug
-minConsoleLogLevel = "Debug"
+-- LogLevels: Error, Operation, Warning, Information, Debug, Development
+minConsoleLogLevel = "Development"
 -- !!!FILE LOGGING IS CURRENTLY IN PROGRESS!!!
 logToFile = "no"
 logFilePath = "Logs/GameServer.txt"

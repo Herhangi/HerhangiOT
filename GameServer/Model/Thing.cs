@@ -11,6 +11,12 @@ namespace HerhangiOT.GameServer.Model
         public virtual string GetDescription(int lookDistance = 0) { return string.Empty; }
 
         public virtual void SetParent(Thing parent) { }
+        
+		public virtual void AddThing(Thing thing) { }
+		public virtual void AddThing(uint index, Thing thing) { }
+		public virtual void UpdateThing(Thing thing, ushort itemId, uint count) { }
+		public virtual void ReplaceThing(uint index, Thing thing) { }
+		public virtual void RemoveThing(Thing thing, uint count) { }
 
         public virtual void PostAddNotification(Thing thing, Thing oldParent, int index, CylinderLinks link = CylinderLinks.Owner) { }
         public virtual void PostRemoveNotification(Thing thing, Thing newParent, int index, CylinderLinks link = CylinderLinks.Owner) { }

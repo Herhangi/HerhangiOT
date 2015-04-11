@@ -17,7 +17,14 @@ namespace HerhangiOT.GameServer.Model
         public const int MaxWalkCacheHeight = (MapWalkHeight - 1)/2;
 
         public uint Id { get; protected set; }
-        public Tile Parent { get; set; }
+        private Tile _parent;
+        public Tile Parent
+        {
+            get { return _parent; }
+            set { _parent = value;
+                Position = _parent.Position;
+            }
+        }
         public Position Position { get; set; }
 
         public virtual ushort Health { get; protected set; }
@@ -672,6 +679,11 @@ namespace HerhangiOT.GameServer.Model
 	        return stepDuration;
         }
 
+        public override void SetParent(Thing parent)
+        {
+            Parent = (Tile)parent;
+        }
+
         private void UpdateTileCache(Tile tile, Position pos)
         {
             Position myPos = Position;
@@ -699,5 +711,14 @@ namespace HerhangiOT.GameServer.Model
         {
 			return Parent.GetZone();
 		}
+
+        public void IncrementReferenceCounter()
+        {
+            //TODO: MICRO MEMORY MANAGEMENT
+        }
+        public void DecrementReferenceCounter()
+        {
+            //TODO: MICRO MEMORY MANAGEMENT
+        }
     }
 }

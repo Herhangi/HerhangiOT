@@ -1,4 +1,4 @@
-﻿using System;
+﻿using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer.Model.Items
 {
@@ -8,7 +8,7 @@ namespace HerhangiOT.GameServer.Model.Items
 
         public MagicField(ushort id) : base(id)
         {
-            _creationTime = DateTime.Now.Ticks;
+            _creationTime = Tools.GetSystemMilliseconds();
         }
     }
 }

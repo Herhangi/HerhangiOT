@@ -4,12 +4,13 @@ using System.Net.Sockets;
 using System.Threading;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Networking;
+using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
 {
     public class SecretServerConnection : Connection
     {
-        public const long ConnectionTimeout = 20000000;
+        public const long ConnectionTimeout = 2000;
         public static SecretServerConnection Instance { get; private set; }
 
         public TcpClient Client { get; set; }
@@ -51,12 +52,12 @@ namespace HerhangiOT.GameServer
             Instance.OutMessage = new OutputMessage { IsRecycledMessage = false };
             Instance.Connect();
 
-            long start = DateTime.Now.Ticks;
+            long start = Tools.GetSystemMilliseconds();
             while (!Instance.IsConnectionEstablished)
             {
                 Thread.Sleep(100); //Stall until connection established
 
-                long timePassd = (DateTime.Now.Ticks - start);
+                long timePassd = (Tools.GetSystemMilliseconds() - start);
                 if (timePassd > ConnectionTimeout)
                 {
                     Logger.LogOperationFailed();

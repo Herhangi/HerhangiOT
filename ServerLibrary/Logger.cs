@@ -2,7 +2,7 @@
 
 namespace HerhangiOT.ServerLibrary
 {
-    public enum LogLevels { Error = 0, Operation = 1, Warning = 2, Information = 3, Debug = 4 }
+    public enum LogLevels { Error = 0, Operation = 1, Warning = 2, Information = 3, Debug = 4, Development = 5 }
 
     public static class Logger
     {
@@ -13,6 +13,12 @@ namespace HerhangiOT.ServerLibrary
         {
             if (logLevel <= MinConsoleLogLevel)
                 Console.WriteLine("[{1:HH:mm:ss}]{0,-13}: {2}", "[" + logLevel + "]", DateTime.Now, message);
+        }
+
+        public static void Log(LogLevels logLevel, string format, params object[] arguments)
+        {
+            if (logLevel <= MinConsoleLogLevel)
+                Console.WriteLine("[{1:HH:mm:ss}]{0,-13}: {2}", "[" + logLevel + "]", DateTime.Now, string.Format(format, arguments));
         }
 
         public static void LogOperationStart(string text)

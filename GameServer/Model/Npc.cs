@@ -5,6 +5,8 @@ namespace HerhangiOT.GameServer.Model
 {
     public class Npc : Creature
     {
+        public static uint NpcAutoID = 0x80000000;
+
         public override CreatureTypes GetCreatureType()
         {
             throw new NotImplementedException();

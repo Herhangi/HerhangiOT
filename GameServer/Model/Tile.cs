@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model.Items;
 
@@ -851,6 +852,77 @@ namespace HerhangiOT.GameServer.Model
 	        }
         }
 
+        public sealed override void PostAddNotification(Thing thing, Thing oldParent, int index, CylinderLinks link = CylinderLinks.Owner)
+        {
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, GetPosition(), true, true);
+	        foreach (Player spectator in list)
+            {
+		        spectator.PostAddNotification(thing, oldParent, index, CylinderLinks.Near);
+	        }
+
+	        //add a reference to this item, it may be deleted after being added (mailbox for example)
+            Creature creature = thing as Creature;
+	        Item item;
+	        if (creature != null)
+            {
+		        creature.IncrementReferenceCounter();
+		        item = null;
+	        }
+            else
+            {
+		        item = thing as Item;
+		        if (item != null)
+                {
+			        item.IncrementReferenceCounter();
+		        }
+	        }
+
+	        if (link == CylinderLinks.Owner)
+            {
+		        if (Flags.HasFlag(TileFlags.Teleport))
+                {
+			        Teleport teleport = GetTeleportItem();
+			        if (teleport != null)
+                    {
+				        teleport.AddThing(thing);
+			        }
+		        }
+                else if (Flags.HasFlag(TileFlags.TrashHolder))
+                {
+			        TrashHolder trashholder = GetTrashHolder();
+			        if (trashholder != null)
+                    {
+				        trashholder.AddThing(thing);
+			        }
+		        }
+                else if (Flags.HasFlag(TileFlags.MailBox))
+                {
+			        Mailbox mailbox = GetMailbox();
+			        if (mailbox != null)
+                    {
+				        mailbox.AddThing(thing);
+			        }
+		        }
+
+		        //calling movement scripts TODO: Scripting
+                //if (creature != null)
+                //{
+                //    g_moveEvents->onCreatureMove(creature, this, oldParent ? oldParent->getPosition() : getPosition(), MOVE_EVENT_STEP_IN);
+                //}
+                //else if (item)
+                //{
+                //    g_moveEvents->onItemMove(item, this, true);
+                //}
+	        }
+
+	        //release the reference to this item onces we are finished
+	        if (creature != null)
+		        Game.ReleaseCreature(creature);
+	        else if (item != null)
+		        Game.ReleaseItem(item);
+        }
+
         public sealed override void PostRemoveNotification(Thing thing, Thing newParent, int index, CylinderLinks link = CylinderLinks.Owner)
         {
             HashSet<Creature> list = new HashSet<Creature>();
@@ -1163,7 +1235,40 @@ namespace HerhangiOT.GameServer.Model
             }
             return -1;
         }
+        
+        public Teleport GetTeleportItem()
+        {
+	        if (Flags.HasFlag(TileFlags.Teleport))
+		        return null;
 
+            if (Items != null)
+                return Items.OfType<Teleport>().LastOrDefault();
+	        return null;
+        }
+        public TrashHolder GetTrashHolder()
+        {
+	        if (!Flags.HasFlag(TileFlags.TrashHolder))
+		        return null;
+
+	        if (Ground is TrashHolder)
+		        return Ground as TrashHolder;
+
+            if (Items != null)
+                return Items.OfType<TrashHolder>().LastOrDefault();
+	        return null;
+        }
+        public Mailbox GetMailbox()
+        {
+	        if (!Flags.HasFlag(TileFlags.MailBox))
+		        return null;
+
+	        if (Ground is Mailbox)
+                return Ground as Mailbox;
+
+            if (Items != null)
+                return Items.OfType<Mailbox>().LastOrDefault();
+	        return null;
+        }
 
         public List<Item> MakeItemList()
         {

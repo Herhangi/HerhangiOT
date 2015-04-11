@@ -785,8 +785,7 @@ namespace HerhangiOT.GameServer
 
 	        //Cylinder* toCylinder = tile->queryDestination(index, *creature, &toItem, flags); //TODO
 	        //toCylinder->internalAddThing(creature);
-            creature.Position = new Position(tile.Position);
-            creature.Parent = tile;
+            tile.InternalAddThing(creature);
 	        tile.AddCreature(creature);
 	        return true;
         }
