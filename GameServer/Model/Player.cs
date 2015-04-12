@@ -19,7 +19,7 @@ namespace HerhangiOT.GameServer.Model
         public const ushort PlayerMinSpeed = 0;
         #endregion
 
-        public GameConnection Connection { get; private set; }
+        public GameConnection Connection { get; set; }
         public int AccountId { get; private set; }
         public int CharacterId { get; private set; }
         public string AccountName { get; private set; }
@@ -52,6 +52,7 @@ namespace HerhangiOT.GameServer.Model
         public ChaseModes ChaseMode { get; set; }
         public SecureModes SecureMode { get; set; }
 
+        public bool IsConnecting { get; set; }
         public bool IsPzLocked { get; protected set; }
         protected long LastWalkthroughAttempt { get; set; }
         protected Position LastWalkthroughPosition { get; set; }
@@ -65,6 +66,8 @@ namespace HerhangiOT.GameServer.Model
         public TradeStates TradeState { get; protected set; }
 
         public Npc ShopOwner { get; protected set; }
+
+        public HashSet<uint> ModalWindows { get; protected set; } 
 
         public Dictionary<byte, OpenContainer> OpenContainers;
         public Dictionary<uint, DepotLocker> DepotLockers; 
@@ -96,6 +99,8 @@ namespace HerhangiOT.GameServer.Model
             DepotLockers = new Dictionary<uint, DepotLocker>();
             DepotChests = new Dictionary<uint, DepotChest>();
             StorageMap = new Dictionary<uint, int>();
+
+            ModalWindows = new HashSet<uint>();
         }
 
         public bool PreloadPlayer()

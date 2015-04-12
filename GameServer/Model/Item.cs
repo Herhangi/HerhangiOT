@@ -2,6 +2,7 @@
 using System.IO;
 using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.GameServer.Enums;
+using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer.Model
 {
@@ -69,7 +70,7 @@ namespace HerhangiOT.GameServer.Model
             Parent = parent;
         }
 
-        public static Item CreateItem(BinaryReader reader)
+        public static Item CreateItem(MemoryStream reader)
         {
             ushort id;
             try

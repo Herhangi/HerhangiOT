@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
@@ -24,7 +25,10 @@ namespace HerhangiOT.GameServer
         public Player PlayerData { get; private set; }
         public OperatingSystems ClientOs { get; private set; }
         public ClientPacketType LatestRequest { get; private set; }
-        
+
+        private bool AcceptPackets { get; set; }
+        private uint EventConnect { get; set; }
+
         private readonly HashSet<uint> _knownCreatureSet = new HashSet<uint>(); 
 
         private uint _challengeTimestamp;
@@ -46,11 +50,24 @@ namespace HerhangiOT.GameServer
         };
 
         #region Connection Overrides
+
+        public override void Disconnect()
+        {
+            if (PlayerData != null)
+                PlayerData.Connection = null;
+            base.Disconnect();
+        }
         public override void HandleFirstConnection(IAsyncResult ar)
         {
-            base.HandleFirstConnection(ar);
+            try
+            {
+                base.HandleFirstConnection(ar);
 
-            SendWelcomeMessage();
+                SendWelcomeMessage();
+            }
+            catch (Exception)
+            {
+            }
         }
         protected override void ParseHeader(IAsyncResult ar)
         {
@@ -103,25 +120,25 @@ namespace HerhangiOT.GameServer
 
             if (version < Constants.CLIENT_VERSION_MIN || (version > Constants.CLIENT_VERSION_MAX))
             {
-                DispatchDisconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!");
+                base.DispatchDisconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!");
                 return;
             }
 
             if (ClientOs >= OperatingSystems.OtClientLinux)
             {
-                DispatchDisconnect("Custom clients are not supported, yet!");
+                base.DispatchDisconnect("Custom clients are not supported, yet!");
                 return;
             }
 
             if (Game.GameState == GameStates.Startup)
             {
-                DispatchDisconnect("Gameworld is starting up. Please wait.");
+                base.DispatchDisconnect("Gameworld is starting up. Please wait.");
                 return;
             }
 
             if (Game.GameState == GameStates.Maintain)
             {
-                DispatchDisconnect("Gameworld is under maintenance. Please re-connect in a while.");
+                base.DispatchDisconnect("Gameworld is under maintenance. Please re-connect in a while.");
                 return;
             }
 
@@ -132,6 +149,8 @@ namespace HerhangiOT.GameServer
         }
         protected override void ProcessMessage()
         {
+            if (!AcceptPackets) return;
+
             LatestRequest = (ClientPacketType)InMessage.GetByte();
 
             Logger.Log(LogLevels.Development, "Player({0}) sent request({1})!", PlayerName, LatestRequest);
@@ -144,6 +163,20 @@ namespace HerhangiOT.GameServer
             }
         }
         #endregion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override void DispatchDisconnect(string message)
+        {
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Disconnect(message)));
+        }
+
+        protected void Disconnect(string message)
+        {
+            OutputMessage msg = OutputMessagePool.GetOutputMessage(this, false);
+            msg.AddByte((byte)ServerPacketType.DisconnectGame);
+            msg.AddString(message);
+            OutputMessagePool.SendImmediately(msg);
+        }
 
         #region Login Process
         private void OnCharacterAuthenticationResultArrived(SecretNetworkResponseType response, string sessionKey, string accountName, string playerName, uint accountId)
@@ -180,7 +213,7 @@ namespace HerhangiOT.GameServer
                 AccountId = accountId;
                 PlayerName = playerName;
                 AccountName = accountName;
-                DispatcherManager.GameDispatcher.AddTask(new Task(Login));
+                DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(Login));
             }
         }
         public void Login()
@@ -200,14 +233,14 @@ namespace HerhangiOT.GameServer
                 //TODO: GROUP FLAGS
                 if (Game.GameState == GameStates.Closing)
                 {
-                    DispatchDisconnect("The game is just going down.\nPlease try again later.");
+                    base.DispatchDisconnect("The game is just going down.\nPlease try again later.");
                     return;
                 }
 
                 //TODO: GROUP FLAGS
                 if (Game.GameState == GameStates.Closed)
                 {
-                    DispatchDisconnect("Server is currently closed.\nPlease try again later.");
+                    base.DispatchDisconnect("Server is currently closed.\nPlease try again later.");
                     return;
                 }
 
@@ -215,7 +248,7 @@ namespace HerhangiOT.GameServer
 
                 if (!PlayerData.LoadPlayer())
                 {
-                    DispatchDisconnect("Your character could not be loaded.");
+                    base.DispatchDisconnect("Your character could not be loaded.");
                     return;
                 }
 
@@ -223,21 +256,23 @@ namespace HerhangiOT.GameServer
                 {
                     if (!Game.PlaceCreature(PlayerData, PlayerData.LoginPosition, false, true))
                     {
-                        DispatchDisconnect("Temple position is wrong. Contact the administrator!");
+                        base.DispatchDisconnect("Temple position is wrong. Contact the administrator!");
                         return;
                     }
                 }
                 
-                //LAST LOGIN OPERATIONS
+                //TODO: LAST LOGIN OPERATIONS
+                AcceptPackets = true;
             }
             else
             {
-                if (ConfigManager.Instance[ConfigBool.ReplaceKickOnLogin])
+                if (ConfigManager.Instance[ConfigBool.ReplaceKickOnLogin] && EventConnect == 0)
                 {
                     if (PlayerData.Connection != null)
                     {
+                        PlayerData.IsConnecting = true;
                         PlayerData.Connection.Disconnect();
-                        DispatcherManager.GameDispatcher.AddTask(new Task(Connect));
+                        EventConnect = DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask(1000, Connect));
                         return;
                     }
 
@@ -251,7 +286,26 @@ namespace HerhangiOT.GameServer
         }
         private void Connect()
         {
-            
+	        EventConnect = 0;
+
+            if (PlayerData.Connection != null)
+            {
+                DispatchDisconnect("You are already logged in.");
+		        return;
+	        }
+
+	        PlayerData.IncrementReferenceCounter();
+
+	        //g_chat->removeUserFromAllChannels(*player); //TODO: Chat
+	        PlayerData.ModalWindows.Clear();
+	        PlayerData.IsConnecting = false;
+
+	        PlayerData.Connection = this;
+	        SendAddCreature(PlayerData, PlayerData.Position, 0, false);
+            //TODO: Last Login Operations
+            //player->lastIP = player->getIP();
+            //player->lastLoginSaved = std::max<time_t>(time(nullptr), player->lastLoginSaved + 1);
+	        AcceptPackets = true;
         }
         #endregion
 
@@ -265,7 +319,7 @@ namespace HerhangiOT.GameServer
         }
         private static void ProcessPingBackPacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.PlayerReceivePingBack(conn.PlayerData.Id)));
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerReceivePingBack(conn.PlayerData.Id)));
         }
         private static void ProcessFightModesPacket(GameConnection conn)
         {
@@ -274,7 +328,7 @@ namespace HerhangiOT.GameServer
 	        SecureModes secureMode = (SecureModes) conn.InMessage.GetByte(); // 0 - can't attack unmarked, 1 - can attack unmarked
 	        // uint8_t rawPvpMode = msg.getByte(); // pvp mode introduced in 10.0
 
-            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
         }
         private static void ProcessPlayerMovePacket(GameConnection conn)
         {
@@ -307,7 +361,7 @@ namespace HerhangiOT.GameServer
                     break;
             }
 
-            DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.PlayerMove(conn.PlayerData.Id, direction)));
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerMove(conn.PlayerData.Id, direction)));
         }
         #endregion
 

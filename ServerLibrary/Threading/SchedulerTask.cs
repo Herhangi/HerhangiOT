@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.ServerLibrary.Threading
@@ -10,22 +11,17 @@ namespace HerhangiOT.ServerLibrary.Threading
 
         public uint TaskId { get; set; }
 
-        public SchedulerTask(int time, Action action) : base(time, action)
-        {
-        }
-
-        public SchedulerTask(Action action) : base(action)
-        {
-        }
+        public SchedulerTask(uint time, Action action) : base(time, action) { }
 
         public int GetCycle()
         {
             return (int)(Expiration - Tools.GetSystemMilliseconds());
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SchedulerTask CreateSchedulerTask(uint delay, Action action)
         {
-            return new SchedulerTask(Math.Max((int)delay, SchedulerMinTicks), action);
+            return new SchedulerTask(Math.Max(delay, SchedulerMinTicks), action);
         }
 
         public class SchedulerTaskComparer : IComparer<SchedulerTask>

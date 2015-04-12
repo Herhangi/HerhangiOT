@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.ServerLibrary.Threading
@@ -8,7 +9,7 @@ namespace HerhangiOT.ServerLibrary.Threading
         public long Expiration { get; protected set; }
         public Action Action { get; protected set; }
 
-        public Task(int time, Action action)
+        public Task(uint time, Action action)
         {
             Expiration = Tools.GetSystemMilliseconds() + time;
             Action = action;
@@ -29,6 +30,18 @@ namespace HerhangiOT.ServerLibrary.Threading
         {
             if (Expiration == -1) return false;
             return (Expiration > Tools.GetSystemMilliseconds());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task CreateTask(uint expiration, Action action)
+        {
+            return new Task(expiration, action);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task CreateTask(Action action)
+        {
+            return new Task(action);
         }
     }
 }

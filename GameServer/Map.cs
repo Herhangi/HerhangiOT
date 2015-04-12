@@ -122,7 +122,7 @@ namespace HerhangiOT.GameServer
             byte type;
             NodeStruct root = fileLoader.GetChildNode(null, out type);
             
-            BinaryReader props;
+            MemoryStream props;
             if (!fileLoader.GetProps(root, out props))
             {
                 Logger.LogOperationFailed("Could not read root property!");
@@ -184,9 +184,9 @@ namespace HerhangiOT.GameServer
                 return false;
             }
 
-            while (props.PeekChar() != -1)
+            int attribute;
+            while ((attribute = props.ReadByte()) != -1)
             {
-                byte attribute = props.ReadByte();
                 switch ((OtbmAttributes)attribute)
                 {
                     case OtbmAttributes.Description:
@@ -248,7 +248,7 @@ namespace HerhangiOT.GameServer
         {
             byte type;
 
-            BinaryReader props;
+            MemoryStream props;
             if (!fileLoader.GetProps(node, out props))
                 return false;
 
@@ -292,10 +292,9 @@ namespace HerhangiOT.GameServer
                     isHouseTile = true;
                 }
 
-                while (props.PeekChar() != -1)
+                int attribute;
+                while ((attribute = props.ReadByte()) != -1)
                 {
-                    byte attribute = props.ReadByte();
-
                     switch ((OtbmAttributes)attribute)
                     {
                         case OtbmAttributes.TileFlags:
@@ -358,7 +357,7 @@ namespace HerhangiOT.GameServer
                     if (type != (byte) OtbmNodeTypes.Item)
                         return false;
 
-                    BinaryReader stream;
+                    MemoryStream stream;
                     if (!fileLoader.GetProps(nodeItem, out stream))
                         return false;
 
@@ -422,7 +421,7 @@ namespace HerhangiOT.GameServer
                 if (type != (byte)OtbmNodeTypes.Town)
                     return false;
 
-                BinaryReader props;
+                MemoryStream props;
                 if (!fileLoader.GetProps(nodeTown, out props))
                     return false;
 
@@ -432,7 +431,7 @@ namespace HerhangiOT.GameServer
                 Town town = Towns[townId];
 
                 town.TownName = props.GetString();
-                town.TemplePosition = new Position(props.ReadUInt16(), props.ReadUInt16(), props.ReadByte());
+                town.TemplePosition = new Position(props.ReadUInt16(), props.ReadUInt16(), (byte)props.ReadByte());
 
                 nodeTown = fileLoader.GetNextNode(nodeTown, out type);
             }
@@ -450,12 +449,12 @@ namespace HerhangiOT.GameServer
 				if (type != (byte)OtbmNodeTypes.Waypoint) 
 					return false;
 
-                BinaryReader props;
+                MemoryStream props;
 				if (!fileLoader.GetProps(nodeWaypoint, out props))
 					return false;
 
                 //(name, new Position(x, y, z)
-                Waypoints.Add(props.GetString(), new Position(props.ReadUInt16(), props.ReadUInt16(), props.ReadByte()));
+                Waypoints.Add(props.GetString(), new Position(props.ReadUInt16(), props.ReadUInt16(), (byte)props.ReadByte()));
 
 				nodeWaypoint = fileLoader.GetNextNode(nodeWaypoint, out type);
 			}

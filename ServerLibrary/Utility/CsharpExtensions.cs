@@ -92,5 +92,38 @@ namespace HerhangiOT.ServerLibrary.Utility
                 list[n] = value;
             }
         }
+
+        #region Memory Stream Extension
+        public static char[] ReadChars(this MemoryStream stream, int count)
+        {
+            byte[] buffer = new byte[4];
+            stream.Read(buffer, 0, count);
+            return Encoding.UTF8.GetChars(buffer);
+        }
+
+        public static ushort ReadUInt16(this MemoryStream stream)
+        {
+            byte[] buffer = new byte[sizeof(ushort)];
+            stream.Read(buffer, 0, buffer.Length);
+            return BitConverter.ToUInt16(buffer, 0);
+        }
+        public static uint ReadUInt32(this MemoryStream stream)
+        {
+            byte[] buffer = new byte[sizeof(uint)];
+            stream.Read(buffer, 0, buffer.Length);
+            return BitConverter.ToUInt32(buffer, 0);
+        }
+        public static byte[] ReadBytes(this MemoryStream stream, int length)
+        {
+            byte[] buffer = new byte[length];
+            stream.Read(buffer, 0, buffer.Length);
+            return buffer;
+        }
+        public static string GetString(this MemoryStream stream)
+        {
+            ushort len = stream.ReadUInt16();
+            return Encoding.Default.GetString(stream.ReadBytes(len));
+        }
+        #endregion
     }
 }

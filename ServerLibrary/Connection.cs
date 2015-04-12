@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Utility;
@@ -12,22 +14,32 @@ namespace HerhangiOT.ServerLibrary
         public NetworkMessage InMessage { get; set; }
 
         protected uint[] XteaKey { get; set; }
+        protected int PendingWrites { get; set; }
         protected bool IsChecksumEnabled { get; set; }
         protected bool IsSecretConnection { get; set; }
         protected bool IsEncryptionEnabled { get; set; }
         protected bool IsFirstMessageReceived { get; set; }
         protected OutputMessage OutputBuffer { get; private set; }
+        protected ConcurrentQueue<OutputMessage> PendingMessages { get; private set; }
 
         public virtual void HandleFirstConnection(IAsyncResult ar)
         {
-            TcpListener clientListener = (TcpListener)ar.AsyncState;
-            Socket = clientListener.EndAcceptSocket(ar);
-            Stream = new NetworkStream(Socket);
-            InMessage = new NetworkMessage();
-            IsChecksumEnabled = true;
-            XteaKey = new uint[4];
+            try
+            {
+                TcpListener clientListener = (TcpListener)ar.AsyncState;
+                Socket = clientListener.EndAcceptSocket(ar);
+                Stream = new NetworkStream(Socket);
+                InMessage = new NetworkMessage();
+                IsChecksumEnabled = true;
+                XteaKey = new uint[4];
 
-            Stream.BeginRead(InMessage.Buffer, 0, 2, ParseHeader, null);
+                PendingMessages = new ConcurrentQueue<OutputMessage>();
+                Stream.BeginRead(InMessage.Buffer, 0, 2, ParseHeader, null);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         protected virtual void ParseHeader(IAsyncResult ar)
@@ -62,11 +74,17 @@ namespace HerhangiOT.ServerLibrary
             {
                 int currentlyRead = Stream.EndRead(ar);
                 if (currentlyRead == 0)
+                {
                     Disconnect();
+                    return false;
+                }
 
                 int size = BitConverter.ToUInt16(InMessage.Buffer, 0) + 2;
                 if (size <= 0 || size >= Constants.NETWORKMESSAGE_ERRORMAXSIZE)
+                {
                     Disconnect();
+                    return false;
+                }
 
                 //TODO: MAX PACKETS PER SECOND CHECK
 
@@ -91,12 +109,11 @@ namespace HerhangiOT.ServerLibrary
             }
         }
 
-        public void Disconnect()
+        public virtual void Disconnect()
         {
             Stream.Close();
             Socket.Close();
         }
-
         public void Disconnect(string reason, uint version)
         {
             OutputMessage message = OutputMessagePool.GetOutputMessage(this, false);
@@ -110,8 +127,7 @@ namespace HerhangiOT.ServerLibrary
             message.DisconnectAfterMessage = true;
             OutputMessagePool.AddToQueue(message);
         }
-
-        public void DispatchDisconnect(string reason)
+        protected virtual void DispatchDisconnect(string reason)
         {
             OutputMessage message = OutputMessagePool.GetOutputMessage(this, false);
             message.AddByte((byte)ServerPacketType.ErrorMessage);
@@ -143,21 +159,40 @@ namespace HerhangiOT.ServerLibrary
             }
         }
 
-        private void InternalSend(OutputMessage message)
+        private void InternalSend(OutputMessage message, bool wasPending = false)
         {
-            Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, OnStreamWriteCompleted, message);
+            if(wasPending || PendingWrites++ == 0)
+                Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, OnStreamWriteCompleted, message);
+            else
+                PendingMessages.Enqueue(message);
         }
 
         private void OnStreamWriteCompleted(IAsyncResult result)
         {
             OutputMessage message = (OutputMessage)result.AsyncState;
-            Stream.EndWrite(result);
 
-            if(message.DisconnectAfterMessage)
-                Disconnect();
+            try
+            {
+                Stream.EndWrite(result);
 
-            if(message.IsRecycledMessage)
-                OutputMessagePool.ReleaseMessage(message);
+                if (--PendingWrites > 0)
+                {
+                    OutputMessage pendingMessage;
+                    if (PendingMessages.TryDequeue(out pendingMessage))
+                    {
+                        InternalSend(pendingMessage, true); 
+                        return;
+                    }
+                }
+
+                if (message.DisconnectAfterMessage)
+                    Disconnect();
+            }
+            finally
+            {
+                if (message.IsRecycledMessage)
+                    OutputMessagePool.ReleaseMessage(message);
+            }
         }
         
         protected void WriteToOutputBuffer(NetworkMessage msg)

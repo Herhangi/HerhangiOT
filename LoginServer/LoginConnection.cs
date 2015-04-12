@@ -54,7 +54,7 @@ namespace HerhangiOT.LoginServer
             string accountName = InMessage.GetString();
             byte[] password = InMessage.GetBytes(InMessage.GetUInt16());
 
-            DispatcherManager.DatabaseDispatcher.AddTask(new Task(() => HandleLoginPacket(accountName, password)));
+            DispatcherManager.DatabaseDispatcher.AddTask(Task.CreateTask(() => HandleLoginPacket(accountName, password)));
         }
 
         private void ProcessStatusMessage()

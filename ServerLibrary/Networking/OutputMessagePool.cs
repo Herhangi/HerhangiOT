@@ -70,8 +70,6 @@ namespace HerhangiOT.ServerLibrary.Networking
         public static void SendImmediately(OutputMessage msg)
         {
             msg.MessageTarget.Send(msg);
-
-            ReleaseMessage(msg);
         }
 
         public static void AddToQueue(OutputMessage msg, bool pushFront = false)
@@ -109,7 +107,7 @@ namespace HerhangiOT.ServerLibrary.Networking
         {
             while (true)
             {
-                OutputMessage msg = null;
+                OutputMessage msg;
                 if (_waitingMessageQueue.Count == 0)
                 {
                     Signaler.WaitOne();

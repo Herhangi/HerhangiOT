@@ -103,31 +103,31 @@ namespace HerhangiOT.GameServer.Model
                 {
                     if (Ground == null)
                         Ground = item;
-                    else if (item.IsAlwaysOnTop)
-                    {
-                        bool isInserted = false;
-
-                        for (int i = _downItemCount; i < items.Count; i++)
-                        {
-                            if (items[i].AlwaysOnTopOrder > item.AlwaysOnTopOrder)
-                            {
-                                items.Insert(i, item);
-                                isInserted = true;
-                                break;
-                            }
-                        }
-
-                        if(!isInserted)
-                            items.Add(item);
-                    }
-                    else
-                    {
-                        items.Insert(0, item);
-                        _downItemCount++;
-                    }
-
-                    SetFlags(item);
                 }
+                else if (item.IsAlwaysOnTop)
+                {
+                    bool isInserted = false;
+
+                    for (int i = _downItemCount; i < items.Count; i++)
+                    {
+                        if (items[i].AlwaysOnTopOrder > item.AlwaysOnTopOrder)
+                        {
+                            items.Insert(i, item);
+                            isInserted = true;
+                            break;
+                        }
+                    }
+
+                    if (!isInserted)
+                        items.Add(item);
+                }
+                else
+                {
+                    items.Insert(0, item);
+                    _downItemCount++;
+                }
+
+                SetFlags(item);
             }
         }
 

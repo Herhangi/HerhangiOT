@@ -28,7 +28,7 @@ namespace HerhangiOT.GameServer
             ClientFluidTypes.Green,
             ClientFluidTypes.Yellow,
             ClientFluidTypes.White,
-            ClientFluidTypes.Purple,
+            ClientFluidTypes.Purple
         };
 
         public static bool Load()
@@ -57,7 +57,7 @@ namespace HerhangiOT.GameServer
             byte type;
             NodeStruct node = fileLoader.GetChildNode(null, out type);
 
-            BinaryReader props;
+            MemoryStream props;
             if (fileLoader.GetProps(node, out props))
             {
                 //4 byte flags
@@ -65,7 +65,7 @@ namespace HerhangiOT.GameServer
 		        //0x01 = version data
 		        props.ReadUInt32();
                 props.ReadByte();
-                byte attr = props.ReadByte();
+                byte attr = (byte)props.ReadByte();
 
                 if (attr == 0x01)//ROOT_ATTR_VERSION
                 {
@@ -117,9 +117,9 @@ namespace HerhangiOT.GameServer
                 byte lightColor = 0;
                 byte alwaysOnTopOrder = 0;
 
-                while (props.PeekChar() != -1)
+                int attrib;
+                while ((attrib = props.ReadByte()) != -1)
                 {
-                    byte attrib = props.ReadByte();
                     ushort datalen = props.ReadUInt16();
 
                     switch ((ItemAttributes)attrib)
@@ -145,7 +145,7 @@ namespace HerhangiOT.GameServer
                             break;
 
                         case ItemAttributes.TopOrder:
-                            alwaysOnTopOrder = props.ReadByte();
+                            alwaysOnTopOrder = (byte)props.ReadByte();
                             break;
 
                         case ItemAttributes.WareId:

@@ -401,7 +401,7 @@ namespace HerhangiOT.GameServer.Model
 			        if (HasExtraSwing())
                     {
 				        //our target is moving lets see if we can get in hit
-                        DispatcherManager.GameDispatcher.AddTask(new Task(() => Game.CheckCreatureAttack(Id)));
+                        DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.CheckCreatureAttack(Id)));
 			        }
 
 			        if (newTile.GetZone() != oldTile.GetZone())

@@ -4,6 +4,7 @@
     {
         Disconnect = 0x0A,
         Disconnect1076 = 0x0B,
+        DisconnectGame = 0x14,
 
         MOTD = 0x14,
         SessionKey = 0x28,

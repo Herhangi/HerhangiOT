@@ -14,29 +14,25 @@ namespace HerhangiOT.ServerLibrary
         private static readonly char[] GloballyAcceptedIdentifier = { '\0', '\0', '\0', '\0' };
 
         private byte[] _buffer;
-        private FileStream _file;
-        private BinaryReader _reader;
+        private MemoryStream _reader;
         private NodeStruct _root;
 
         public bool OpenFile(string fileName, string acceptedIdentifier)
         {
             try
             {
-                _file = File.Open(fileName, FileMode.Open);
-                _reader = new BinaryReader(_file);
+                _reader = new MemoryStream(File.ReadAllBytes(fileName));
 
                 char[] identifier = _reader.ReadChars(4);
                 if (identifier.MemCmp(GloballyAcceptedIdentifier, 4) != 0 && identifier.MemCmp(acceptedIdentifier.ToCharArray(), 4) != 0)
                 {
                     _reader.Close();
-                    _file.Close();
                     return false;
                 }
             }
             catch (Exception)
             {
                 _reader.Close();
-                _file.Close();
                 return false;
             }
 
@@ -55,7 +51,6 @@ namespace HerhangiOT.ServerLibrary
             _root = null;
 
             _reader.Close();
-            _file.Close();
         }
 
         protected bool ParseNode(NodeStruct node)
@@ -63,14 +58,14 @@ namespace HerhangiOT.ServerLibrary
             int value;
             NodeStruct currentNode = node;
 
-	        while ((value = _file.ReadByte()) != -1)
+	        while ((value = _reader.ReadByte()) != -1)
 	        {
 	            currentNode.Type = (byte)value;
 		        bool setPropsSize = false;
 
 		        while (true)
 		        {
-		            value = _file.ReadByte();
+                    value = _reader.ReadByte();
 			        if (value == -1) return false;
 
 			        bool skipNode = false;
@@ -78,7 +73,7 @@ namespace HerhangiOT.ServerLibrary
 		            long pos;
 		            switch ((byte)value) {
 				        case NodeStart:
-			                pos = _file.Position;
+                            pos = _reader.Position;
 
                             NodeStruct childNode = new NodeStruct {Start = pos};
 		                    currentNode.PropsSize = pos - currentNode.Start - 2;
@@ -95,17 +90,17 @@ namespace HerhangiOT.ServerLibrary
 					        //current node end
 					        if (!setPropsSize)
 					        {
-					            pos = _file.Position;
+                                pos = _reader.Position;
 						        currentNode.PropsSize = pos - currentNode.Start - 2;
 					        }
 
-			                value = _file.ReadByte();
+                            value = _reader.ReadByte();
 			                if (value == -1) return true;
 
 					        switch ((byte)value) {
 						        case NodeStart:
 							        //Starts next node
-					                pos = _file.Position;
+                                    pos = _reader.Position;
 
 							        skipNode = true;
 							        NodeStruct nextNode = new NodeStruct {Start = pos};
@@ -115,7 +110,7 @@ namespace HerhangiOT.ServerLibrary
 
 						        case NodeEnd:
 							        //return safeTell(pos) && safeSeek(pos);
-                                    _file.Seek(-1, SeekOrigin.Current);
+                                    _reader.Seek(-1, SeekOrigin.Current);
                                     //_file.Seek(pos, SeekOrigin.Begin);
 					                return true;
 
@@ -126,7 +121,7 @@ namespace HerhangiOT.ServerLibrary
 					        break;
 
 				        case EscapeChar:
-			                value = _file.ReadByte();
+                            value = _reader.ReadByte();
 			                if (value == -1) return false;
 					        break;
 			        }
@@ -168,14 +163,14 @@ namespace HerhangiOT.ServerLibrary
 	        return next;
         }
 
-        public bool GetProps(NodeStruct node, out BinaryReader props)
+        public bool GetProps(NodeStruct node, out MemoryStream props)
         {
             long size;
             byte[] buffer = GetProps(node, out size);
 
             if (buffer != null)
             {
-                props = new BinaryReader(new MemoryStream(buffer, 0, (int)size));
+                props = new MemoryStream(buffer, 0, (int)size);
                 return true;
             }
 
@@ -192,8 +187,8 @@ namespace HerhangiOT.ServerLibrary
                 _buffer = new byte[node.PropsSize];
             }
 
-            _file.Seek(node.Start + 1, SeekOrigin.Begin);
-            int readSize = _file.Read(_buffer, 0, (int)node.PropsSize);
+            _reader.Seek(node.Start + 1, SeekOrigin.Begin);
+            int readSize = _reader.Read(_buffer, 0, (int)node.PropsSize);
             if (readSize < node.PropsSize) return null;
 
             uint j = 0;
