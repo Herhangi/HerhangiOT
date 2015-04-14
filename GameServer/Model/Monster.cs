@@ -31,5 +31,10 @@ namespace HerhangiOT.GameServer.Model
             if (Id == 0)
                 Id = MonsterAutoID++;
         }
+
+        protected override bool UseCacheMap()
+        {
+            return true;
+        }
     }
 }

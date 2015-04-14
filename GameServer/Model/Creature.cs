@@ -53,6 +53,9 @@ namespace HerhangiOT.GameServer.Model
         public bool HasFollowPath { get; protected set; }
 		public bool[][] LocalMapCache { get; protected set; }
 
+        public uint BlockTicks { get; protected set; }
+        public uint WalkUpdateTicks { get; protected set; }
+        public uint BlockCount { get; protected set; }
         public long LastStep { get; protected set; }
         public uint LastStepCost { get; protected set; }
         public uint EventWalk { get; protected set; }
@@ -66,6 +69,106 @@ namespace HerhangiOT.GameServer.Model
             for(int i = 0; i < MapWalkHeight; i++)
                 LocalMapCache[i] = new bool[MapWalkWidth];
             Summons = new List<Creature>();
+        }
+
+        protected virtual bool UseCacheMap()
+        {
+			return false;
+		}
+
+        public virtual void OnThink(uint interval)
+        {
+            if (!IsMapLoaded && UseCacheMap())
+            {
+                IsMapLoaded = true;
+                UpdateMapCache();
+            }
+
+            if (FollowCreature != null && Master != FollowCreature && !CanSeeCreature(FollowCreature))
+                OnCreatureDisappear(FollowCreature, false);
+
+            if (AttackedCreature != null && Master != AttackedCreature && !CanSeeCreature(AttackedCreature))
+                OnCreatureDisappear(AttackedCreature, false);
+
+            BlockTicks += interval;
+            if (BlockTicks >= 1000)
+            {
+                BlockCount = Math.Min(BlockCount + 1, 2);
+                BlockTicks = 0;
+            }
+
+            if (FollowCreature != null)
+            {
+                WalkUpdateTicks += interval;
+                if (ForceUpdateFollowPath || WalkUpdateTicks >= 2000)
+                {
+                    WalkUpdateTicks = 0;
+                    ForceUpdateFollowPath = false;
+                    IsUpdatingPath = true;
+                }
+            }
+
+            if (IsUpdatingPath)
+            {
+                IsUpdatingPath = false;
+                GoToFollowCreature();
+            }
+
+            ////scripting event - onThink TODO: Scripting
+            //const CreatureEventList& thinkEvents = getCreatureEvents(CREATURE_EVENT_THINK);
+            //for (CreatureEvent* thinkEvent : thinkEvents) {
+            //    thinkEvent->executeOnThink(this, interval);
+            //}
+        }
+
+        protected virtual void GoToFollowCreature()
+        {
+	        if (FollowCreature != null)
+            {
+                //TODO: Pathfinding
+                //FindPathParams fpp;
+                //getPathSearchParams(followCreature, fpp);
+
+                //Monster* monster = getMonster();
+                //if (monster && !monster->getMaster() && (monster->isFleeing() || fpp.maxTargetDist > 1)) {
+                //    Direction dir = DIRECTION_NONE;
+
+                //    if (monster->isFleeing()) {
+                //        monster->getDistanceStep(followCreature->getPosition(), dir, true);
+                //    } else { //maxTargetDist > 1
+                //        if (!monster->getDistanceStep(followCreature->getPosition(), dir)) {
+                //             if we can't get anything then let the A* calculate
+                //            listWalkDir.clear();
+                //            if (getPathTo(followCreature->getPosition(), listWalkDir, fpp)) {
+                //                hasFollowPath = true;
+                //                startAutoWalk(listWalkDir);
+                //            } else {
+                //                hasFollowPath = false;
+                //            }
+
+                //            return;
+                //        }
+                //    }
+
+                //    if (dir != DIRECTION_NONE) {
+                //        listWalkDir.clear();
+                //        listWalkDir.push_front(dir);
+
+                //        hasFollowPath = true;
+                //        startAutoWalk(listWalkDir);
+                //    }
+                //} else {
+                //    listWalkDir.clear();
+                //    if (getPathTo(followCreature->getPosition(), listWalkDir, fpp)) {
+                //        hasFollowPath = true;
+                //        startAutoWalk(listWalkDir);
+                //    } else {
+                //        hasFollowPath = false;
+                //    }
+                //}
+	        }
+
+	        OnFollowCreatureComplete(FollowCreature);
         }
 
         public virtual bool CanSeeInvisibility()
@@ -113,6 +216,8 @@ namespace HerhangiOT.GameServer.Model
             //    }
             //}
         }
+        
+		public virtual void OnCreatureSay(Creature creature, SpeakTypes type, string text) { }
 
         public void StartAutoWalk(Directions direction)
         {

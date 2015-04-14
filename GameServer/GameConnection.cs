@@ -47,6 +47,7 @@ namespace HerhangiOT.GameServer
             { ClientPacketType.MoveNorthWest, ProcessPlayerMovePacket },
             { ClientPacketType.MoveSouthEast, ProcessPlayerMovePacket },
             { ClientPacketType.MoveSouthWest, ProcessPlayerMovePacket },
+            { ClientPacketType.PlayerSpeech, ProcessPlayerSpeechPacket },
         };
 
         #region Connection Overrides
@@ -323,9 +324,10 @@ namespace HerhangiOT.GameServer
         }
         private static void ProcessFightModesPacket(GameConnection conn)
         {
-            FightModes fightMode = (FightModes) conn.InMessage.GetByte(); // 1 - offensive, 2 - balanced, 3 - defensive
-            ChaseModes chaseMode = (ChaseModes) conn.InMessage.GetByte(); // 0 - stand while fightning, 1 - chase opponent
-	        SecureModes secureMode = (SecureModes) conn.InMessage.GetByte(); // 0 - can't attack unmarked, 1 - can attack unmarked
+            NetworkMessage msg = conn.InMessage;
+            FightModes fightMode = (FightModes) msg.GetByte(); // 1 - offensive, 2 - balanced, 3 - defensive
+            ChaseModes chaseMode = (ChaseModes) msg.GetByte(); // 0 - stand while fightning, 1 - chase opponent
+	        SecureModes secureMode = (SecureModes) msg.GetByte(); // 0 - can't attack unmarked, 1 - can attack unmarked
 	        // uint8_t rawPvpMode = msg.getByte(); // pvp mode introduced in 10.0
 
             DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
@@ -362,6 +364,37 @@ namespace HerhangiOT.GameServer
             }
 
             DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerMove(conn.PlayerData.Id, direction)));
+        }
+        private static void ProcessPlayerSpeechPacket(GameConnection conn)
+        {
+            string receiver = string.Empty;
+	        ushort channelId;
+            NetworkMessage msg = conn.InMessage;
+
+	        SpeakTypes type = (SpeakTypes) msg.GetByte();
+	        switch (type)
+            {
+		        case SpeakTypes.PrivateTo:
+		        case SpeakTypes.PrivateRedTo:
+			        receiver = msg.GetString();
+			        channelId = 0;
+			        break;
+
+		        case SpeakTypes.ChannelY:
+		        case SpeakTypes.ChannelR1:
+			        channelId = msg.GetUInt16();
+			        break;
+
+		        default:
+			        channelId = 0;
+			        break;
+	        }
+
+	        string text = msg.GetString();
+	        if (text.Length > 255)
+		        return;
+
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerSay(conn.PlayerData.Id, channelId, type, receiver, text)) );
         }
         #endregion
 
@@ -840,6 +873,51 @@ namespace HerhangiOT.GameServer
 		        SendAddCreature(creature, newPos, newStackPos, false);
 	        }
         }
+
+        private static uint _creatureSayStatementId;
+        public void SendCreatureSay(Creature creature, SpeakTypes type, string text, Position pos = null)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.CreatureSpeech);
+            msg.AddUInt32(++_creatureSayStatementId);
+	        msg.AddString(creature.GetName());
+
+	        //Add level only for players
+            Player speaker = creature as Player;
+	        if (speaker != null)
+		        msg.AddUInt16(speaker.CharacterData.Level);
+	        else
+		        msg.AddUInt16(0x00);
+
+	        msg.AddByte((byte)type);
+	        if (pos != null)
+		        msg.AddPosition(pos);
+	        else
+		        msg.AddPosition(creature.GetPosition());
+
+	        msg.AddString(text);
+	        WriteToOutputBuffer(msg);
+        }
+
+        private static uint _privateMessageStatementId;
+        public void SendPrivateMessage(Player speaker, SpeakTypes type, string text)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte) ServerPacketType.CreatureSpeech);
+            msg.AddUInt32(++_privateMessageStatementId);
+	        if (speaker != null)
+            {
+		        msg.AddString(speaker.GetName());
+		        msg.AddUInt16(speaker.CharacterData.Level);
+	        }
+            else
+            {
+		        msg.AddUInt32(0x00);
+	        }
+	        msg.AddByte((byte) type);
+	        msg.AddString(text);
+	        WriteToOutputBuffer(msg);
+}
         #endregion
 
         #region Add Messages

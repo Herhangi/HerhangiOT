@@ -83,6 +83,7 @@
     <Compile Include="Enums\MessageTypes.cs" />
     <Compile Include="Enums\SecureModes.cs" />
     <Compile Include="Enums\Slots.cs" />
+    <Compile Include="Enums\SpeakTypes.cs" />
     <Compile Include="Enums\TextColors.cs" />
     <Compile Include="Enums\TradeStates.cs" />
     <Compile Include="Enums\ZoneTypes.cs" />
@@ -200,6 +201,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.lua">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\Characters\Herhangi.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Data\Characters\Admin Adonis.json">

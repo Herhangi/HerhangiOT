@@ -57,6 +57,7 @@ namespace HerhangiOT.GameServer.Model
         protected long LastWalkthroughAttempt { get; set; }
         protected Position LastWalkthroughPosition { get; set; }
 
+        public int MessageBufferCount { get; set; }
         public uint IdleTime { get; set; }
         public uint WalkTaskEvent { get; set; }
         public uint ActionTaskEvent { get; set; }
@@ -611,6 +612,23 @@ namespace HerhangiOT.GameServer.Model
 			if (Connection != null)
 				Connection.SendTextMessage(new TextMessage {Type = MessageTypes.StatusSmall, Text = msg});
 		}
+        
+		public void SendTextMessage(MessageTypes type, string message)
+        {
+			if (Connection != null) 
+				Connection.SendTextMessage(new TextMessage{ Type = type, Text = message});
+		}
+        
+		public void SendPrivateMessage(Player speaker, SpeakTypes type, string text)
+        {
+			if (Connection != null)
+				Connection.SendPrivateMessage(speaker, type, text);
+		}
+		public void SendCreatureSay(Creature creature, SpeakTypes type, string text, Position pos = null)
+        {
+			if (Connection != null)
+				Connection.SendCreatureSay(creature, type, text, pos);
+		}
 
 		public void SendCancelWalk()
         {
@@ -829,5 +847,54 @@ namespace HerhangiOT.GameServer.Model
 		    }
         }
         #endregion
+
+        public uint IsMuted()
+        {
+            //if (hasFlag(PlayerFlag_CannotBeMuted))  TODO: Player Flags
+            //    return 0;
+
+            //int muteTicks = 0; //TODO: Player Conditions
+            //for (Condition* condition : conditions) {
+            //    if (condition->getType() == CONDITION_MUTED && condition->getTicks() > muteTicks) {
+            //        muteTicks = condition->getTicks();
+            //    }
+            //}
+            //return static_cast<uint32_t>(muteTicks) / 1000;
+
+            return 0;
+        }
+
+        public void AddMessageBuffer()
+        {
+            if (MessageBufferCount > 0 && ConfigManager.Instance[ConfigInt.MaxMessageBuffer] != 0)// && !HasFlag(PlayerFlag_CannotBeMuted)) TODO: Player Flags
+		        --MessageBufferCount;
+        }
+
+        public void RemoveMessageBuffer()
+        {
+            //if (hasFlag(PlayerFlag_CannotBeMuted)) { TODO: Player Flags
+            //    return;
+            //}
+
+	        int maxMessageBuffer = ConfigManager.Instance[ConfigInt.MaxMessageBuffer];
+	        if (maxMessageBuffer != 0 && MessageBufferCount <= maxMessageBuffer + 1)
+            {
+		        if (++MessageBufferCount > maxMessageBuffer)
+                {
+			        uint muteCount = 1;
+                    //auto it = muteCountMap.find(guid);
+                    //if (it != muteCountMap.end()) {
+                    //    muteCount = it->second;
+                    //}
+
+			        uint muteTime = 5 * muteCount * muteCount;
+                    //muteCountMap[guid] = muteCount + 1; TODO: Conditions
+                    //Condition* condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_MUTED, muteTime * 1000, 0);
+                    //addCondition(condition);
+                    
+			        SendTextMessage(MessageTypes.StatusSmall, string.Format("You are muted for {0} seconds.", muteTime));
+		        }
+	        }
+        }
     }
 }

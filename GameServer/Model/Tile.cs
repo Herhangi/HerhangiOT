@@ -34,7 +34,8 @@ namespace HerhangiOT.GameServer.Model
         {
             if (!Flags.HasFlag(TileFlags.FloorChange))
             {
-                SetFlag(TileFlags.FloorChange);
+                if(item.FloorChangeDirection != FloorChangeDirections.None)
+                    SetFlag(TileFlags.FloorChange);
 
                 switch (item.FloorChangeDirection)
                 {

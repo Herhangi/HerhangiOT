@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
@@ -339,6 +340,256 @@ namespace HerhangiOT.GameServer
 	        player.SetNextWalkActionTask(null);
 	        player.StartAutoWalk(direction);
         }
+
+        public static void PlayerSay(uint playerId, ushort channelId, SpeakTypes type, string receiver, string text)
+        {
+	        Player player = GetPlayerById(playerId);
+	        if (player == null || string.IsNullOrWhiteSpace(text))
+		        return;
+
+	        player.ResetIdleTime();
+
+	        uint muteTime = player.IsMuted();
+	        if (muteTime > 0)
+	        {
+	            string message = string.Format("You are still muted for {0} seconds.", muteTime);
+		        player.SendTextMessage(MessageTypes.StatusSmall, message);
+		        return;
+	        }
+
+	        if (PlayerSayCommand(player, text))
+		        return;
+
+	        if (PlayerSaySpell(player, type, text))
+		        return;
+
+	        if (text[0] == '/')// && player->isAccessPlayer()) { TODO: Player Access
+		        return;
+
+	        if (type != SpeakTypes.PrivatePn)
+		        player.RemoveMessageBuffer();
+
+	        switch (type)
+            {
+		        case SpeakTypes.Say:
+			        InternalCreatureSay(player, SpeakTypes.Say, text, false);
+			        break;
+
+		        case SpeakTypes.Whisper:
+			        PlayerWhisper(player, text);
+			        break;
+
+		        case SpeakTypes.Yell:
+			        PlayerYell(player, text);
+			        break;
+
+		        case SpeakTypes.PrivateTo:
+		        case SpeakTypes.PrivateRedTo:
+			        PlayerSpeakTo(player, type, receiver, text);
+			        break;
+
+		        case SpeakTypes.ChannelO:
+		        case SpeakTypes.ChannelY:
+		        case SpeakTypes.ChannelR1:
+			        //g_chat->talkToChannel(*player, type, text, channelId); TODO: Chat channels
+			        break;
+
+		        case SpeakTypes.PrivatePn:
+			        PlayerSpeakToNpc(player, text);
+			        break;
+
+		        case SpeakTypes.Broadcast:
+			        PlayerBroadcastMessage(player, text);
+			        break;
+	        }
+        }
+
+        #region Talk Actions
+        private static bool PlayerSayCommand(Player player, string text)
+        {
+            //TODO: Player Commands
+            //char firstCharacter = text.front();
+            //for (char commandTag : commandTags) {
+            //    if (commandTag == firstCharacter) {
+            //        if (commands.exeCommand(*player, text)) {
+            //            return true;
+            //        }
+            //    }
+            //}
+	        return false;
+        }
+
+        private static bool PlayerSaySpell(Player player, SpeakTypes type, string text)
+        {
+            //TODO: Player Spells
+            //        std::string words = text;
+
+            //TalkActionResult_t result = g_talkActions->playerSaySpell(player, type, words);
+            //if (result == TALKACTION_BREAK) {
+            //    return true;
+            //}
+
+            //result = g_spells->playerSaySpell(player, words);
+            //if (result == TALKACTION_BREAK) {
+            //    if (!g_config.getBoolean(ConfigManager::EMOTE_SPELLS)) {
+            //        return internalCreatureSay(player, TALKTYPE_SAY, words, false);
+            //    } else {
+            //        return internalCreatureSay(player, TALKTYPE_MONSTER_SAY, words, false);
+            //    }
+
+            //} else if (result == TALKACTION_FAILED) {
+            //    return true;
+            //}
+	        return false;
+        }
+        
+        private static void PlayerWhisper(Player player, string text)
+        {
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, player.GetPosition(), false, false, Map.MaxClientViewportX, Map.MaxClientViewportX, Map.MaxClientViewportY, Map.MaxClientViewportY);
+
+	        //send to client
+	        foreach (Player spectator in list.OfType<Player>())
+	        {
+			    if (!Position.AreInRange(player.GetPosition(), spectator.GetPosition(), 1, 1, 0))
+                {
+				    spectator.SendCreatureSay(player, SpeakTypes.Whisper, "pspsps");
+			    }
+                else
+                {
+				    spectator.SendCreatureSay(player, SpeakTypes.Whisper, text);
+			    }
+	        }
+
+	        //event method
+	        foreach (Creature spectator in list)
+            {
+		        spectator.OnCreatureSay(player, SpeakTypes.Whisper, text);
+	        }
+        }
+        
+        private static bool PlayerYell(Player player, string text)
+        {
+	        if (player.CharacterData.Level == 1)
+            {
+		        player.SendTextMessage(MessageTypes.StatusSmall, "You may not yell as long as you are on level 1.");
+		        return false;
+	        }
+
+            //if (player.HasCondition(CONDITION_YELLTICKS)) { //TODO: Conditions
+            //    player.SendCancelMessage(ReturnTypes.YouAreExhausted);
+            //    return false;
+            //}
+
+	        if (player.AccountType < AccountTypes.GameMaster)
+            {
+                //Condition* condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_YELLTICKS, 30000, 0); //TODO: Conditions
+                //player->addCondition(condition);
+	        }
+
+	        InternalCreatureSay(player, SpeakTypes.Yell, text.ToUpperInvariant(), false);
+	        return true;
+        }
+
+        private static bool PlayerSpeakTo(Player player, SpeakTypes type, string receiver, string text)
+        {
+	        Player toPlayer = GetPlayerByName(receiver);
+	        if (toPlayer == null)
+            {
+		        player.SendTextMessage(MessageTypes.StatusSmall, "A player with this name is not online.");
+		        return false;
+	        }
+
+	        if (type == SpeakTypes.PrivateRedTo)// && (player->hasFlag(PlayerFlag_CanTalkRedPrivate) || player.AccountType >= AccountTypes.GameMaster)) TODO: Player Flags
+            {
+		        type = SpeakTypes.PrivateRedFrom;
+	        }
+            else
+            {
+		        type = SpeakTypes.PrivateFrom;
+	        }
+
+	        toPlayer.SendPrivateMessage(player, type, text);
+	        toPlayer.OnCreatureSay(player, type, text);
+
+	        if (toPlayer.IsInGhostMode())// && !player->isAccessPlayer()) TODO: ACCESS PLAYER
+            {
+		        player.SendTextMessage(MessageTypes.StatusSmall, "A player with this name is not online.");
+	        }
+            else
+            {
+		        player.SendTextMessage(MessageTypes.StatusSmall, string.Format("Message sent to {0}.", toPlayer.GetName()));
+	        }
+	        return true;
+        }
+        
+        private static void PlayerSpeakToNpc(Player player, string text)
+        {
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, player.GetPosition());
+	        foreach (Npc spectator in list.OfType<Npc>())
+            {
+                spectator.OnCreatureSay(player, SpeakTypes.PrivatePn, text);
+	        }
+        }
+        
+        private static bool PlayerBroadcastMessage(Player player, string text)
+        {
+            //if (!player.HasFlag(PlayerFlag_CanBroadcast)) { //TODO: Player Flags
+            //    return false;
+            //}
+
+            Logger.Log(LogLevels.Information, "{0} broadcasted: \"{1}\".", player.GetName(), text);
+
+            foreach (Player onlinePlayer in OnlinePlayers.Values)
+            {
+                onlinePlayer.SendPrivateMessage(player, SpeakTypes.Broadcast, text);
+            }
+
+	        return true;
+        }
+
+        private static void InternalCreatureSay(Creature creature, SpeakTypes type, string text, bool ghostMode, HashSet<Creature> spectatorsPtr = null, Position pos= null)
+        {
+	        if (pos == null)
+            {
+		        pos = creature.GetPosition();
+	        }
+
+            HashSet<Creature> spectators;
+            if (spectatorsPtr == null || spectatorsPtr.Count == 0)
+            {
+                spectators = new HashSet<Creature>();
+                if(type != SpeakTypes.Yell && type != SpeakTypes.MonsterYell)
+                    Map.GetSpectators(ref spectators, pos, false, false, Map.MaxClientViewportX, Map.MaxClientViewportX, Map.MaxClientViewportY, Map.MaxClientViewportY);
+                else
+                    Map.GetSpectators(ref spectators, pos, true, false, 18, 18, 14, 14);
+            }
+            else
+            {
+                spectators = spectatorsPtr;
+            }
+
+	        //send to client
+	        foreach (Creature spectator in spectators)
+	        {
+	            Player tmpPlayer = spectator as Player;
+		        if (tmpPlayer != null)
+                {
+			        if (!ghostMode || tmpPlayer.CanSeeCreature(creature))
+                    {
+				        tmpPlayer.SendCreatureSay(creature, type, text, pos);
+			        }
+		        }
+	        }
+
+	        //event method
+	        foreach (Creature spectator in spectators)
+            {
+		        spectator.OnCreatureSay(creature, type, text);
+	        }
+        }
+        #endregion
         #endregion
     }
 }

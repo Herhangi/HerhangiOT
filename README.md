@@ -3,6 +3,11 @@ HerhangiOT [![Build Status](https://travis-ci.org/Herhangi/HerhangiOT.svg?branch
 
 HerhangiOT is open-source server emulator written in C# for MMORPG called [Tibia](http://www.tibia.com) currently working with 10.76 protocol. HerhangiOT is mainly developed on [The Forgotten Server](https://www.github.com/otland/forgottenserver) project and inspired by [SharpOT](https://github.com/sharpot/sharpot) project. Huge thanks to contributors of these project for creating this opportunity.
 
+### Roadmap
+We will be using Trello for development roadmap and ideas! You can check what is going on and submit your ideas on idea wall anytime!
+[Trello Development Board](https://trello.com/b/hlG7ulkz/herhangiot-development)
+[Trello Idea Wall](https://trello.com/b/keTadpDB/herhangiot-idea-wall)
+
 ### What is Herhangi
 Herhangi is the word used in Turkish as English article "any". As an idea "Herhangi" has a special meaning for me that is; anything can be done by anyone, anywhere, anytime if particular person finds motivation and power to work on the cause. 
 

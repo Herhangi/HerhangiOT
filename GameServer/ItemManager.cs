@@ -10,7 +10,7 @@ using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer
 {
-    public class ItemManager
+    public static class ItemManager
     {
         public static uint DwMajorVersion;
         public static uint DwMinorVersion;
