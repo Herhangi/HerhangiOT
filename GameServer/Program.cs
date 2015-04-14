@@ -140,6 +140,7 @@ namespace HerhangiOT.GameServer
 
             GameServer.Start();
             Game.GameState = GameStates.Normal;
+            Game.StartJobs();
             //TODO: FIRE SERVER RUNNING EVENT
 
             while (true)

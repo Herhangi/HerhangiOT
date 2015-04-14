@@ -48,6 +48,8 @@ namespace HerhangiOT.GameServer.Model
         public bool IsHealthHidden { get; protected set; }
         public bool IsInternalRemoved { get; protected set; }
         public bool IsMapLoaded { get; protected set; }
+        public bool CreatureCheck { get; protected set; }
+        public bool InCheckCreaturesVector { get; set; }
         public bool ForceUpdateFollowPath { get; protected set; }
         public bool IsUpdatingPath { get; protected set; }
         public bool HasFollowPath { get; protected set; }
@@ -120,6 +122,10 @@ namespace HerhangiOT.GameServer.Model
             //    thinkEvent->executeOnThink(this, interval);
             //}
         }
+        public virtual void OnDeath()
+        {
+            //TODO: Fill this method
+        }
 
         protected virtual void GoToFollowCreature()
         {
@@ -185,7 +191,12 @@ namespace HerhangiOT.GameServer.Model
         {
             return false; //TODO: FILL METHOD
         }
-        
+
+        public void ExecuteConditions(uint interval)
+        {
+            //TODO: Conditions
+        }
+
 		public virtual SpeechBubbles GetSpeechBubble()
         {
 			return SpeechBubbles.None;

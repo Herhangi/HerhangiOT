@@ -4,6 +4,7 @@ using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.ServerLibrary;
+using HerhangiOT.ServerLibrary.Threading;
 
 namespace HerhangiOT.GameServer
 {
@@ -27,8 +28,7 @@ namespace HerhangiOT.GameServer
 
     public static class Game
     {
-        #region Singleton Implementation
-        #endregion
+        private static int _lastCheckedBucket = -1;
 
         private static GameStates _gameState;
         public static GameStates GameState
@@ -67,10 +67,20 @@ namespace HerhangiOT.GameServer
 
         public static Dictionary<Tile, Container> BrowseFields = new Dictionary<Tile, Container>(); 
 
+        private static readonly List<Creature>[] CheckCreatureBuckets = new List<Creature>[Constants.JobCheckCreatureBucketCount]; 
+
         public static void Initialize()
         {
             GameState = GameStates.Startup;
             WorldLight = new LightInfo {Color = 0xD7, Level = Constants.LightLevelDay};
+
+            for(int i = 0; i < Constants.JobCheckCreatureBucketCount; i++)
+                CheckCreatureBuckets[i] = new List<Creature>();
+        }
+
+        public static void StartJobs()
+        {
+            DispatcherManager.Jobs.AddJob("CheckCreatures", JobTask.CreateJobTask(Constants.JobCheckCreatureInterval, 0, CheckCreatures));
         }
 
         #region Internal Operations
@@ -310,6 +320,39 @@ namespace HerhangiOT.GameServer
         }
 
         #region Game Operations
+        private static void CheckCreatures()
+        {
+            _lastCheckedBucket = (_lastCheckedBucket + 1) % Constants.JobCheckCreatureBucketCount;
+            List<Creature> creaturesToCheck = CheckCreatureBuckets[_lastCheckedBucket];
+
+            for(int i = creaturesToCheck.Count - 1; i > -1; i--)
+            {
+                Creature creature = creaturesToCheck[i];
+
+                if (creature.CreatureCheck)
+                {
+                    if (creature.Health > 0)
+                    {
+                        creature.OnThink(Constants.JobCheckCreatureInterval);
+                        creature.OnAttacking(Constants.JobCheckCreatureInterval);
+                        creature.ExecuteConditions(Constants.JobCheckCreatureInterval);
+                    }
+                    else
+                    {
+                        creature.OnDeath();
+                    }
+                }
+                else
+                {
+                    creature.InCheckCreaturesVector = false;
+                    creaturesToCheck.RemoveAt(i);
+                    ReleaseCreature(creature);
+                }
+            }
+
+	        Cleanup();
+        }
+
         public static void PlayerReceivePingBack(uint playerId)
         {
             Player player = GetPlayerById(playerId);
