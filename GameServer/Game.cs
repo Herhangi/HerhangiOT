@@ -319,6 +319,23 @@ namespace HerhangiOT.GameServer
             //ToReleaseItems.push_back(item); //TODO: MICRO MEMORY MANAGEMENT, WE MIGHT NOT NEED THIS
         }
 
+        
+        private static bool InternalCreatureTurn(Creature creature, Directions direction)
+        {
+	        if (creature.Direction == direction)
+		        return false;
+
+	        creature.Direction = direction;
+
+	        HashSet<Creature> spectators = new HashSet<Creature>();
+	        Map.GetSpectators(ref spectators, creature.GetPosition(), true, true);
+	        foreach (Player spectator in spectators.OfType<Player>())
+            {
+		        spectator.SendCreatureTurn(creature);
+	        }
+	        return true;
+        }
+
         #region Game Operations
         private static void CheckCreatures()
         {
@@ -382,6 +399,19 @@ namespace HerhangiOT.GameServer
 	        player.ResetIdleTime();
 	        player.SetNextWalkActionTask(null);
 	        player.StartAutoWalk(direction);
+        }
+
+        public static void PlayerTurn(uint playerId, Directions direction)
+        {
+            Player player = GetPlayerById(playerId);
+            if (player == null)
+                return;
+
+            //if (!g_events->eventPlayerOnTurn(player, direction)) TODO: Events
+            //    return;
+
+	        player.ResetIdleTime();
+            InternalCreatureTurn(player, direction);
         }
 
         public static void PlayerSay(uint playerId, ushort channelId, SpeakTypes type, string receiver, string text)

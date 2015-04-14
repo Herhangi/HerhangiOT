@@ -25,5 +25,7 @@
         public const int JobCheckCreatureBucketCount = 10;
         public const int JobCheckCreatureCompletionInterval = 1000;
         public const int JobCheckCreatureInterval = JobCheckCreatureCompletionInterval / JobCheckCreatureBucketCount;
+
+        public const int DispatcherTaskExpiration = 2000;
     }
 }

@@ -641,6 +641,18 @@ namespace HerhangiOT.GameServer.Model
 			if (Connection != null)
 				Connection.SendUpdateTile(tile, pos);
 		}
+
+		public void SendCreatureTurn(Creature creature)
+        {
+			if (Connection != null && CanSeeCreature(creature))
+            {
+				int stackpos = creature.Parent.GetStackposOfCreature(this, creature);
+				if (stackpos != -1)
+                {
+					Connection.SendCreatureTurn(creature, (byte)stackpos);
+				}
+			}
+		}
         #endregion
         
         public void SetNextWalkActionTask(SchedulerTask task)

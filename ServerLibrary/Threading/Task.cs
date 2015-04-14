@@ -29,7 +29,7 @@ namespace HerhangiOT.ServerLibrary.Threading
         public bool IsExpired()
         {
             if (Expiration == -1) return false;
-            return (Expiration > Tools.GetSystemMilliseconds());
+            return (Expiration < Tools.GetSystemMilliseconds());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

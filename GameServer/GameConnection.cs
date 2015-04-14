@@ -5,6 +5,7 @@ using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.GameServer.Utility;
+using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database.Model;
 using HerhangiOT.ServerLibrary.Enums;
@@ -48,6 +49,10 @@ namespace HerhangiOT.GameServer
             { ClientPacketType.MoveSouthEast, ProcessPlayerMovePacket },
             { ClientPacketType.MoveSouthWest, ProcessPlayerMovePacket },
             { ClientPacketType.PlayerSpeech, ProcessPlayerSpeechPacket },
+            { ClientPacketType.TurnEast, ProcessPlayerTurnPacket },
+            { ClientPacketType.TurnNorth, ProcessPlayerTurnPacket },
+            { ClientPacketType.TurnSouth, ProcessPlayerTurnPacket },
+            { ClientPacketType.TurnWest, ProcessPlayerTurnPacket },
         };
 
         #region Connection Overrides
@@ -395,6 +400,27 @@ namespace HerhangiOT.GameServer
 		        return;
 
             DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerSay(conn.PlayerData.Id, channelId, type, receiver, text)) );
+        }
+        private static void ProcessPlayerTurnPacket(GameConnection conn)
+        {
+            Directions direction = Directions.None;
+            switch (conn.LatestRequest)
+            {
+                case ClientPacketType.TurnEast:
+                    direction = Directions.East;
+                    break;
+                case ClientPacketType.TurnNorth:
+                    direction = Directions.North;
+                    break;
+                case ClientPacketType.TurnSouth:
+                    direction = Directions.South;
+                    break;
+                case ClientPacketType.TurnWest:
+                    direction = Directions.West;
+                    break;
+            }
+
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(Constants.DispatcherTaskExpiration, () => Game.PlayerTurn(conn.PlayerData.Id, direction)));
         }
         #endregion
 
@@ -872,6 +898,21 @@ namespace HerhangiOT.GameServer
             {
 		        SendAddCreature(creature, newPos, newStackPos, false);
 	        }
+        }
+        public void SendCreatureTurn(Creature creature, byte stackPos)
+        {
+	        if (!CanSee(creature))
+		        return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.TileUpdateThing);
+	        msg.AddPosition(creature.GetPosition());
+	        msg.AddByte(stackPos);
+	        msg.AddUInt16(0x63);
+	        msg.AddUInt32(creature.Id);
+	        msg.AddByte((byte)creature.Direction);
+            msg.AddBoolean(!PlayerData.CanWalkthroughEx(creature));
+	        WriteToOutputBuffer(msg);
         }
 
         private static uint _creatureSayStatementId;
