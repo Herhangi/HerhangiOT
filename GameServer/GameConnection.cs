@@ -5,7 +5,6 @@ using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.GameServer.Utility;
-using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database.Model;
 using HerhangiOT.ServerLibrary.Enums;
@@ -53,6 +52,9 @@ namespace HerhangiOT.GameServer
             { ClientPacketType.TurnNorth, ProcessPlayerTurnPacket },
             { ClientPacketType.TurnSouth, ProcessPlayerTurnPacket },
             { ClientPacketType.TurnWest, ProcessPlayerTurnPacket },
+            { ClientPacketType.Logout, ProcessLogoutPacket },
+            { ClientPacketType.AutoWalk, ProcessAutoWalkPacket },
+            { ClientPacketType.StopAutoWalk, ProcessStopAutoWalkPacket },
         };
 
         #region Connection Overrides
@@ -419,6 +421,47 @@ namespace HerhangiOT.GameServer
             }
 
             DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(Constants.DispatcherTaskExpiration, () => Game.PlayerTurn(conn.PlayerData.Id, direction)));
+        }
+        private static void ProcessAutoWalkPacket(GameConnection conn)
+        {
+            NetworkMessage msg = conn.InMessage;
+
+	        byte numdirs = msg.GetByte();
+	        if (numdirs == 0 || (msg.Position + numdirs) != (msg.Length))
+		        return;
+
+	        //msg.SkipBytes(numdirs);
+
+            Queue<Directions> path = new Queue<Directions>();
+	        for (byte i = 0; i < numdirs; ++i)
+            {
+		        //byte rawdir = msg.GetPreviousByte();
+		        byte rawdir = msg.GetByte();
+		        switch (rawdir)
+                {
+			        case 1: path.Enqueue(Directions.East); break;
+			        case 2: path.Enqueue(Directions.NorthEast); break;
+			        case 3: path.Enqueue(Directions.North); break;
+			        case 4: path.Enqueue(Directions.NorthWest); break;
+			        case 5: path.Enqueue(Directions.West); break;
+			        case 6: path.Enqueue(Directions.SouthWest); break;
+			        case 7: path.Enqueue(Directions.South); break;
+			        case 8: path.Enqueue(Directions.SouthEast); break;
+		        }
+	        }
+
+            if (path.Count == 0)
+                return;
+
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerAutoWalk(conn.PlayerData.Id, path)));
+        }
+        private static void ProcessStopAutoWalkPacket(GameConnection conn)
+        {
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerStopAutoWalk(conn.PlayerData.Id)));
+        }
+        private static void ProcessLogoutPacket(GameConnection conn)
+        {
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Logout(conn.PlayerData, true, false)));
         }
         #endregion
 
@@ -1184,6 +1227,48 @@ namespace HerhangiOT.GameServer
 	        GetMapDescription(oldPos.X - 8, oldPos.Y + 7, newPos.Z, 18, 1, msg);
         }
         #endregion
+
+        public static void Logout(Player player, bool displayEffect, bool forced)
+        {
+            if (player == null)
+                return;
+
+            if (!player.IsRemoved())
+            {
+		        if (!forced)
+                {
+                    if (!player.Group.Access)
+                    {
+                        if (player.Parent.Flags.HasFlag(TileFlags.NoLogout))
+                        {
+                            player.SendCancelMessage(ReturnTypes.YouCannotLogoutHere);
+					        return;
+				        }
+
+                        //if (!player.Parent.Flags.HasFlag(TileFlags.ProtectionZone) && player->hasCondition(CONDITION_INFIGHT)) { //TODO: Conditions
+                        //    player->sendCancelMessage(RETURNVALUE_YOUMAYNOTLOGOUTDURINGAFIGHT);
+                        //    return;
+                        //}
+			        }
+
+			        //scripting event - onLogout TODO: Scripting
+                    //if (!g_creatureEvents->playerLogout(player))
+                    //{
+                    //    //Let the script handle the error message
+                    //    return;
+                    //}
+		        }
+
+                if (displayEffect && player.Health > 0)
+                {
+                    Game.AddMagicEffect(player.GetPosition(), MagicEffects.Poff);
+		        }
+	        }
+
+            player.Connection.Disconnect();
+
+            Game.RemoveCreature(player);
+        }
 
         private void GetMapDescription(int x, int y, int z, int width, int height, NetworkMessage msg)
         {

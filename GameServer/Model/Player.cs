@@ -61,6 +61,7 @@ namespace HerhangiOT.GameServer.Model
         public int MessageBufferCount { get; set; }
         public uint IdleTime { get; set; }
         public uint WalkTaskEvent { get; set; }
+        public uint NextStepEvent { get; set; }
         public uint ActionTaskEvent { get; set; }
         public SchedulerTask WalkTask { get; protected set; }
 
@@ -391,7 +392,14 @@ namespace HerhangiOT.GameServer.Model
             //TODO: VIP LIST
             Game.AddPlayer(this);
         }
-        
+
+        public override void RemoveList()
+        {
+            Game.RemovePlayer(this);
+
+            //TODO: VIP LIST
+        }
+
         public sealed override void OnWalk(ref Directions dir)
         {
             base.OnWalk(ref dir);
@@ -658,8 +666,29 @@ namespace HerhangiOT.GameServer.Model
 				}
 			}
 		}
+
+        public void SendMagicEffect(Position position, MagicEffects effect)
+        {
+            if(Connection != null)
+                Connection.SendMagicEffect(position, effect);
+        }
         #endregion
         
+        
+        public void SetNextWalkTask(SchedulerTask task)
+        {
+	        if (NextStepEvent != 0) {
+		        DispatcherManager.Scheduler.StopEvent(NextStepEvent);
+		        NextStepEvent = 0;
+	        }
+
+	        if (task != null)
+            {
+                NextStepEvent = DispatcherManager.Scheduler.AddEvent(task);
+		        ResetIdleTime();
+	        }
+        }
+
         public void SetNextWalkActionTask(SchedulerTask task)
         {
 	        if (WalkTaskEvent != 0)

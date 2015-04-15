@@ -125,6 +125,17 @@ namespace HerhangiOT.ServerLibrary.Networking
         }
 
         /// <summary>
+        /// Returns the next byte from the content 
+        /// </summary>
+        public byte GetPreviousByte()
+        {
+            if (_position - 1 < 0)
+                throw new IndexOutOfRangeException("NetworkMessage GetByte() out of range.");
+
+            return _buffer[--_position];
+        }
+
+        /// <summary>
         /// Returns next specified count of bytes from the content
         /// </summary>
         /// <param name="count">Byte count that will be returned</param>

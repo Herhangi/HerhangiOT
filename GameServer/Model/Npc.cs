@@ -22,6 +22,11 @@ namespace HerhangiOT.GameServer.Model
             throw new NotImplementedException();
         }
 
+        public override void RemoveList()
+        {
+            throw new NotImplementedException();
+        }
+
         public override void SetID()
         {
             throw new NotImplementedException();

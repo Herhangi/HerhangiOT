@@ -208,16 +208,89 @@ namespace HerhangiOT.GameServer
                     tmpPlayer.SendCreatureAppear(creature, creature.Position, true);
                 }
             }
-                //for (Creature* spectator : list) {
-                //    spectator->onCreatureAppear(creature, true);
-                //}
 
-                //creature->getParent()->postAddNotification(creature, nullptr, 0);
+            foreach (Creature spectator in spectators)
+            {
+                spectator.OnCreatureAppear(creature, true);
+            }
 
-                //addCreatureCheck(creature);
-                //creature->onPlacedCreature();
-	            return true;
+            creature.Parent.PostAddNotification(creature, null, 0);
+
+            AddCreatureCheck(creature);
+            creature.OnPlacedCreature();
+	        return true;
         }
+
+        private static int _lastAddedCreatureBucket = -1;
+        public static void AddCreatureCheck(Creature creature)
+        {
+            creature.CreatureCheck = true;
+
+            if(creature.InCheckCreaturesVector)
+                return;
+
+            _lastAddedCreatureBucket = (_lastAddedCreatureBucket + 1)%Constants.JobCheckCreatureBucketCount;
+            creature.InCheckCreaturesVector = true;
+            CheckCreatureBuckets[_lastAddedCreatureBucket].Add(creature);
+            creature.IncrementReferenceCounter();
+        }
+
+        public static void RemoveCreatureCheck(Creature creature)
+        {
+	        if (creature.InCheckCreaturesVector)
+		        creature.CreatureCheck = false;
+        }
+
+        public static bool RemoveCreature(Creature creature, bool isLogout = true)
+        {
+	        if (creature.IsRemoved())
+		        return false;
+
+	        Tile tile = creature.Parent;
+
+            List<int> oldStackPosVector = new List<int>();
+
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, tile.GetPosition(), true);
+	        foreach (Player spectator in list.OfType<Player>())
+            {
+			    oldStackPosVector.Add(spectator.CanSeeCreature(creature) ? tile.GetStackposOfCreature(spectator, creature) : -1);
+	        }
+
+	        tile.RemoveCreature(creature);
+
+	        Position tilePosition = tile.GetPosition();
+
+	        //send to client
+	        int i = 0;
+	        foreach (Player spectator in list.OfType<Player>())
+            {
+			    spectator.SendRemoveTileThing(tilePosition, oldStackPosVector[i++]);
+	        }
+
+	        //event method
+	        foreach (Creature spectator in list)
+            {
+		        spectator.OnRemoveCreature(creature, isLogout);
+	        }
+
+	        creature.Parent.PostRemoveNotification(creature, null, 0);
+
+	        creature.RemoveList();
+	        creature.IsInternalRemoved = true;
+	        ReleaseCreature(creature);
+
+	        RemoveCreatureCheck(creature);
+
+	        foreach (Creature summon in creature.Summons)
+	        {
+	            summon.SkillLoss = false;
+		        RemoveCreature(summon);
+	        }
+	        return true;
+        }
+
+
 
         public static void AddPlayer(Player player)
         {
@@ -225,6 +298,14 @@ namespace HerhangiOT.GameServer
             OnlinePlayers[lowercaseName] = player;
             //TODO: Wildcard tree
             OnlinePlayersById[player.Id] = player;
+        }
+
+        public static void RemovePlayer(Player player)
+        {
+            string lowercaseName = player.CharacterName.ToLowerInvariant();
+            OnlinePlayers.Remove(lowercaseName);
+            //TODO: Wildcard tree
+            OnlinePlayersById.Remove(player.Id);
         }
 
         #region Get Operations
@@ -267,6 +348,21 @@ namespace HerhangiOT.GameServer
             return monster;
         }
         #endregion
+        
+        public static void AddMagicEffect(Position position, MagicEffects effect)
+        {
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, position, true, true);
+	        AddMagicEffect(list, position, effect);
+        }
+        public static void AddMagicEffect(HashSet<Creature> spectators, Position position, MagicEffects effect)
+        {
+            foreach (Player spectator in spectators.OfType<Player>())
+            {
+                spectator.SendMagicEffect(position, effect);
+            }
+        }
+
 
         public static void CheckCreatureWalk(uint creatureId)
         {
@@ -400,6 +496,26 @@ namespace HerhangiOT.GameServer
 	        player.ResetIdleTime();
 	        player.SetNextWalkActionTask(null);
 	        player.StartAutoWalk(direction);
+        }
+
+        public static void PlayerAutoWalk(uint playerId, Queue<Directions> directions)
+        {
+	        Player player = GetPlayerById(playerId);
+	        if (player == null)
+		        return;
+
+	        player.ResetIdleTime();
+	        player.SetNextWalkTask(null);
+	        player.StartAutoWalk(directions);
+        }
+
+        public static void PlayerStopAutoWalk(uint playerId)
+        {
+	        Player player = GetPlayerById(playerId);
+	        if (player == null)
+		        return;
+
+            player.CancelNextWalk = true;
         }
 
         public static void PlayerTurn(uint playerId, Directions direction)

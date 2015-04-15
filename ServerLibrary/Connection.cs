@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net.Sockets;
 using HerhangiOT.ServerLibrary.Networking;
 using HerhangiOT.ServerLibrary.Utility;
@@ -161,8 +160,16 @@ namespace HerhangiOT.ServerLibrary
 
         private void InternalSend(OutputMessage message, bool wasPending = false)
         {
-            if(wasPending || PendingWrites++ == 0)
-                Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, OnStreamWriteCompleted, message);
+            if (wasPending || PendingWrites++ == 0)
+            {
+                try
+                {
+                    Stream.BeginWrite(message.Buffer, message.HeaderPosition, message.Length, OnStreamWriteCompleted, message);   
+                }
+                catch (Exception)
+                {
+                }
+            }
             else
                 PendingMessages.Enqueue(message);
         }

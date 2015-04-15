@@ -640,7 +640,7 @@ namespace HerhangiOT.GameServer.Model
         #endregion
 
         #region Remove Methods
-        public void RemoveThing(Thing thing, uint count)
+        public override void RemoveThing(Thing thing, uint count)
         {
 	        Creature creature = thing as Creature;
 	        if (creature != null)
@@ -729,6 +729,12 @@ namespace HerhangiOT.GameServer.Model
 			        OnRemoveTileItem(spectators, oldStackPosVector, item);
 		        }
 	        }
+        }
+
+        public void RemoveCreature(Creature creature)
+        {
+            //TODO: QT Nodes
+            RemoveThing(creature, 0);
         }
         #endregion
         

@@ -45,10 +45,12 @@ namespace HerhangiOT.GameServer.Model
         public Creature FollowCreature { get; protected set; }
         public List<Creature> Summons { get; protected set; }
 
+        public bool LootDrop { get; protected set; }
+        public bool SkillLoss { get; set; }
         public bool IsHealthHidden { get; protected set; }
-        public bool IsInternalRemoved { get; protected set; }
+        public bool IsInternalRemoved { get; set; }
         public bool IsMapLoaded { get; protected set; }
-        public bool CreatureCheck { get; protected set; }
+        public bool CreatureCheck { get; set; }
         public bool InCheckCreaturesVector { get; set; }
         public bool ForceUpdateFollowPath { get; protected set; }
         public bool IsUpdatingPath { get; protected set; }
@@ -61,7 +63,7 @@ namespace HerhangiOT.GameServer.Model
         public long LastStep { get; protected set; }
         public uint LastStepCost { get; protected set; }
         public uint EventWalk { get; protected set; }
-        public bool CancelNextWalk { get; protected set; }
+        public bool CancelNextWalk { get; set; }
         public Queue<Directions> WalkDirections { get; protected set; } 
 
         public Creature()
@@ -125,6 +127,58 @@ namespace HerhangiOT.GameServer.Model
         public virtual void OnDeath()
         {
             //TODO: Fill this method
+        }        
+        public virtual void OnRemoveCreature(Creature creature, bool isLogout)
+        {
+	        OnCreatureDisappear(creature, true);
+	        if (creature == this)
+            {
+		        if (Master != null && !Master.IsRemoved())
+                {
+			        Master.RemoveSummon(this);
+		        }
+	        }
+            else if (IsMapLoaded)
+            {
+		        if (creature.GetPosition().Z == GetPosition().Z)
+                {
+			        UpdateTileCache(creature.Parent, creature.GetPosition());
+		        }
+	        }
+        }
+        public virtual void OnCreatureAppear(Creature creature, bool isLogin)
+        {
+            if (creature == this)
+            {
+                if (UseCacheMap())
+                {
+                    IsMapLoaded = true;
+                    UpdateMapCache();
+                }
+            }
+            else if (IsMapLoaded)
+            {
+                if (creature.GetPosition().Z == GetPosition().Z)
+                {
+                    UpdateTileCache(creature.Parent, creature.GetPosition());
+                }
+            }
+        }
+
+        private void RemoveSummon(Creature creature)
+        {
+            for (int i = 0; i < Summons.Count; i++)
+            {
+                Creature summon = Summons[i];
+                if(summon != creature) continue;
+
+                summon.LootDrop = false;
+                summon.SkillLoss = true;
+                summon.Master = null;
+                summon.DecrementReferenceCounter();
+                Summons.RemoveAt(i);
+                break;
+            }
         }
 
         protected virtual void GoToFollowCreature()
@@ -205,6 +259,7 @@ namespace HerhangiOT.GameServer.Model
         public abstract CreatureTypes GetCreatureType();
         public abstract string GetName();
         public abstract void AddList();
+        public abstract void RemoveList();
         public abstract void SetID();
 
         public virtual bool HasExtraSwing()
@@ -212,6 +267,7 @@ namespace HerhangiOT.GameServer.Model
             return false;
         }
 
+        public virtual void OnPlacedCreature() { }
 		public virtual void DoAttacking(uint interval) { }
         public virtual void OnWalkComplete() { }
         public virtual void OnWalkAborted() { }
@@ -242,7 +298,7 @@ namespace HerhangiOT.GameServer.Model
         {
 	        WalkDirections = directions;
 
-	        AddEventWalk(directions.Count == 1);
+	        AddEventWalk(directions.Count >= 1);
         }
 
         public virtual void OnWalk()
@@ -821,6 +877,11 @@ namespace HerhangiOT.GameServer.Model
         public override Position GetPosition()
         {
             return Position;
+        }
+
+        public override bool IsRemoved()
+        {
+            return IsInternalRemoved;
         }
 
         private ZoneTypes GetZone()
