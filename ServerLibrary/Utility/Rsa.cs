@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Numerics;
 
 namespace HerhangiOT.ServerLibrary.Utility
 {
@@ -7,31 +6,29 @@ namespace HerhangiOT.ServerLibrary.Utility
     {
         protected static BigInteger N; 
         protected static BigInteger D; 
+        protected static BigInteger Me = new BigInteger("65537", 10); 
         
         public static bool SetKey(string p, string q)
         {
             Logger.LogOperationStart("Setting up RSA encyption");
 
             BigInteger mP, mQ;
-
-            if (!BigInteger.TryParse(p, out mP))
+            try
             {
-                Logger.LogOperationFailed("P value could not be parsed!");
-                return false;
+                mP = new BigInteger(p, 10);
+                mQ = new BigInteger(q, 10);
             }
-
-            if (!BigInteger.TryParse(q, out mQ))
+            catch (Exception)
             {
-                Logger.LogOperationFailed("Q value could not be parsed!");
+                Logger.LogOperationFailed("P,Q value could not be parsed!");
                 return false;
             }
             
             N = mP * mQ;
 
-            BigInteger mE = BigInteger.Parse("65537");
             BigInteger mod = (mP - 1)*(mQ - 1);
 
-            D = mE.ModInverse(mod);
+            D = Me.ModInverse(mod);
             Logger.LogOperationDone();
             return true;
         }
@@ -41,40 +38,38 @@ namespace HerhangiOT.ServerLibrary.Utility
             byte[] temp = new byte[128];
             Array.Copy(buffer, index, temp, 0, 128);
 
-            BigInteger c = new BigInteger(temp);
-            BigInteger mE = BigInteger.Parse("65537");
-            BigInteger m = BigInteger.ModPow(c, mE, N);
-            byte[] a = m.ToByteArray();
+            BigInteger input = new BigInteger(temp);
+            BigInteger output = input.modPow(Me, N);
 
-            int length = (1024 >> 3);
-            if (a.Length >= length)
-                Array.Copy(a, 0, buffer, index, 128);
-            else
-            {
-                temp.MemSet(index, (byte)0, length - a.Length);
-                Array.Copy(a, 0, buffer, index + (length - a.Length), a.Length);
-            }
+            Array.Copy(GetPaddedValue(output), 0, buffer, index, 128);
         }
 
         public static void Decrypt(ref byte[] buffer, int index)
         {
             byte[] temp = new byte[128];
             Array.Copy(buffer, index, temp, 0, 128);
-            Array.Reverse(temp);
             
-            BigInteger c = new BigInteger(temp);
-            BigInteger m = BigInteger.ModPow(c, D, N);
-            byte[] a = m.ToByteArray();
-            Array.Reverse(a);
+            BigInteger input = new BigInteger(temp);
+            BigInteger output = input.modPow(D, N);
 
-            int length = (1024 >> 3);
-            if (a.Length >= length)
-                Array.Copy(a, 0, buffer, index, 128);
-            else
-            {
-                buffer.MemSet(index, (byte)0, length - a.Length);
-                Array.Copy(a, 0, buffer, index + (length - a.Length), a.Length);
-            }
+            Array.Copy(GetPaddedValue(output), 0, buffer, index, 128);
         }
+
+        private static byte[] GetPaddedValue(BigInteger value)
+        {
+            byte[] result = value.getBytes();
+
+            const int length = (1024 >> 3);
+            if (result.Length >= length)
+                return result;
+
+            // left-pad 0x00 value on the result (same integer, correct length)
+            byte[] padded = new byte[length];
+            Buffer.BlockCopy(result, 0, padded, (length - result.Length), result.Length);
+            // temporary result may contain decrypted (plaintext) data, clear it
+            Array.Clear(result, 0, result.Length);
+            return padded;
+        }
+
     }
 }

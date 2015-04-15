@@ -72,6 +72,7 @@
     <Compile Include="Threading\Scheduler.cs" />
     <Compile Include="Threading\SchedulerTask.cs" />
     <Compile Include="Threading\Task.cs" />
+    <Compile Include="Utility\BigInteger.cs" />
     <Compile Include="Utility\CsharpExtensions.cs" />
     <Compile Include="Utility\Deque.cs" />
     <Compile Include="Utility\Rsa.cs" />
