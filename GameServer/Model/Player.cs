@@ -19,6 +19,7 @@ namespace HerhangiOT.GameServer.Model
         public const ushort PlayerMinSpeed = 0;
         #endregion
 
+        public Group Group { get; private set; }
         public GameConnection Connection { get; set; }
         public int AccountId { get; private set; }
         public int CharacterId { get; private set; }
@@ -118,7 +119,12 @@ namespace HerhangiOT.GameServer.Model
 
             //TODO : DELETION CONTROL
 
-            //TODO: GROUPS
+            Group = Groups.GetGroup(CharacterData.GroupId);
+            if (Group == null)
+            {
+                Logger.Log(LogLevels.Information, "Player({0}) has unknown group id({1})!", CharacterData.CharacterName, CharacterData.GroupId);
+                return false;
+            }
 
             AccountId = CharacterData.AccountId;
             CharacterId = CharacterData.CharacterId;
@@ -247,24 +253,24 @@ namespace HerhangiOT.GameServer.Model
             return true;
         }
 
+        public bool HasFlag(PlayerFlags flag)
+        {
+            return Group.Flags.HasFlag(flag);
+        }
+
         private void UpdateBaseSpeed()
         {
-            //TODO: Group Flags
-            //if (!hasFlag(PlayerFlag_SetMaxSpeed))
-            //{
+            if(!HasFlag(PlayerFlags.SetMaxSpeed))
                 BaseSpeed = (ushort)(VocationData.BaseSpeed + (2U * (CharacterData.Level - 1U)));
-            //}
-            //else
-            //{
-            //    BaseSpeed = PlayerMaxSpeed;
-            //}
+            else
+                BaseSpeed = PlayerMaxSpeed;
         }
         private void UpdateInventoryWeight()
         {
-            //TODO: COMPLETE THIS METHOD
-            //if (hasFlag(PlayerFlag_HasInfiniteCapacity))
-            //    return;
+            if (HasFlag(PlayerFlags.HasInfiniteCapacity))
+                return;
 
+            //TODO: COMPLETE THIS METHOD
             //inventoryWeight = 0;
             //for (int i = CONST_SLOT_FIRST; i <= CONST_SLOT_LAST; ++i)
             //{
@@ -313,8 +319,8 @@ namespace HerhangiOT.GameServer.Model
 
         public bool CanWalkthroughEx(Creature creature)
         {
-            //if (group->access) TODO: GROUP ACCESS
-            //    return true;
+            if (Group.Access)
+                return true;
 
 	        Player player = creature as Player;
 	        if (player == null)
@@ -325,8 +331,7 @@ namespace HerhangiOT.GameServer.Model
         }
         public bool CanWalkthrough(Creature creature)
         {
-            //TODO: Player Group
-	        if (creature.IsInGhostMode())// (group->access || creature.IsInGhostMode()) {
+	        if (creature.IsInGhostMode() || Group.Access)
 		        return true;
 
 	        Player player = creature as Player;
@@ -361,7 +366,7 @@ namespace HerhangiOT.GameServer.Model
 	        if (creature == this)
 		        return true;
 
-	        if (creature.IsInGhostMode())// && !group->access) { TODO: GROUP ACCESS
+	        if (creature.IsInGhostMode() && !Group.Access)
 		        return false;
 
 	        if (!(creature is Player) && !CanSeeInvisibility() && creature.IsInvisible())
@@ -432,7 +437,7 @@ namespace HerhangiOT.GameServer.Model
 
         public bool IsPremium()
         {
-            if (ConfigManager.Instance[ConfigBool.FreePremium]) //hasFlag(PlayerFlag_IsAlwaysPremium)) { //TODO: PLAYER FLAGS
+            if (ConfigManager.Instance[ConfigBool.FreePremium] || HasFlag(PlayerFlags.IsAlwaysPremium))
                 return true;
 
             return PremiumDays > 0;
@@ -862,8 +867,8 @@ namespace HerhangiOT.GameServer.Model
 
         public uint IsMuted()
         {
-            //if (hasFlag(PlayerFlag_CannotBeMuted))  TODO: Player Flags
-            //    return 0;
+            if (HasFlag(PlayerFlags.CannotBeMuted))
+                return 0;
 
             //int muteTicks = 0; //TODO: Player Conditions
             //for (Condition* condition : conditions) {
@@ -878,15 +883,14 @@ namespace HerhangiOT.GameServer.Model
 
         public void AddMessageBuffer()
         {
-            if (MessageBufferCount > 0 && ConfigManager.Instance[ConfigInt.MaxMessageBuffer] != 0)// && !HasFlag(PlayerFlag_CannotBeMuted)) TODO: Player Flags
+            if (MessageBufferCount > 0 && ConfigManager.Instance[ConfigInt.MaxMessageBuffer] != 0 && !HasFlag(PlayerFlags.CannotBeMuted))
 		        --MessageBufferCount;
         }
 
         public void RemoveMessageBuffer()
         {
-            //if (hasFlag(PlayerFlag_CannotBeMuted)) { TODO: Player Flags
-            //    return;
-            //}
+            if (HasFlag(PlayerFlags.CannotBeMuted))
+                return;
 
 	        int maxMessageBuffer = ConfigManager.Instance[ConfigInt.MaxMessageBuffer];
 	        if (maxMessageBuffer != 0 && MessageBufferCount <= maxMessageBuffer + 1)
@@ -894,7 +898,7 @@ namespace HerhangiOT.GameServer.Model
 		        if (++MessageBufferCount > maxMessageBuffer)
                 {
 			        uint muteCount = 1;
-                    //auto it = muteCountMap.find(guid);
+                    //auto it = muteCountMap.find(guid); //TODO: Mute Map
                     //if (it != muteCountMap.end()) {
                     //    muteCount = it->second;
                     //}

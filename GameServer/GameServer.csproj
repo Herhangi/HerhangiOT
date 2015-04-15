@@ -91,6 +91,7 @@
     <Compile Include="GameConnection.cs" />
     <Compile Include="ItemManager.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="Model\Groups.cs" />
     <Compile Include="Model\Items\DepotChest.cs" />
     <Compile Include="Model\Npc.cs" />
     <Compile Include="Model\TextMessage.cs" />

@@ -223,8 +223,7 @@ namespace HerhangiOT.GameServer.Model
                 Player player = creature as Player;
 		        if (player != null)
                 {
-                    //TODO: Player Group
-                    if(Creatures != null && Creatures.Count != 0 && !cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature))// && !player->isAccessPlayer())
+                    if(Creatures != null && Creatures.Count != 0 && !cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature) && !player.Group.Access)
                     {
                         foreach (Creature tileCreature in Creatures)
                         {
@@ -1096,10 +1095,10 @@ namespace HerhangiOT.GameServer.Model
             {
 		        if (thing is Creature)
                 {
-			        foreach (Creature creature in Creatures)
+                    for (int i = Creatures.Count - 1; i > -1; i--)
                     {
 				        ++n;
-				        if (creature == thing)
+				        if (Creatures[i] == thing)
 					        return n;
 			        }
 		        }
@@ -1139,8 +1138,9 @@ namespace HerhangiOT.GameServer.Model
 
             if (Creatures != null)
             {
-                foreach (Creature c in Creatures)
+                for(int i = Creatures.Count - 1; i > -1; i--)
                 {
+                    Creature c = Creatures[i];
                     if (c == creature)
                         return n;
                     
@@ -1223,8 +1223,9 @@ namespace HerhangiOT.GameServer.Model
 
             if (Creatures != null)
             {
-                foreach (Creature c in Creatures)
+                for (int i = Creatures.Count - 1; i > -1; i--)
                 {
+                    Creature c = Creatures[i];
                     if (c == creature)
                         return n;
 

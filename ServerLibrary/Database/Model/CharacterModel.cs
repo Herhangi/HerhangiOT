@@ -7,7 +7,7 @@ namespace HerhangiOT.ServerLibrary.Database.Model
         public int AccountId { get; set; }
         public int CharacterId { get; set; }
         public string CharacterName { get; set; }
-        public int GroupId { get; set; }
+        public ushort GroupId { get; set; }
         public ushort Level { get; set; }
         public byte Vocation { get; set; }
         public ushort Health { get; set; }

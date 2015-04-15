@@ -236,15 +236,13 @@ namespace HerhangiOT.GameServer
                 }
                 //CHECK NAMELOCK
 
-                //TODO: GROUP FLAGS
-                if (Game.GameState == GameStates.Closing)
+                if (Game.GameState == GameStates.Closing && !PlayerData.HasFlag(PlayerFlags.CanAlwaysLogin))
                 {
                     base.DispatchDisconnect("The game is just going down.\nPlease try again later.");
                     return;
                 }
 
-                //TODO: GROUP FLAGS
-                if (Game.GameState == GameStates.Closed)
+                if (Game.GameState == GameStates.Closed && !PlayerData.HasFlag(PlayerFlags.CanAlwaysLogin))
                 {
                     base.DispatchDisconnect("Server is currently closed.\nPlease try again later.");
                     return;
@@ -1017,7 +1015,7 @@ namespace HerhangiOT.GameServer
 		        AddOutfit(msg, Outfit.EmptyOutfit);
 	        }
 
-            msg.AddByte(0xFF);//player->isAccessPlayer() ? 0xFF : lightInfo.level); TODO: ACCESS
+            msg.AddByte(PlayerData.Group.Access ? (byte)0xFF : creature.InternalLight.Level);
 	        msg.AddByte(creature.InternalLight.Color);
 
 	        msg.AddUInt16((ushort)(creature.StepSpeed / 2));
@@ -1072,14 +1070,14 @@ namespace HerhangiOT.GameServer
         private void AddWorldLight(NetworkMessage msg, LightInfo lightInfo)
         {
 	        msg.AddByte((byte)ServerPacketType.WorldLight);
-            msg.AddByte(lightInfo.Level);// (player->isAccessPlayer() ? 0xFF : lightInfo.level)); TODO: ACCESS
+            msg.AddByte(PlayerData.Group.Access ? (byte)0xFF : lightInfo.Level);
 	        msg.AddByte(lightInfo.Color);
         }
         private void AddCreatureLight(NetworkMessage msg, Creature creature)
         {
 	        msg.AddByte((byte)ServerPacketType.CreatureLight);
-	        msg.AddUInt32(creature.Id);
-            msg.AddByte(creature.InternalLight.Level);//(player->isAccessPlayer() ? 0xFF : lightInfo.level)); TODO: ACCESS
+            msg.AddUInt32(creature.Id);
+            msg.AddByte(PlayerData.Group.Access ? (byte)0xFF : creature.InternalLight.Level);
             msg.AddByte(creature.InternalLight.Color);
         }
 

@@ -45,6 +45,7 @@ namespace HerhangiOT.GameServer
                 {
                     case GameStates.Init:
                         //TODO: Program HERE
+                        Groups.Load();
                         break;
                     case GameStates.Shutdown:
                         //TODO: Program HERE
@@ -178,7 +179,7 @@ namespace HerhangiOT.GameServer
 		        return false;
 	        }
 
-	        //creature.IncrementReferenceCounter(); //TODO
+	        creature.IncrementReferenceCounter();
 	        creature.SetID();
 	        creature.AddList();
 	        return true;
@@ -436,7 +437,7 @@ namespace HerhangiOT.GameServer
 	        if (PlayerSaySpell(player, type, text))
 		        return;
 
-	        if (text[0] == '/')// && player->isAccessPlayer()) { TODO: Player Access
+	        if (text[0] == '/' && player.Group.Access)
 		        return;
 
 	        if (type != SpeakTypes.PrivatePn)
@@ -573,7 +574,7 @@ namespace HerhangiOT.GameServer
 		        return false;
 	        }
 
-	        if (type == SpeakTypes.PrivateRedTo)// && (player->hasFlag(PlayerFlag_CanTalkRedPrivate) || player.AccountType >= AccountTypes.GameMaster)) TODO: Player Flags
+	        if (type == SpeakTypes.PrivateRedTo && (player.HasFlag(PlayerFlags.CanTalkRedPrivate) || player.AccountType >= AccountTypes.GameMaster))
             {
 		        type = SpeakTypes.PrivateRedFrom;
 	        }
@@ -585,7 +586,7 @@ namespace HerhangiOT.GameServer
 	        toPlayer.SendPrivateMessage(player, type, text);
 	        toPlayer.OnCreatureSay(player, type, text);
 
-	        if (toPlayer.IsInGhostMode())// && !player->isAccessPlayer()) TODO: ACCESS PLAYER
+	        if (toPlayer.IsInGhostMode() && !player.Group.Access)
             {
 		        player.SendTextMessage(MessageTypes.StatusSmall, "A player with this name is not online.");
 	        }
@@ -608,9 +609,8 @@ namespace HerhangiOT.GameServer
         
         private static bool PlayerBroadcastMessage(Player player, string text)
         {
-            //if (!player.HasFlag(PlayerFlag_CanBroadcast)) { //TODO: Player Flags
-            //    return false;
-            //}
+            if (!player.HasFlag(PlayerFlags.CanBroadcast))
+                return false;
 
             Logger.Log(LogLevels.Information, "{0} broadcasted: \"{1}\".", player.GetName(), text);
 
