@@ -22,7 +22,7 @@ namespace HerhangiOT.GameServer.Model
         public Group Group { get; private set; }
         public GameConnection Connection { get; set; }
         public int AccountId { get; private set; }
-        public int CharacterId { get; private set; }
+        public uint CharacterId { get; private set; }
         public string AccountName { get; private set; }
         public string CharacterName { get; private set; }
         public ushort PremiumDays { get; private set; }
@@ -461,6 +461,15 @@ namespace HerhangiOT.GameServer.Model
             if (Id == 0)
                 Id = PlayerAutoID++;
         }
+        
+        public void KickPlayer(bool displayEffect)
+        {
+	        //g_creatureEvents->playerLogout(this); TODO: Creature Events
+	        if (Connection != null)
+                GameConnection.Logout(this, displayEffect, true);
+	        else
+		        Game.RemoveCreature(this);
+        }
 
         #region Static Methods
         public static byte GetPercentage(ulong current, ulong max)
@@ -642,6 +651,28 @@ namespace HerhangiOT.GameServer.Model
 			if (Connection != null)
 				Connection.SendCreatureSay(creature, type, text, pos);
 		}
+        public void SendChannelsDialog()
+        {
+            if (Connection != null)
+            {
+                Connection.SendChannelsDialog();
+            }
+        }
+		public void SendChannel(ushort channelId, string channelName, Dictionary<uint, Player> channelUsers, Dictionary<uint, Player> invitedUsers)
+        {
+			if (Connection != null)
+				Connection.SendChannel(channelId, channelName, channelUsers, invitedUsers);
+		}
+		public void SendCreatePrivateChannel(ushort channelId, string channelName)
+        {
+			if (Connection != null)
+				Connection.SendCreatePrivateChannel(channelId, channelName);
+		}
+		public void SendOpenPrivateChannel(string receiver)
+        {
+			if (Connection != null)
+				Connection.SendOpenPrivateChannel(receiver);
+		}
 
 		public void SendCancelWalk()
         {
@@ -672,8 +703,55 @@ namespace HerhangiOT.GameServer.Model
             if(Connection != null)
                 Connection.SendMagicEffect(position, effect);
         }
+        
+		public void SendCreatureHealth(Creature creature)
+        {
+			if (Connection != null)
+                Connection.SendCreatureHealth(creature);
+		}
+
+        public void SendChannelEvent(ushort channelId, string playerName, ChatChannelEvents channelEvent)
+        {
+            if (Connection != null)
+                Connection.SendChannelEvent(channelId, playerName, channelEvent);
+        }
+		public void SendChannelMessage(string author, string text, SpeakTypes type, ushort channel)
+        {
+			if (Connection != null)
+				Connection.SendChannelMessage(author, text, type, channel);
+		}
+		public void SendToChannel(Creature creature, SpeakTypes type, string text, ushort channelId)
+        {
+			if (Connection != null)
+                Connection.SendToChannel(creature, type, text, channelId);
+		}
+        
+        public void SendClosePrivate(ushort channelId)
+        {
+	        if (channelId == Constants.ChatChannelGuild || channelId == Constants.ChatChannelParty)
+            {
+		        Chat.RemoveUserFromChannel(this, channelId);
+	        }
+
+	        if (Connection != null)
+		        Connection.SendClosePrivate(channelId);
+        }
+
         #endregion
         
+        public void ChangeSoul(int soulChange)
+        {
+	        if (soulChange > 0)
+	        {
+	            CharacterData.Soul += (byte)Math.Min(soulChange, VocationData.SoulMax - CharacterData.Soul);
+	        }
+            else
+	        {
+	            CharacterData.Soul = (byte)Math.Max(0, CharacterData.Soul + soulChange);
+	        }
+
+	        SendStats();
+        }
         
         public void SetNextWalkTask(SchedulerTask task)
         {
@@ -712,6 +790,21 @@ namespace HerhangiOT.GameServer.Model
                 ActionTaskEvent = DispatcherManager.Scheduler.AddEvent(task);
 		        ResetIdleTime();
 	        }
+        }
+
+        public override string GetDescription(int lookDistance)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int GetThrowRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsPushable()
+        {
+            throw new NotImplementedException();
         }
 
         public sealed override void PostRemoveNotification(Thing thing, Thing newParent, int index, CylinderLinks link = CylinderLinks.Owner)

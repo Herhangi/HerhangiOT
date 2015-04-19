@@ -90,6 +90,9 @@
         QuestPartList = 0xF1,
         ShowTutorial = 0xDC,
         AddMapMarker = 0xDD,
+
+        ChatChannelEvent = 0xF3,
+
     }
 
     public enum ClientPacketType : byte

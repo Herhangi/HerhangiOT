@@ -79,7 +79,11 @@ namespace HerhangiOT.GameServer
             // Loading items
             if(!ItemManager.Load())
                 ExitApplication();
-            
+
+            // Loading Chat Channels
+            if (!Chat.Load())
+                ExitApplication();
+
             // Loading scripts
             if(!ScriptManager.LoadCsScripts() || !ScriptManager.LoadLuaScripts())
                 ExitApplication();

@@ -37,6 +37,9 @@ namespace HerhangiOT.ScriptLibrary.Scripts.CLO
                     case "clo":
                         HerhangiOT.ScriptLibrary.ScriptManager.LoadCommandLineOperations(forceCompilation);
                         break;
+                    case "chat":
+                        HerhangiOT.GameServer.Chat.Load(forceCompilation);
+                        break;
                     default:
                         Logger.Log(LogLevels.Information, "Argument '"+args[i]+"' is invalid in 'reload' operation!");
                         break;

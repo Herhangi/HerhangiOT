@@ -54,7 +54,7 @@ namespace HerhangiOT.GameServer.Model
             IsLoadedFromMap = false;
             //TODO: SET ATTRIBUTE: DURATION
         }
-
+        
         public override ushort GetThingId()
         {
             throw new System.NotImplementedException();
@@ -68,6 +68,16 @@ namespace HerhangiOT.GameServer.Model
         public override void SetParent(Thing parent)
         {
             Parent = parent;
+        }
+
+        public override int GetThrowRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsPushable()
+        {
+            throw new NotImplementedException();
         }
 
         public static Item CreateItem(MemoryStream reader)

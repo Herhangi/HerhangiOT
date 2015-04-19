@@ -132,6 +132,21 @@ namespace HerhangiOT.GameServer.Model
             }
         }
 
+        public override string GetDescription(int lookDistance)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override int GetThrowRange()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool IsPushable()
+        {
+            throw new NotImplementedException();
+        }
+
         public override ReturnTypes QueryAdd(int index, Thing thing, uint count, CylinderFlags cFlags, Creature actor = null)
         {
             Item item;
@@ -1244,9 +1259,22 @@ namespace HerhangiOT.GameServer.Model
             return -1;
         }
         
+        
+        public BedItem GetBedItem()
+        {
+	        if (!Flags.HasFlag(TileFlags.Bed))
+		        return null;
+
+	        if (Ground is BedItem)
+		        return Ground as BedItem;
+
+            if (Items != null)
+                return Items.OfType<BedItem>().LastOrDefault();
+	        return null;
+        }
         public Teleport GetTeleportItem()
         {
-	        if (Flags.HasFlag(TileFlags.Teleport))
+	        if (!Flags.HasFlag(TileFlags.Teleport))
 		        return null;
 
             if (Items != null)

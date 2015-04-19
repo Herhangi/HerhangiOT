@@ -5,7 +5,7 @@ namespace HerhangiOT.ServerLibrary.Database.Model
     public class CharacterModel
     {
         public int AccountId { get; set; }
-        public int CharacterId { get; set; }
+        public uint CharacterId { get; set; }
         public string CharacterName { get; set; }
         public ushort GroupId { get; set; }
         public ushort Level { get; set; }

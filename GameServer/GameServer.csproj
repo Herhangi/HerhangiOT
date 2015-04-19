@@ -76,7 +76,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Chat.cs" />
+    <None Include="Data\ChatChannels\WorldChat.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ChatChannels\EnglishChat.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ChatChannels\AdvertisingChannel.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ChatChannels\AdvertisingRookgaardChannel.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ChatChannels\HelpChat.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Data\ChatChannels\GamemasterChannel.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Enums\ChaseModes.cs" />
+    <Compile Include="Enums\ChatChannelEvents.cs" />
     <Compile Include="Enums\ClientFluidTypes.cs" />
     <Compile Include="Enums\CylinderLinks.cs" />
     <Compile Include="Enums\FightModes.cs" />
@@ -96,6 +116,11 @@
     <Compile Include="Model\Npc.cs" />
     <Compile Include="Model\TextMessage.cs" />
     <Compile Include="OutfitManager.cs" />
+    <Compile Include="Scriptability\ChatChannel.cs" />
+    <Compile Include="Scriptability\ChatChannels\PrivateChatChannel.cs" />
+    <None Include="Data\ChatChannels\TutorChannel.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="SecretCommunication.cs" />
     <Compile Include="Utility\ServerLibraryExtensions.cs" />
     <Content Include="Data\Items\items.xml">
@@ -249,6 +274,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

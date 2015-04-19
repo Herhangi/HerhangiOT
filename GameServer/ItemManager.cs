@@ -465,7 +465,7 @@ namespace HerhangiOT.GameServer
                                 Logger.Log(LogLevels.Warning, "ParseItemNode: Unknown shoottype: " + valueAttribute.InnerText);
                             break;
                         case "effect":
-                            //if (!Enum.TryParse(valueAttribute.InnerText, true, out item.MagicEffect))
+                            //if (!Enum.TryParse(valueAttribute.InnerText, true, out item.MagicEffect)) TODO: Item Magic Effect
                             //    Logger.Log(LogLevels.Warning, "ParseItemNode: Unknown magiceffect: " + valueAttribute.InnerText);
                             break;
                         case "range":

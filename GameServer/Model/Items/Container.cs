@@ -33,7 +33,48 @@ namespace HerhangiOT.GameServer.Model.Items
             HasPagination = false;
         }
 
-        //TODO: Container from tile
+        public Container(Tile tile) : base((ushort)FixedItems.BrowseField)
+        {
+	        if (tile.Items != null)
+            {
+		        foreach (Item item in tile.Items)
+                {
+			        if (item is Container || item.HasProperty(ItemProperties.Moveable))
+                    {
+				        ItemList.AddToFront(item);
+				        item.SetParent(this);
+			        }
+		        }
+	        }
+
+	        MaxSize = 30;
+	        TotalWeight = 0;
+	        SerializationCount = 0;
+	        IsUnlocked = false;
+	        HasPagination = true;
+	        base.SetParent(tile);
+        }
+
+        ~Container()
+        {
+            if (Id == (short)FixedItems.BrowseField)
+            {
+		        Game.BrowseFields.Remove((Tile)Parent);
+
+		        foreach (Item item in ItemList)
+                {
+			        item.SetParent(Parent);
+		        }
+	        }
+            else if(ItemList != null)
+            {
+		        foreach (Item item in ItemList)
+                {
+			        item.SetParent(null);
+			        item.DecrementReferenceCounter();
+		        }
+	        }
+        }
         
         public void AddItemBack(Item item)
         {
@@ -74,7 +115,7 @@ namespace HerhangiOT.GameServer.Model.Items
 	        replacedItem.SetParent(null);
         }
 
-        public void RemoveThing(Thing thing, uint count)
+        public override void RemoveThing(Thing thing, uint count)
         {
 	        Item item = thing as Item;
 	        if (item == null)
@@ -127,7 +168,7 @@ namespace HerhangiOT.GameServer.Model.Items
             return ItemList[index];
         }
         
-        public int GetThingIndex(Thing thing)
+        public override int GetThingIndex(Thing thing)
         {
             Item item = thing as Item;
             if (item == null) return -1;

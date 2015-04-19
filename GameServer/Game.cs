@@ -3,6 +3,8 @@ using System.Linq;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
+using HerhangiOT.GameServer.Scriptability;
+using HerhangiOT.GameServer.Scriptability.ChatChannels;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Threading;
 
@@ -67,6 +69,7 @@ namespace HerhangiOT.GameServer
         public static Dictionary<uint, Npc> Npcs = new Dictionary<uint, Npc>();
 
         public static Dictionary<Tile, Container> BrowseFields = new Dictionary<Tile, Container>(); 
+        public static Dictionary<uint, BedItem> BedSleepers = new Dictionary<uint, BedItem>(); 
 
         private static readonly List<Creature>[] CheckCreatureBuckets = new List<Creature>[Constants.JobCheckCreatureBucketCount]; 
 
@@ -82,6 +85,13 @@ namespace HerhangiOT.GameServer
         public static void StartJobs()
         {
             DispatcherManager.Jobs.AddJob("CheckCreatures", JobTask.CreateJobTask(Constants.JobCheckCreatureInterval, 0, CheckCreatures));
+        }
+
+
+        public static Item TransformItem(Item item, ushort newId, int newCount = -1)
+        {
+            //TODO: Fill Method
+            return null;
         }
 
         #region Internal Operations
@@ -363,6 +373,20 @@ namespace HerhangiOT.GameServer
             }
         }
 
+        public static void AddCreatureHealth(Creature target)
+        {
+            HashSet<Creature> spectators = new HashSet<Creature>();
+            Map.GetSpectators(ref spectators, target.GetPosition(), true, true);
+            AddCreatureHealth(spectators, target);
+        }
+
+        public static void AddCreatureHealth(HashSet<Creature> spectators, Creature target)
+        {
+            foreach (Player spectator in spectators.OfType<Player>())
+            {
+                spectator.SendCreatureHealth(target);
+            }
+        }
 
         public static void CheckCreatureWalk(uint creatureId)
         {
@@ -581,7 +605,7 @@ namespace HerhangiOT.GameServer
 		        case SpeakTypes.ChannelO:
 		        case SpeakTypes.ChannelY:
 		        case SpeakTypes.ChannelR1:
-			        //g_chat->talkToChannel(*player, type, text, channelId); TODO: Chat channels
+                    Chat.TalkToChannel(player, type, text, channelId);
 			        break;
 
 		        case SpeakTypes.PrivatePn:
@@ -592,6 +616,111 @@ namespace HerhangiOT.GameServer
 			        PlayerBroadcastMessage(player, text);
 			        break;
 	        }
+        }
+        public static void PlayerRequestChannels(uint playerId)
+        {
+	        Player player = GetPlayerById(playerId);
+	        if (player == null)
+		        return;
+
+	        player.SendChannelsDialog();
+        }
+        public static void PlayerChannelOpen(uint playerId, ushort channelId)
+        {
+	        Player player = GetPlayerById(playerId);
+	        if (player == null)
+		        return;
+
+            ChatChannel channel = Chat.AddUserToChannel(player, channelId);
+            if(channel == null)
+                return;
+
+            Dictionary<uint, Player> invitedUsers = channel.Invites;
+            Dictionary<uint, Player> users = null;
+            if (!channel.IsPublicChannel)
+                users = channel.Users;
+
+            player.SendChannel(channel.Id, channel.Name, users, invitedUsers);
+        }
+        public static void PlayerChannelClose(uint playerId, ushort channelId)
+        {
+            Player player = GetPlayerById(playerId);
+            if (player == null)
+                return;
+
+            Chat.RemoveUserFromChannel(player, channelId);
+        }
+        public static void PlayerPrivateChannelCreate(uint playerId)
+        {
+            Player player = GetPlayerById(playerId);
+            if (player == null || !player.IsPremium())
+                return;
+
+	        ChatChannel channel = Chat.CreateChannel(player, Constants.ChatChannelPrivate);
+	        if (channel == null || !channel.AddUser(player))
+		        return;
+
+	        player.SendCreatePrivateChannel(channel.Id, channel.Name);
+        }
+        public static void PlayerPrivateChannelOpen(uint playerId, string receiver)
+        {
+            Player player = GetPlayerById(playerId);
+            if (player == null)
+                return;
+            
+            //if (!IOLoginData::formatPlayerName(receiver)) { //TODO: Learn what this is
+            //    player->sendCancelMessage("A player with this name does not exist.");
+            //    return;
+            //}
+
+            player.SendOpenPrivateChannel(receiver);
+        }
+        public static void PlayerPrivateChannelInvite(uint playerId, string name)
+        {
+            Player player = GetPlayerById(playerId);
+            if (player == null)
+                return;
+
+	        PrivateChatChannel channel = Chat.GetPrivateChannel(player);
+	        if (channel == null)
+		        return;
+
+	        Player invitePlayer = GetPlayerByName(name);
+	        if (invitePlayer == null)
+		        return;
+
+	        if (player == invitePlayer)
+		        return;
+
+	        channel.InvitePlayer(player, invitePlayer);
+        }
+        public static void PlayerPrivateChannelExclude(uint playerId, string name)
+        {
+            Player player = GetPlayerById(playerId);
+            if (player == null)
+                return;
+
+	        PrivateChatChannel channel = Chat.GetPrivateChannel(player);
+	        if (channel == null)
+		        return;
+
+	        Player excludePlayer = GetPlayerByName(name);
+	        if (excludePlayer == null)
+		        return;
+
+	        if (player == excludePlayer)
+		        return;
+
+	        channel.ExcludePlayer(player, excludePlayer);
+        }
+
+        public static void KickPlayer(uint playerId, bool displayEffect)
+        {
+	        Player player = GetPlayerById(playerId);
+	        if (player == null)
+		        return;
+
+	        player.KickPlayer(displayEffect);
         }
 
         #region Talk Actions
@@ -779,6 +908,25 @@ namespace HerhangiOT.GameServer
 	        }
         }
         #endregion
+        #endregion
+
+        #region Bed Methods
+        public static BedItem GetBedBySleeper(uint guid)
+        {
+            BedItem bed;
+            BedSleepers.TryGetValue(guid, out bed);
+            return bed;
+        }
+        
+        public static void SetBedSleeper(BedItem bed, uint guid)
+        {
+	        BedSleepers[guid] = bed;
+        }
+
+        public static void RemoveBedSleeper(uint guid)
+        {
+            BedSleepers.Remove(guid);
+        }
         #endregion
     }
 }

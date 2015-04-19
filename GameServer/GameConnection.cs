@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
+using HerhangiOT.GameServer.Scriptability;
 using HerhangiOT.GameServer.Utility;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database.Model;
@@ -55,6 +56,13 @@ namespace HerhangiOT.GameServer
             { ClientPacketType.Logout, ProcessLogoutPacket },
             { ClientPacketType.AutoWalk, ProcessAutoWalkPacket },
             { ClientPacketType.StopAutoWalk, ProcessStopAutoWalkPacket },
+            { ClientPacketType.ChannelList, ProcessChannelListPacket },
+            { ClientPacketType.ChannelOpen, ProcessChannelOpenPacket },
+            { ClientPacketType.ChannelClose, ProcessChannelClosePacket },
+            { ClientPacketType.PrivateChannelOpen, ProcessPrivateChannelOpenPacket },
+            { ClientPacketType.PrivateChannelCreate, ProcessPrivateChannelCreatePacket },
+            { ClientPacketType.PrivateChannelInvite, ProcessPrivateChannelInvitePacket },
+            { ClientPacketType.PrivateChannelExclude, ProcessPrivateChannelExcludePacket },
         };
 
         #region Connection Overrides
@@ -463,6 +471,40 @@ namespace HerhangiOT.GameServer
         {
             DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Logout(conn.PlayerData, true, false)));
         }
+        private static void ProcessChannelListPacket(GameConnection conn)
+        {
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerRequestChannels(conn.PlayerData.Id)));
+        }
+        private static void ProcessChannelOpenPacket(GameConnection conn)
+        {
+            ushort channelId = conn.InMessage.GetUInt16();
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerChannelOpen(conn.PlayerData.Id, channelId)));
+        }
+        private static void ProcessChannelClosePacket(GameConnection conn)
+        {
+            ushort channelId = conn.InMessage.GetUInt16();
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerChannelClose(conn.PlayerData.Id, channelId)));
+        }
+        private static void ProcessPrivateChannelOpenPacket(GameConnection conn)
+        {
+            string receiver = conn.InMessage.GetString();
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelOpen(conn.PlayerData.Id, receiver)));
+        }
+        private static void ProcessPrivateChannelCreatePacket(GameConnection conn)
+        {
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelCreate(conn.PlayerData.Id)));
+        }
+        private static void ProcessPrivateChannelInvitePacket(GameConnection conn)
+        {
+            string name = conn.InMessage.GetString();
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelInvite(conn.PlayerData.Id, name)));
+        }
+        private static void ProcessPrivateChannelExcludePacket(GameConnection conn)
+        {
+            string name = conn.InMessage.GetString();
+            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelExclude(conn.PlayerData.Id, name)));
+        }
+
         #endregion
 
         #region Send Messages
@@ -953,6 +995,154 @@ namespace HerhangiOT.GameServer
 	        msg.AddUInt32(creature.Id);
 	        msg.AddByte((byte)creature.Direction);
             msg.AddBoolean(!PlayerData.CanWalkthroughEx(creature));
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendChannelsDialog()
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ChannelList);
+
+            List<ChatChannel> channels = Chat.GetChannelList(PlayerData);
+            msg.AddByte((byte)channels.Count);
+            foreach (ChatChannel channel in channels)
+            {
+                msg.AddUInt16(channel.Id);
+                msg.AddString(channel.Name);
+            }
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendChannel(ushort channelId, string channelName, Dictionary<uint, Player> channelUsers, Dictionary<uint, Player> invitedUsers)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ChannelOpen);
+
+	        msg.AddUInt16(channelId);
+	        msg.AddString(channelName);
+
+	        if (channelUsers != null)
+            {
+		        msg.AddUInt16((ushort)channelUsers.Count);
+		        foreach (Player user in channelUsers.Values)
+                {
+			        msg.AddString(user.CharacterName);
+		        }
+	        }
+            else
+            {
+		        msg.AddUInt16(0); // Channel user count
+	        }
+
+	        if (invitedUsers != null)
+            {
+		        msg.AddUInt16((ushort)invitedUsers.Count);
+		        foreach (Player user in invitedUsers.Values)
+                {
+			        msg.AddString(user.CharacterName);
+		        }
+	        }
+            else
+            {
+		        msg.AddUInt16(0); // Invited user count
+	        }
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendCreatePrivateChannel(ushort channelId, string channelName)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.PrivateChannelCreate);
+            msg.AddUInt16(channelId);
+            msg.AddString(channelName);
+            msg.AddUInt16(0x01); // Player count in channel
+            msg.AddString(PlayerData.CharacterName); // That player
+            msg.AddUInt16(0x00); // Invited player count in channel
+            WriteToOutputBuffer(msg);
+        }
+        public void SendCreatureHealth(Creature creature)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.CreatureHealth);
+	        msg.AddUInt32(creature.Id);
+
+	        if (creature.IsHealthHidden)
+            {
+		        msg.AddByte(0x00);
+	        }
+            else
+	        {
+	            msg.AddByte(Tools.GetPercentage(creature.Health, creature.HealthMax));
+	        }
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendChannelEvent(ushort channelId, string playerName, ChatChannelEvents channelEvent)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.ChatChannelEvent);
+            msg.AddUInt16(channelId);
+            msg.AddString(playerName);
+            msg.AddByte((byte)channelEvent);
+            WriteToOutputBuffer(msg);
+        }
+        public void SendChannelMessage(string author, string text, SpeakTypes type, ushort channel)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.CreatureSpeech);
+            msg.AddUInt32(0x00);
+            msg.AddString(author);
+            msg.AddUInt16(0x00);
+            msg.AddByte((byte)type);
+            msg.AddUInt16(channel);
+            msg.AddString(text);
+            WriteToOutputBuffer(msg);
+        }
+        public void SendClosePrivate(ushort channelId)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.ChannelClosePrivate);
+	        msg.AddUInt16(channelId);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendOpenPrivateChannel(string receiver)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte)ServerPacketType.ChannelOpenPrivate);
+            msg.AddString(receiver);
+            WriteToOutputBuffer(msg);
+        }
+
+        private uint _sayToChannelStatementId;
+        public void SendToChannel(Creature creature, SpeakTypes type, string text, ushort channelId)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.CreatureSpeech);
+
+	        msg.AddUInt32(++_sayToChannelStatementId);
+	        if (creature == null)
+            {
+		        msg.AddUInt32(0x00);
+	        }
+            else if (type == SpeakTypes.ChannelR2)
+            {
+		        msg.AddUInt32(0x00);
+		        type = SpeakTypes.ChannelR1;
+	        }
+            else
+            {
+		        msg.AddString(creature.GetName());
+		        //Add level only for players
+                Player player = creature as Player;
+		        if (player != null)
+                {
+			        msg.AddUInt16(player.CharacterData.Level);
+		        }
+                else
+                {
+			        msg.AddUInt16(0x00);
+		        }
+	        }
+
+	        msg.AddByte((byte)type);
+	        msg.AddUInt16(channelId);
+	        msg.AddString(text);
 	        WriteToOutputBuffer(msg);
         }
 

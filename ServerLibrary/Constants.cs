@@ -27,5 +27,9 @@
         public const int JobCheckCreatureInterval = JobCheckCreatureCompletionInterval / JobCheckCreatureBucketCount;
 
         public const int DispatcherTaskExpiration = 2000;
+
+        public const ushort ChatChannelGuild = 0x00;
+        public const ushort ChatChannelParty = 0x01;
+        public const ushort ChatChannelPrivate = 0xFFFF;
     }
 }

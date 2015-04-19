@@ -41,5 +41,20 @@ namespace HerhangiOT.GameServer.Model
         {
             return true;
         }
+
+        public override string GetDescription(int lookDistance)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override int GetThrowRange()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public override bool IsPushable()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
