@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using HerhangiOT.ServerLibrary.Networking;
 
@@ -28,6 +29,7 @@ namespace HerhangiOT.ServerLibrary.Threading
         }
 
         // allows AddTask(() => method);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddTask(Action action, bool pushFront = false)
         {
             AddTask(Task.CreateTask(action), pushFront);

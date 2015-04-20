@@ -183,7 +183,7 @@ namespace HerhangiOT.GameServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void DispatchDisconnect(string message)
         {
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Disconnect(message)));
+            DispatcherManager.GameDispatcher.AddTask(() => Disconnect(message));
         }
 
         protected void Disconnect(string message)
@@ -229,7 +229,7 @@ namespace HerhangiOT.GameServer
                 AccountId = accountId;
                 PlayerName = playerName;
                 AccountName = accountName;
-                DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(Login));
+                DispatcherManager.GameDispatcher.AddTask(Login);
             }
         }
         public void Login()
@@ -333,7 +333,7 @@ namespace HerhangiOT.GameServer
         }
         private static void ProcessPingBackPacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerReceivePingBack(conn.PlayerData.Id)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerReceivePingBack(conn.PlayerData.Id));
         }
         private static void ProcessFightModesPacket(GameConnection conn)
         {
@@ -343,7 +343,7 @@ namespace HerhangiOT.GameServer
 	        SecureModes secureMode = (SecureModes) msg.GetByte(); // 0 - can't attack unmarked, 1 - can attack unmarked
 	        // uint8_t rawPvpMode = msg.getByte(); // pvp mode introduced in 10.0
 
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerSetFightModes(conn.PlayerData.Id, fightMode, chaseMode, secureMode));
         }
         private static void ProcessPlayerMovePacket(GameConnection conn)
         {
@@ -376,7 +376,7 @@ namespace HerhangiOT.GameServer
                     break;
             }
 
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerMove(conn.PlayerData.Id, direction)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerMove(conn.PlayerData.Id, direction));
         }
         private static void ProcessPlayerSpeechPacket(GameConnection conn)
         {
@@ -407,7 +407,7 @@ namespace HerhangiOT.GameServer
 	        if (text.Length > 255)
 		        return;
 
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerSay(conn.PlayerData.Id, channelId, type, receiver, text)) );
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerSay(conn.PlayerData.Id, channelId, type, receiver, text));
         }
         private static void ProcessPlayerTurnPacket(GameConnection conn)
         {
@@ -461,48 +461,48 @@ namespace HerhangiOT.GameServer
             if (path.Count == 0)
                 return;
 
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerAutoWalk(conn.PlayerData.Id, path)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerAutoWalk(conn.PlayerData.Id, path));
         }
         private static void ProcessStopAutoWalkPacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerStopAutoWalk(conn.PlayerData.Id)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerStopAutoWalk(conn.PlayerData.Id));
         }
         private static void ProcessLogoutPacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Logout(conn.PlayerData, true, false)));
+            DispatcherManager.GameDispatcher.AddTask(() => Logout(conn.PlayerData, true, false));
         }
         private static void ProcessChannelListPacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerRequestChannels(conn.PlayerData.Id)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerRequestChannels(conn.PlayerData.Id));
         }
         private static void ProcessChannelOpenPacket(GameConnection conn)
         {
             ushort channelId = conn.InMessage.GetUInt16();
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerChannelOpen(conn.PlayerData.Id, channelId)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerChannelOpen(conn.PlayerData.Id, channelId));
         }
         private static void ProcessChannelClosePacket(GameConnection conn)
         {
             ushort channelId = conn.InMessage.GetUInt16();
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerChannelClose(conn.PlayerData.Id, channelId)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerChannelClose(conn.PlayerData.Id, channelId));
         }
         private static void ProcessPrivateChannelOpenPacket(GameConnection conn)
         {
             string receiver = conn.InMessage.GetString();
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelOpen(conn.PlayerData.Id, receiver)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerPrivateChannelOpen(conn.PlayerData.Id, receiver));
         }
         private static void ProcessPrivateChannelCreatePacket(GameConnection conn)
         {
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelCreate(conn.PlayerData.Id)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerPrivateChannelCreate(conn.PlayerData.Id));
         }
         private static void ProcessPrivateChannelInvitePacket(GameConnection conn)
         {
             string name = conn.InMessage.GetString();
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelInvite(conn.PlayerData.Id, name)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerPrivateChannelInvite(conn.PlayerData.Id, name));
         }
         private static void ProcessPrivateChannelExcludePacket(GameConnection conn)
         {
             string name = conn.InMessage.GetString();
-            DispatcherManager.GameDispatcher.AddTask(Task.CreateTask(() => Game.PlayerPrivateChannelExclude(conn.PlayerData.Id, name)));
+            DispatcherManager.GameDispatcher.AddTask(() => Game.PlayerPrivateChannelExclude(conn.PlayerData.Id, name));
         }
 
         #endregion
