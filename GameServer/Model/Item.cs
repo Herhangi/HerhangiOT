@@ -193,7 +193,7 @@ namespace HerhangiOT.GameServer.Model
                 return;
         }
 
-        public void StartDecaying()
+        public override void StartDecaying()
         {
             //TODO: GAME DECAYING
         }

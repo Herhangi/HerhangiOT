@@ -9,14 +9,15 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HerhangiOT.ServerLibrary</RootNamespace>
     <AssemblyName>ServerLibrary</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\bin\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -55,7 +56,7 @@
     <Compile Include="Database\Model\GameWorldModel.cs" />
     <Compile Include="Database\Model\CharacterModel.cs" />
     <Compile Include="Enums\OperatingSystems.cs" />
-    <Compile Include="ExternalMethods.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="FileLoader.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Networking\NetworkEnums.cs" />

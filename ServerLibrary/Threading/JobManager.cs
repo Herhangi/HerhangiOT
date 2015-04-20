@@ -7,7 +7,7 @@ namespace HerhangiOT.ServerLibrary.Threading
     {
         protected DispatcherState State { get; set; }
         protected HashSet<string> ActiveJobs { get; set; }
-        protected SortedSet<JobTask> JobList { get; set; } 
+        protected SortedSet<JobTask> JobList { get; set; }
 
         protected Thread Thread;
         protected object JobLock;
@@ -71,7 +71,7 @@ namespace HerhangiOT.ServerLibrary.Threading
 
                 JobList.Clear();
                 ActiveJobs.Clear();
-            
+
                 Monitor.Pulse(JobLock);
             }
         }

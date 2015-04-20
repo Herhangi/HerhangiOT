@@ -6,47 +6,49 @@ namespace HerhangiOT.GameServer.Model.Items
     {
         public uint MaxDepotItems { get; set; }
 
-        public DepotChest(ushort id) : base(id)
+        public DepotChest(ushort id)
+            : base(id)
         {
         }
 
-        public DepotChest(ushort id, ushort size) : base(id, size)
+        public DepotChest(ushort id, ushort size)
+            : base(id, size)
         {
         }
 
         #region Thing Implementations
         public override ReturnTypes QueryAdd(int index, Thing thing, uint count, CylinderFlags cFlags, Creature actor = null)
         {
-	        Item item = thing as Item;
-	        if (item == null)
-		        return ReturnTypes.NotPossible;
+            Item item = thing as Item;
+            if (item == null)
+                return ReturnTypes.NotPossible;
 
-	        bool skipLimit = cFlags.HasFlag(CylinderFlags.Nolimit);
-	        if (!skipLimit)
+            bool skipLimit = cFlags.HasFlag(CylinderFlags.Nolimit);
+            if (!skipLimit)
             {
-		        int addCount = 0;
+                int addCount = 0;
 
-		        if ((item.IsStackable && item.Count != count))
-			        addCount = 1;
+                if ((item.IsStackable && item.Count != count))
+                    addCount = 1;
 
-		        if (item.GetTopParent() != this)
-		        {
-		            Container container = item as Container;
-			        if (container != null)
+                if (item.GetTopParent() != this)
+                {
+                    Container container = item as Container;
+                    if (container != null)
                     {
-				        addCount = container.ItemList.Count + 1;
-			        }
+                        addCount = container.ItemList.Count + 1;
+                    }
                     else
                     {
-				        addCount = 1;
-			        }
-		        }
+                        addCount = 1;
+                    }
+                }
 
-		        if (ItemList.Count + addCount > MaxDepotItems)
-			        return ReturnTypes.DepotIsFull;
-	        }
+                if (ItemList.Count + addCount > MaxDepotItems)
+                    return ReturnTypes.DepotIsFull;
+            }
 
-	        return base.QueryAdd(index, thing, count, cFlags, actor);
+            return base.QueryAdd(index, thing, count, cFlags, actor);
         }
 
         public override void PostAddNotification(Thing thing, Thing oldParent, int index, CylinderLinks link = CylinderLinks.Owner)
@@ -74,9 +76,9 @@ namespace HerhangiOT.GameServer.Model.Items
 
         public override Thing GetParent()
         {
-	        if (Parent != null)
-		        return Parent.GetParent();
-	        return null;
+            if (Parent != null)
+                return Parent.GetParent();
+            return null;
         }
         public override Thing GetRealParent()
         {

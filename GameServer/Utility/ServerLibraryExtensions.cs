@@ -16,45 +16,46 @@ namespace HerhangiOT.GameServer.Utility
 
         public static void AddItem(this NetworkMessage message, Item item)
         {
-	        ItemTemplate it = ItemManager.Templates[item.Id];
+            ItemTemplate it = ItemManager.Templates[item.Id];
 
             message.AddUInt16(it.ClientId);
             message.AddByte(0xFF); // MARK_UNMARKED
 
-	        if (it.IsStackable)
+            if (it.IsStackable)
             {
-		        message.AddByte(Math.Min(byte.MaxValue, item.Count));
-	        }
+                message.AddByte(Math.Min(byte.MaxValue, item.Count));
+            }
             else if (it.Group.HasFlag(ItemGroups.Splash) || it.Group.HasFlag(ItemGroups.Fluid))
             {
-		        message.AddByte((byte)ItemManager.FluidMap[(byte)item.FluidType & 7]);
-	        }
+                message.AddByte((byte)ItemManager.FluidMap[(byte)item.FluidType & 7]);
+            }
 
-	        if (it.IsAnimation)
+            if (it.IsAnimation)
             {
-		        message.AddByte(0xFE);    // random phase (0xFF for async)
-	        }
+                message.AddByte(0xFE);    // random phase (0xFF for async)
+            }
         }
-        
+
         public static void AddItem(this NetworkMessage message, ushort id, byte count)
         {
-	        ItemTemplate it = ItemManager.Templates[id];
+            ItemTemplate it = ItemManager.Templates[id];
 
             message.AddUInt16(it.ClientId);
-	        message.AddByte(0xFF);    // MARK_UNMARKED
+            message.AddByte(0xFF);    // MARK_UNMARKED
 
-	        if (it.IsStackable)
+            if (it.IsStackable)
             {
                 message.AddByte(count);
             }
             else if (it.Group.HasFlag(ItemGroups.Splash) || it.Group.HasFlag(ItemGroups.Fluid))
             {
                 message.AddByte((byte)ItemManager.FluidMap[count & 7]);
-	        }
+            }
 
-	        if (it.IsAnimation) {
-		        message.AddByte(0xFE);    // random phase (0xFF for async)
-	        }
+            if (it.IsAnimation)
+            {
+                message.AddByte(0xFE);    // random phase (0xFF for async)
+            }
         }
 
         public static void AddItemId(this NetworkMessage message, ushort itemId)

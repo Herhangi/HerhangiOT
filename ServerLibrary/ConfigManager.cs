@@ -101,7 +101,7 @@ namespace HerhangiOT.ServerLibrary
         MarketPremium, //-
         EmoteSpells, //-
         StaminaSystem, //-
-        
+
         LastBooleanConfig
 
         // DISABLED FEATURES - Might be implemented in the future
@@ -116,22 +116,24 @@ namespace HerhangiOT.ServerLibrary
     {
         private static bool _isLoaded;
         private static string _lastLoadedFile;
-        
+
         public int this[ConfigInt configName]
         {
             get { return IntConfigs[configName]; }
         }
+
         public bool this[ConfigBool configName]
         {
             get { return BoolConfigs[configName]; }
         }
+
         public string this[ConfigStr configName]
         {
             get { return StrConfigs[configName]; }
         }
 
         private static readonly Dictionary<ConfigInt, int> IntConfigs = new Dictionary<ConfigInt, int>();
-        private static readonly Dictionary<ConfigBool, bool> BoolConfigs = new Dictionary<ConfigBool, bool>();        
+        private static readonly Dictionary<ConfigBool, bool> BoolConfigs = new Dictionary<ConfigBool, bool>();
         private static readonly Dictionary<ConfigStr, string> StrConfigs = new Dictionary<ConfigStr, string>();
 
         public static event Action ConfigsLoaded;
@@ -158,7 +160,7 @@ namespace HerhangiOT.ServerLibrary
 
             //info that must be loaded one time (unless we reset the modules involved)
             if (!_isLoaded)
-            { 
+            {
                 BoolConfigs.Add(ConfigBool.BindOnlyGlobalAddress, ReadBoolFromConfig(config, "bindOnlyGlobalAddress", false));
                 BoolConfigs.Add(ConfigBool.UseExternalLoginServer, ReadBoolFromConfig(config, "useExternalLoginServer", false));
 
@@ -179,7 +181,7 @@ namespace HerhangiOT.ServerLibrary
                         StrConfigs.Add(ConfigStr.DatabaseMysqlPass, ReadStrFromConfig(config, "mysqlPass"));
                         StrConfigs.Add(ConfigStr.DatabaseMysqlDb, ReadStrFromConfig(config, "mysqlDatabase", "herhangi"));
                         StrConfigs.Add(ConfigStr.DatabaseMysqlSock, ReadStrFromConfig(config, "mysqlSock"));
-                        IntConfigs.Add(ConfigInt.DatabaseMysqlPort, ReadIntFromConfig(config, "mysqlPort", 3306));                        
+                        IntConfigs.Add(ConfigInt.DatabaseMysqlPort, ReadIntFromConfig(config, "mysqlPort", 3306));
                         break;
                     default:
                         Logger.LogOperationFailed("config.lua contains invalid database type!");
@@ -262,16 +264,17 @@ namespace HerhangiOT.ServerLibrary
             return true;
         }
         public static bool Reload()
-        {           
-	        if (!_isLoaded) {
-		        return false;
-	        }
+        {
+            if (!_isLoaded)
+            {
+                return false;
+            }
 
-	        bool result = Load(_lastLoadedFile);
+            bool result = Load(_lastLoadedFile);
             //if (transformToSHA1(getString(ConfigManager::MOTD)) != g_game.getMotdHash()) {
             //    g_game.incrementMotdNum();
             //}
-	        return result;
+            return result;
         }
 
         private static int ReadIntFromConfig(Lua config, string identifier, int @default = 0)

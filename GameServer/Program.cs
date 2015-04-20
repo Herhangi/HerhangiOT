@@ -20,21 +20,21 @@ namespace HerhangiOT.GameServer
         private const string RsaP = "14299623962416399520070177382898895550795403345466153217470516082934737582776038882967213386204600674145392845853859217990626450972452084065728686565928113";
         private const string RsaQ = "7630979195970404721891201847792002125535401292779123937207447574596692788513647179235335529307251350570728407373705564708871762033017096809910315212884101";
 
-        static void Main()
+        internal static void Main()
         {
-            ExternalMethods.SetConsoleCtrlHandler(ConsoleCtrlOperationHandler, true);
+            NativeMethods.SetConsoleCtrlHandler(ConsoleCtrlOperationHandler, true);
 
             Game.Initialize();
             Tools.Initialize();
             OutputMessagePool.Initialize();
             NetworkMessagePool.Initialize();
 
-            Console.Title = Constants.STATUS_SERVER_NAME;
+            Console.Title = Constants.ServerName;
             Console.Clear();
-            Console.WriteLine("Welcome to {0} - Version {1}", Constants.STATUS_SERVER_NAME, Constants.STATUS_SERVER_VERSION);
-            Console.WriteLine("Developed by {0}", Constants.STATUS_SERVER_DEVELOPERS);
-            Console.WriteLine("-----------------------------------------------------");
-            
+            Console.WriteLine("Welcome to {0} - Version {1}", Constants.ServerName, Constants.ServerVersion);
+            Console.WriteLine("Developed by {0}", Constants.ServerDevelopers);
+            Console.WriteLine();
+
             // Start Threads
             DispatcherManager.Start();
 
@@ -42,7 +42,7 @@ namespace HerhangiOT.GameServer
             if (!ConfigManager.Load("config.lua"))
                 ExitApplication();
 
-            if(!Enum.TryParse(ConfigManager.Instance[ConfigStr.MinConsoleLogLevel], true, out Logger.MinConsoleLogLevel))
+            if (!Enum.TryParse(ConfigManager.Instance[ConfigStr.MinConsoleLogLevel], true, out Logger.MinConsoleLogLevel))
             {
                 Console.WriteLine("LOGGER LOG LEVEL COULD NOT BE PARSED! PLEASE FIX!");
                 ExitApplication();
@@ -61,9 +61,9 @@ namespace HerhangiOT.GameServer
                     Process.GetCurrentProcess().PriorityClass = ProcessPriorityClass.AboveNormal;
                     break;
             }
-            
+
             // Setting up RSA cyrpto
-            if(!Rsa.SetKey(RsaP, RsaQ))
+            if (!Rsa.SetKey(RsaP, RsaQ))
                 ExitApplication();
 
             // Initializing Database connection
@@ -77,7 +77,7 @@ namespace HerhangiOT.GameServer
                 ExitApplication();
 
             // Loading items
-            if(!ItemManager.Load())
+            if (!ItemManager.Load())
                 ExitApplication();
 
             // Loading Chat Channels
@@ -85,7 +85,7 @@ namespace HerhangiOT.GameServer
                 ExitApplication();
 
             // Loading scripts
-            if(!ScriptManager.LoadCsScripts() || !ScriptManager.LoadLuaScripts())
+            if (!ScriptManager.LoadCsScripts() || !ScriptManager.LoadLuaScripts())
                 ExitApplication();
 
             // Loading Command Line Operations
@@ -95,7 +95,7 @@ namespace HerhangiOT.GameServer
             // LOAD CREATURES HERE
 
             // Loading outfits
-            if(!OutfitManager.Load())
+            if (!OutfitManager.Load())
                 ExitApplication();
 
             // Loading map
@@ -155,12 +155,12 @@ namespace HerhangiOT.GameServer
 
                 string[] firstPass = input.Split('"');
                 List<string> secondPass = firstPass[0].Trim().Split(' ').ToList();
-                
+
                 if (firstPass.Length > 1)
                 {
                     for (int i = 1; i < firstPass.Length; i++)
                     {
-                        if (i%2 == 1)
+                        if (i % 2 == 1)
                         {
                             secondPass.Add(firstPass[i]);
                         }
@@ -180,7 +180,7 @@ namespace HerhangiOT.GameServer
                     }
                     catch (Exception)
                     {
-                        Logger.Log(LogLevels.Warning, "Command '"+command[0]+"' could not be executed in this environment!");
+                        Logger.Log(LogLevels.Warning, "Command '" + command[0] + "' could not be executed in this environment!");
                     }
                 }
                 else
@@ -188,9 +188,9 @@ namespace HerhangiOT.GameServer
                     Logger.Log(LogLevels.Warning, "Command is unknown!");
                 }
             }
-// ReSharper disable FunctionNeverReturns
+            // ReSharper disable FunctionNeverReturns
         }
-// ReSharper restore FunctionNeverReturns
+        // ReSharper restore FunctionNeverReturns
 
         private static void ConsoleCtrlOperationHandler(ConsoleCtrlEvents ctrlEvent)
         {

@@ -31,7 +31,7 @@ namespace HerhangiOT.GameServer.Model
         {
             Logger.LogOperationStart("Loading Groups");
             _groups = new Dictionary<ushort, Group>();
-            
+
             XmlDocument doc = new XmlDocument();
             try
             {
@@ -59,7 +59,7 @@ namespace HerhangiOT.GameServer.Model
                 _groups.Add(group.Id, group);
             }
             Logger.LogOperationDone();
-	        return true;
+            return true;
         }
     }
 }

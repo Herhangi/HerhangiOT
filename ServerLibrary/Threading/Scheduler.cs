@@ -8,7 +8,7 @@ namespace HerhangiOT.ServerLibrary.Threading
         protected HashSet<uint> ActiveEventIds { get; set; }
         protected DispatcherState State { get; set; }
         protected uint LastEventId { get; set; }
-        protected SortedSet<SchedulerTask> EventList { get; set; } 
+        protected SortedSet<SchedulerTask> EventList { get; set; }
 
         protected Thread Thread;
         protected object EventLock;
@@ -56,13 +56,13 @@ namespace HerhangiOT.ServerLibrary.Threading
                     Monitor.Pulse(EventLock);
             }
 
-	        return task.TaskId;
+            return task.TaskId;
         }
 
         public bool StopEvent(uint eventId)
         {
-	        if (eventId == 0)
-		        return false;
+            if (eventId == 0)
+                return false;
 
             lock (EventLock)
             {
@@ -93,7 +93,7 @@ namespace HerhangiOT.ServerLibrary.Threading
 
                 EventList.Clear();
                 ActiveEventIds.Clear();
-            
+
                 Monitor.Pulse(EventLock);
             }
         }
@@ -132,7 +132,7 @@ namespace HerhangiOT.ServerLibrary.Threading
                         Monitor.Exit(EventLock);
                         continue;
                     }
-                    
+
                     Monitor.Exit(EventLock);
                     task.SetNotToExpire();
                     DispatcherManager.GameDispatcher.AddTask(task, true);

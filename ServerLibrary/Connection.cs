@@ -79,7 +79,7 @@ namespace HerhangiOT.ServerLibrary
                 }
 
                 int size = BitConverter.ToUInt16(InMessage.Buffer, 0) + 2;
-                if (size <= 0 || size >= Constants.NETWORKMESSAGE_ERRORMAXSIZE)
+                if (size <= 0 || size >= Constants.NetworkMessageErrorSizeMax)
                 {
                     Disconnect();
                     return false;

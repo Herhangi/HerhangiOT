@@ -4,7 +4,8 @@
     {
         private House _house;
 
-        public Door(ushort id) : base(id)
+        public Door(ushort id)
+            : base(id)
         {
             _house = null;
         }

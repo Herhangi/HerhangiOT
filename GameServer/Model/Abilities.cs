@@ -34,25 +34,25 @@ namespace HerhangiOT.GameServer.Model
             if (SkillModifiers == null)
                 SkillModifiers = new int[(byte)Skills.Last + 1];
         }
-        
+
         public void InitializeAbsorbPercent()
         {
             if (AbsorbPercent == null)
                 AbsorbPercent = new short[(ushort)CombatTypeFlags.Count + 1];
         }
-        
+
         public void InitializeFieldAbsorbPercent()
         {
             if (FieldAbsorbPercent == null)
                 FieldAbsorbPercent = new short[(ushort)CombatTypeFlags.Count + 1];
         }
-        
+
         public void InitializeStatModifiers()
         {
             if (StatModifiers == null)
                 StatModifiers = new int[(byte)Stats.Last + 1];
         }
-        
+
         public void InitializeStatModifiersPercent()
         {
             if (StatModifiersPercent == null)

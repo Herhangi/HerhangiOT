@@ -9,7 +9,7 @@ namespace HerhangiOT.ServerLibrary.Networking
         public const int HeaderLength = 2;
         public const int CryptoLength = 4;
         public const int XteaMultiple = 8;
-        public const int MaxBodyLength = Constants.NETWORKMESSAGE_MAXSIZE - HeaderLength - CryptoLength - XteaMultiple;
+        public const int MaxBodyLength = Constants.NetworkMessageSizeMax - HeaderLength - CryptoLength - XteaMultiple;
         public const int MaxProtocolBodyLength = MaxBodyLength - 10;
         #endregion
 

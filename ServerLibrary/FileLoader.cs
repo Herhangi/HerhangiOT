@@ -37,7 +37,7 @@ namespace HerhangiOT.ServerLibrary
             }
 
             _root = null;
-            _root = new NodeStruct {Start = 4};
+            _root = new NodeStruct { Start = 4 };
 
             if (_reader.ReadByte() == NodeStart)
                 return ParseNode(_root);
@@ -58,80 +58,83 @@ namespace HerhangiOT.ServerLibrary
             int value;
             NodeStruct currentNode = node;
 
-	        while ((value = _reader.ReadByte()) != -1)
-	        {
-	            currentNode.Type = (byte)value;
-		        bool setPropsSize = false;
+            while ((value = _reader.ReadByte()) != -1)
+            {
+                currentNode.Type = (byte)value;
+                bool setPropsSize = false;
 
-		        while (true)
-		        {
+                while (true)
+                {
                     value = _reader.ReadByte();
-			        if (value == -1) return false;
+                    if (value == -1) return false;
 
-			        bool skipNode = false;
+                    bool skipNode = false;
 
-		            long pos;
-		            switch ((byte)value) {
-				        case NodeStart:
+                    long pos;
+                    switch ((byte)value)
+                    {
+                        case NodeStart:
                             pos = _reader.Position;
 
-                            NodeStruct childNode = new NodeStruct {Start = pos};
-		                    currentNode.PropsSize = pos - currentNode.Start - 2;
-			                currentNode.Child = childNode;
+                            NodeStruct childNode = new NodeStruct { Start = pos };
+                            currentNode.PropsSize = pos - currentNode.Start - 2;
+                            currentNode.Child = childNode;
 
                             setPropsSize = true;
-                            
+
                             if (!ParseNode(childNode))
                                 return false;
 
                             break;
 
-				        case NodeEnd:
-					        //current node end
-					        if (!setPropsSize)
-					        {
+                        case NodeEnd:
+                            //current node end
+                            if (!setPropsSize)
+                            {
                                 pos = _reader.Position;
-						        currentNode.PropsSize = pos - currentNode.Start - 2;
-					        }
+                                currentNode.PropsSize = pos - currentNode.Start - 2;
+                            }
 
                             value = _reader.ReadByte();
-			                if (value == -1) return true;
+                            if (value == -1) return true;
 
-					        switch ((byte)value) {
-						        case NodeStart:
-							        //Starts next node
+                            switch ((byte)value)
+                            {
+                                case NodeStart:
+                                    //Starts next node
                                     pos = _reader.Position;
 
-							        skipNode = true;
-							        NodeStruct nextNode = new NodeStruct {Start = pos};
-					                currentNode.Next = nextNode;
-							        currentNode = nextNode;
-							        break;
+                                    skipNode = true;
+                                    NodeStruct nextNode = new NodeStruct { Start = pos };
+                                    currentNode.Next = nextNode;
+                                    currentNode = nextNode;
+                                    break;
 
-						        case NodeEnd:
-							        //return safeTell(pos) && safeSeek(pos);
+                                case NodeEnd:
+                                    //return safeTell(pos) && safeSeek(pos);
                                     _reader.Seek(-1, SeekOrigin.Current);
                                     //_file.Seek(pos, SeekOrigin.Begin);
-					                return true;
+                                    return true;
 
-						        default:
+                                default:
                                     //Invalid Format
-							        return false;
-					        }
-					        break;
+                                    return false;
+                            }
+                            break;
 
-				        case EscapeChar:
+                        case EscapeChar:
                             value = _reader.ReadByte();
-			                if (value == -1) return false;
-					        break;
-			        }
+                            if (value == -1) return false;
+                            break;
+                    }
 
-			        if (skipNode) {
-				        break;
-			        }
-		        }
-	        }
-	        return false;
+                    if (skipNode)
+                    {
+                        break;
+                    }
+                }
+            }
+            return false;
         }
 
         public NodeStruct GetChildNode(NodeStruct parent, out byte type)
@@ -153,14 +156,14 @@ namespace HerhangiOT.ServerLibrary
         public NodeStruct GetNextNode(NodeStruct prev, out byte type)
         {
             type = 0;
-	        if (prev == null)
-		        return null;
+            if (prev == null)
+                return null;
 
             NodeStruct next = prev.Next;
-	        if (next != null)
-		        type = next.Type;
+            if (next != null)
+                type = next.Type;
 
-	        return next;
+            return next;
         }
 
         public bool GetProps(NodeStruct node, out MemoryStream props)
@@ -245,12 +248,12 @@ namespace HerhangiOT.ServerLibrary
 
         private static void ClearChild(NodeStruct node)
         {
-            if(node.Child != null)
+            if (node.Child != null)
                 ClearChild(node.Child);
 
             node.Child = null; //Clearing all references for GC
 
-            if(node.Next != null)
+            if (node.Next != null)
                 ClearNext(node.Next);
 
             node.Next = null; //Clearing all references for GC

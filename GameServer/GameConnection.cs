@@ -134,9 +134,9 @@ namespace HerhangiOT.GameServer
                 return;
             }
 
-            if (version < Constants.CLIENT_VERSION_MIN || (version > Constants.CLIENT_VERSION_MAX))
+            if (version < Constants.ClientVersionMin || (version > Constants.ClientVersionMax))
             {
-                base.DispatchDisconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!");
+                base.DispatchDisconnect("Only clients with protocol " + Constants.ClientVersionStr + " allowed!");
                 return;
             }
 

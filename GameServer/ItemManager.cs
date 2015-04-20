@@ -37,10 +37,10 @@ namespace HerhangiOT.GameServer
 
             if (!LoadFromOtb())
                 return false;
-            
+
             if (!LoadFromXml())
                 return false;
-            
+
             Logger.LogOperationDone();
             return true;
         }
@@ -61,9 +61,9 @@ namespace HerhangiOT.GameServer
             if (fileLoader.GetProps(node, out props))
             {
                 //4 byte flags
-		        //attributes
-		        //0x01 = version data
-		        props.ReadUInt32();
+                //attributes
+                //0x01 = version data
+                props.ReadUInt32();
                 props.ReadByte();
                 byte attr = (byte)props.ReadByte();
 
@@ -161,7 +161,7 @@ namespace HerhangiOT.GameServer
                 if (!ReverseItemDict.ContainsKey(clientId))
                     ReverseItemDict[clientId] = serverId;
 
-                if(!Templates.ContainsKey(serverId))
+                if (!Templates.ContainsKey(serverId))
                     Templates[serverId] = new ItemTemplate();
 
                 ItemTemplate item = Templates[serverId];
@@ -234,8 +234,8 @@ namespace HerhangiOT.GameServer
 
             foreach (XmlNode itemNode in doc.GetElementsByTagName("item"))
             {
-                if(itemNode.Attributes == null) continue;
-                
+                if (itemNode.Attributes == null) continue;
+
                 XmlAttribute idAttribute = itemNode.Attributes["id"];
                 if (idAttribute != null)
                 {
@@ -260,7 +260,7 @@ namespace HerhangiOT.GameServer
                 ushort id = ushort.Parse(fromIdAttribute.InnerText);
                 ushort toId = ushort.Parse(toIdAttribute.InnerText);
 
-                while(id <= toId)
+                while (id <= toId)
                     ParseItemNode(itemNode, id++);
             }
             return true;
@@ -275,7 +275,7 @@ namespace HerhangiOT.GameServer
                 if (!Templates.ContainsKey(id))
                     Templates.Add(id, new ItemTemplate());
             }
-            
+
             ItemTemplate item = Templates[id];
             item.Id = id;
 
@@ -294,12 +294,12 @@ namespace HerhangiOT.GameServer
             {
                 foreach (XmlNode attributeNode in node.ChildNodes)
                 {
-                    if(attributeNode.Attributes == null) continue;
+                    if (attributeNode.Attributes == null) continue;
 
                     XmlAttribute keyAttribute = attributeNode.Attributes["key"];
                     XmlAttribute valueAttribute = attributeNode.Attributes["value"];
 
-                    if(keyAttribute == null || valueAttribute == null) continue;
+                    if (keyAttribute == null || valueAttribute == null) continue;
 
                     switch (keyAttribute.InnerText.ToLowerInvariant())
                     {
@@ -338,7 +338,7 @@ namespace HerhangiOT.GameServer
                                     item.Type = ItemTypes.Rune;
                                     break;
                                 default:
-                                    Logger.Log(LogLevels.Warning, "ParseItemNode: Unknown type: "+valueAttribute.InnerText);
+                                    Logger.Log(LogLevels.Warning, "ParseItemNode: Unknown type: " + valueAttribute.InnerText);
                                     break;
                             }
                             break;
@@ -514,7 +514,7 @@ namespace HerhangiOT.GameServer
                         case "maletransformto":
                             ushort value = ushort.Parse(valueAttribute.InnerText);
 
-                            if(item.TransformToOnUse == null)
+                            if (item.TransformToOnUse == null)
                                 item.TransformToOnUse = new ushort[2];
 
                             item.TransformToOnUse[(int)Genders.Male] = value;
@@ -530,7 +530,7 @@ namespace HerhangiOT.GameServer
                         case "femaletransformto":
                             value = ushort.Parse(valueAttribute.InnerText);
 
-                            if(item.TransformToOnUse == null)
+                            if (item.TransformToOnUse == null)
                                 item.TransformToOnUse = new ushort[2];
 
                             item.TransformToOnUse[(int)Genders.Female] = value;
@@ -830,62 +830,62 @@ namespace HerhangiOT.GameServer
 
     public enum OtbClientVersion : uint
     {
-	    V750 = 1,
-	    V755 = 2,
-	    V760 = 3,
-	    V770 = 3,
-	    V780 = 4,
-	    V790 = 5,
-	    V792 = 6,
-	    V800 = 7,
-	    V810 = 8,
-	    V811 = 9,
-	    V820 = 10,
-	    V830 = 11,
-	    V840 = 12,
-	    V841 = 13,
-	    V842 = 14,
-	    V850 = 15,
-	    V854Bad = 16,
-	    V854 = 17,
-	    V855 = 18,
-	    V860Old = 19,
-	    V860 = 20,
-	    V861 = 21,
-	    V862 = 22,
-	    V870 = 23,
-	    V871 = 24,
-	    V872 = 25,
-	    V873 = 26,
-	    V900 = 27,
-	    V910 = 28,
-	    V920 = 29,
-	    V940 = 30,
-	    V944V1 = 31,
-	    V944V2 = 32,
-	    V944V3 = 33,
-	    V944V4 = 34,
-	    V946 = 35,
-	    V950 = 36,
-	    V952 = 37,
-	    V953 = 38,
-	    V954 = 39,
-	    V960 = 40,
-	    V961 = 41,
-	    V963 = 42,
-	    V970 = 43,
-	    V980 = 44,
-	    V981 = 45,
-	    V982 = 46,
-	    V983 = 47,
-	    V985 = 48,
-	    V986 = 49,
-	    V1010 = 50,
-	    V1020 = 51,
-	    V1021 = 52,
-	    V1030 = 53,
-	    V1031 = 54,
-	    V1035 = 55,
+        V750 = 1,
+        V755 = 2,
+        V760 = 3,
+        V770 = 3,
+        V780 = 4,
+        V790 = 5,
+        V792 = 6,
+        V800 = 7,
+        V810 = 8,
+        V811 = 9,
+        V820 = 10,
+        V830 = 11,
+        V840 = 12,
+        V841 = 13,
+        V842 = 14,
+        V850 = 15,
+        V854Bad = 16,
+        V854 = 17,
+        V855 = 18,
+        V860Old = 19,
+        V860 = 20,
+        V861 = 21,
+        V862 = 22,
+        V870 = 23,
+        V871 = 24,
+        V872 = 25,
+        V873 = 26,
+        V900 = 27,
+        V910 = 28,
+        V920 = 29,
+        V940 = 30,
+        V944V1 = 31,
+        V944V2 = 32,
+        V944V3 = 33,
+        V944V4 = 34,
+        V946 = 35,
+        V950 = 36,
+        V952 = 37,
+        V953 = 38,
+        V954 = 39,
+        V960 = 40,
+        V961 = 41,
+        V963 = 42,
+        V970 = 43,
+        V980 = 44,
+        V981 = 45,
+        V982 = 46,
+        V983 = 47,
+        V985 = 48,
+        V986 = 49,
+        V1010 = 50,
+        V1020 = 51,
+        V1021 = 52,
+        V1030 = 53,
+        V1031 = 54,
+        V1035 = 55,
         V1076 = 56,
     }
 }

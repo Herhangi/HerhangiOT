@@ -18,7 +18,7 @@ namespace HerhangiOT.ScriptLibrary
         /// <returns>Number of the methods listening specified custom event!</returns>
         public int ListenCustomEvent(string identifier, CustomEventOccuredDelegate method)
         {
-            if(!CustomEventListeners.ContainsKey(identifier))
+            if (!CustomEventListeners.ContainsKey(identifier))
                 CustomEventListeners.Add(identifier, new List<CustomEventOccuredDelegate>());
 
             CustomEventListeners[identifier].Add(method);
@@ -35,9 +35,9 @@ namespace HerhangiOT.ScriptLibrary
         {
             if (!CustomEventListeners.ContainsKey(identifier))
                 return (int)ScriptError.CustomEventNotRegisteredYet;
-            
+
             CustomEventListeners[identifier].Remove(method);
-            return CustomEventListeners[identifier].Count; 
+            return CustomEventListeners[identifier].Count;
         }
 
         /// <summary>

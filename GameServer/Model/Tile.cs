@@ -21,7 +21,7 @@ namespace HerhangiOT.GameServer.Model
 
         public Tile(int x, int y, int z)
         {
-            Position = new Position((ushort)x,(ushort)y,(byte)z);
+            Position = new Position((ushort)x, (ushort)y, (byte)z);
             Flags = TileFlags.None;
         }
 
@@ -34,7 +34,7 @@ namespace HerhangiOT.GameServer.Model
         {
             if (!Flags.HasFlag(TileFlags.FloorChange))
             {
-                if(item.FloorChangeDirection != FloorChangeDirections.None)
+                if (item.FloorChangeDirection != FloorChangeDirections.None)
                     SetFlag(TileFlags.FloorChange);
 
                 switch (item.FloorChangeDirection)
@@ -152,28 +152,28 @@ namespace HerhangiOT.GameServer.Model
             Item item;
             Creature creature;
 
-	        if ((creature = thing as Creature) != null)
+            if ((creature = thing as Creature) != null)
             {
-		        if (cFlags.HasFlag(CylinderFlags.Nolimit))
-			        return ReturnTypes.NoError;
+                if (cFlags.HasFlag(CylinderFlags.Nolimit))
+                    return ReturnTypes.NoError;
 
-		        if (cFlags.HasFlag(CylinderFlags.Pathfinding))
+                if (cFlags.HasFlag(CylinderFlags.Pathfinding))
                 {
-			        if (Flags.HasFlag(TileFlags.FloorChange) || Flags.HasFlag(TileFlags.Teleport))
-				        return ReturnTypes.NotPossible;
-		        }
+                    if (Flags.HasFlag(TileFlags.FloorChange) || Flags.HasFlag(TileFlags.Teleport))
+                        return ReturnTypes.NotPossible;
+                }
 
                 if (Ground == null)
                     return ReturnTypes.NotPossible;
 
                 Monster monster = creature as Monster;
-		        if (monster != null)
+                if (monster != null)
                 {
-			        if (Flags.HasFlag(TileFlags.ProtectionZone))
-				        return ReturnTypes.NotPossible;
-                    
-			        if (Flags.HasFlag(TileFlags.FloorChange) || Flags.HasFlag(TileFlags.Teleport))
-				        return ReturnTypes.NotPossible;
+                    if (Flags.HasFlag(TileFlags.ProtectionZone))
+                        return ReturnTypes.NotPossible;
+
+                    if (Flags.HasFlag(TileFlags.FloorChange) || Flags.HasFlag(TileFlags.Teleport))
+                        return ReturnTypes.NotPossible;
 
                     //TODO: After monsters
                     //const CreatureVector* creatures = getCreatures();
@@ -233,137 +233,139 @@ namespace HerhangiOT.GameServer.Model
                     //}
 
                     //return RETURNVALUE_NOERROR;
-		        }
+                }
 
                 Player player = creature as Player;
-		        if (player != null)
+                if (player != null)
                 {
-                    if(Creatures != null && Creatures.Count != 0 && !cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature) && !player.Group.Access)
+                    if (Creatures != null && Creatures.Count != 0 && !cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature) && !player.Group.Access)
                     {
                         foreach (Creature tileCreature in Creatures)
                         {
-                            if(!player.CanWalkthrough(tileCreature))
+                            if (!player.CanWalkthrough(tileCreature))
                                 return ReturnTypes.NotPossible;
                         }
-			        }
+                    }
 
-			        if (player.Parent == null && Flags.HasFlag(TileFlags.NoLogout))
-				        return ReturnTypes.NotPossible; //player is trying to login to a "no logout" tile
+                    if (player.Parent == null && Flags.HasFlag(TileFlags.NoLogout))
+                        return ReturnTypes.NotPossible; //player is trying to login to a "no logout" tile
 
-			        Tile playerTile = player.Parent;
-			        if (playerTile != null && player.IsPzLocked)
+                    Tile playerTile = player.Parent;
+                    if (playerTile != null && player.IsPzLocked)
                     {
-				        if (!playerTile.Flags.HasFlag(TileFlags.PvpZone))
+                        if (!playerTile.Flags.HasFlag(TileFlags.PvpZone))
                         {
-					        //player is trying to enter a pvp zone while being pz-locked
-					        if (Flags.HasFlag(TileFlags.PvpZone))
-						        return ReturnTypes.PlayerIsPZLockedEnterPvpZone;
-				        }
+                            //player is trying to enter a pvp zone while being pz-locked
+                            if (Flags.HasFlag(TileFlags.PvpZone))
+                                return ReturnTypes.PlayerIsPZLockedEnterPvpZone;
+                        }
                         else if (!Flags.HasFlag(TileFlags.PvpZone))
                         {
-					        // player is trying to leave a pvp zone while being pz-locked
-					        return ReturnTypes.PlayerIsPZLockedLeavePvpZone;
-				        }
+                            // player is trying to leave a pvp zone while being pz-locked
+                            return ReturnTypes.PlayerIsPZLockedLeavePvpZone;
+                        }
 
-				        if ((!playerTile.Flags.HasFlag(TileFlags.NoPvpZone) && Flags.HasFlag(TileFlags.NoPvpZone)) ||
-					        (!playerTile.Flags.HasFlag(TileFlags.ProtectionZone) && Flags.HasFlag(TileFlags.ProtectionZone))) {
-					        // player is trying to enter a non-pvp/protection zone while being pz-locked
-					        return ReturnTypes.PlayerIsPZLocked;
-				        }
-			        }
-		        }
+                        if ((!playerTile.Flags.HasFlag(TileFlags.NoPvpZone) && Flags.HasFlag(TileFlags.NoPvpZone)) ||
+                            (!playerTile.Flags.HasFlag(TileFlags.ProtectionZone) && Flags.HasFlag(TileFlags.ProtectionZone)))
+                        {
+                            // player is trying to enter a non-pvp/protection zone while being pz-locked
+                            return ReturnTypes.PlayerIsPZLocked;
+                        }
+                    }
+                }
                 else if (Creatures != null && Creatures.Count != 0 && cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature))
                 {
                     foreach (Creature tileCreature in Creatures)
                     {
-                        if(!tileCreature.IsInGhostMode())
+                        if (!tileCreature.IsInGhostMode())
                             return ReturnTypes.NotEnoughRoom;
                     }
-		        }
+                }
 
-		        if (Items != null)
+                if (Items != null)
                 {
-			        if (!cFlags.HasFlag(CylinderFlags.IgnoreBlockItem))
+                    if (!cFlags.HasFlag(CylinderFlags.IgnoreBlockItem))
                     {
-				        //If the CylinderFlags.IgnoreBlockItem bit isn't set we dont have to iterate every single item
-				        if (Flags.HasFlag(TileFlags.BlockSolid))
-					        return ReturnTypes.NotEnoughRoom;
-			        }
+                        //If the CylinderFlags.IgnoreBlockItem bit isn't set we dont have to iterate every single item
+                        if (Flags.HasFlag(TileFlags.BlockSolid))
+                            return ReturnTypes.NotEnoughRoom;
+                    }
                     else
                     {
-				        //CylinderFlags.IgnoreBlockItem is set
-				        if (Ground != null)
-				        {
-				            ItemTemplate it = ItemManager.Templates[Ground.Id];
-					        if (it.DoesBlockSolid && (!it.IsMoveable))// || Ground->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) { TODO: Attributes
-						        return ReturnTypes.NotPossible;
-				        }
-
-				        foreach(Item stackItem in Items)
+                        //CylinderFlags.IgnoreBlockItem is set
+                        if (Ground != null)
                         {
-				            ItemTemplate it = ItemManager.Templates[stackItem.Id];
-					        if (it.DoesBlockSolid && (!it.IsMoveable))// || item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) {
-						        return ReturnTypes.NotPossible;
-				        }
-			        }
-		        }
-	        }
+                            ItemTemplate it = ItemManager.Templates[Ground.Id];
+                            if (it.DoesBlockSolid && (!it.IsMoveable))// || Ground->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) { TODO: Attributes
+                                return ReturnTypes.NotPossible;
+                        }
+
+                        foreach (Item stackItem in Items)
+                        {
+                            ItemTemplate it = ItemManager.Templates[stackItem.Id];
+                            if (it.DoesBlockSolid && (!it.IsMoveable))// || item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) {
+                                return ReturnTypes.NotPossible;
+                        }
+                    }
+                }
+            }
             else if ((item = thing as Item) != null)
             {
-		        if (Items != null && Items.Count >= 0xFFFF)
-			        return ReturnTypes.NotPossible;
+                if (Items != null && Items.Count >= 0xFFFF)
+                    return ReturnTypes.NotPossible;
 
-		        if (cFlags.HasFlag(CylinderFlags.Nolimit))
-			        return ReturnTypes.NoError;
+                if (cFlags.HasFlag(CylinderFlags.Nolimit))
+                    return ReturnTypes.NoError;
 
-		        bool itemIsHangable = item.IsHangable;
-		        if (Ground == null && !itemIsHangable) {
-			        return ReturnTypes.NotPossible;
-		        }
+                bool itemIsHangable = item.IsHangable;
+                if (Ground == null && !itemIsHangable)
+                {
+                    return ReturnTypes.NotPossible;
+                }
 
-		        if (Creatures != null && Creatures.Count != 0 && item.IsBlocking && !cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature))
+                if (Creatures != null && Creatures.Count != 0 && item.IsBlocking && !cFlags.HasFlag(CylinderFlags.IgnoreBlockCreature))
                 {
                     foreach (Creature tileCreature in Creatures)
                     {
-                        if(!tileCreature.IsInGhostMode())
+                        if (!tileCreature.IsInGhostMode())
                             return ReturnTypes.NotEnoughRoom;
                     }
-		        }
+                }
 
-		        if (itemIsHangable && Flags.HasFlag(TileFlags.SupportsHangable))
+                if (itemIsHangable && Flags.HasFlag(TileFlags.SupportsHangable))
                 {
-			        if (Items != null)
+                    if (Items != null)
                     {
                         foreach (Item tileItem in Items)
                         {
-                            if(tileItem.IsHangable)
+                            if (tileItem.IsHangable)
                                 return ReturnTypes.NeedExchange;
                         }
-			        }
-		        }
+                    }
+                }
                 else
                 {
-			        if (Ground != null)
+                    if (Ground != null)
                     {
-				        ItemTemplate itemTemplate = ItemManager.Templates[Ground.Id];
-				        if (itemTemplate.DoesBlockSolid)
+                        ItemTemplate itemTemplate = ItemManager.Templates[Ground.Id];
+                        if (itemTemplate.DoesBlockSolid)
                         {
-					        if (!itemTemplate.DoesAllowPickupable || item.IsMagicField || item.IsBlocking)
+                            if (!itemTemplate.DoesAllowPickupable || item.IsMagicField || item.IsBlocking)
                             {
-						        if (!item.IsPickupable)
-							        return ReturnTypes.NotEnoughRoom;
+                                if (!item.IsPickupable)
+                                    return ReturnTypes.NotEnoughRoom;
 
-						        if (!itemTemplate.HasHeight || itemTemplate.IsPickupable || itemTemplate.Type == ItemTypes.Bed)
-							        return ReturnTypes.NotEnoughRoom;
-					        }
-				        }
-			        }
+                                if (!itemTemplate.HasHeight || itemTemplate.IsPickupable || itemTemplate.Type == ItemTypes.Bed)
+                                    return ReturnTypes.NotEnoughRoom;
+                            }
+                        }
+                    }
 
-			        if (Items != null)
+                    if (Items != null)
                     {
                         foreach (Item tileItem in Items)
                         {
-				            ItemTemplate itemTemplate = ItemManager.Templates[tileItem.Id];
+                            ItemTemplate itemTemplate = ItemManager.Templates[tileItem.Id];
 
                             if (!itemTemplate.DoesBlockSolid)
                                 continue;
@@ -377,11 +379,11 @@ namespace HerhangiOT.GameServer.Model
                             if (!itemTemplate.HasHeight || itemTemplate.IsPickupable || itemTemplate.Type == ItemTypes.Bed)
                                 return ReturnTypes.NotEnoughRoom;
                         }
-			        }
-		        }
-	        }
+                    }
+                }
+            }
 
-	        return ReturnTypes.NoError;
+            return ReturnTypes.NoError;
         }
 
         public override Thing QueryDestination(ref int index, Thing thing, ref Item destItem, ref CylinderFlags flags)
@@ -513,237 +515,237 @@ namespace HerhangiOT.GameServer.Model
             Creatures.Add(creature);
         }
 
-        public void AddThing(Thing thing)
+        public override void AddThing(Thing thing)
         {
-	        AddThing(0, thing);
+            AddThing(0, thing);
         }
 
         public virtual void AddThing(int index, Thing thing)
         {
             Creature creature = thing as Creature;
-	        if (creature != null)
+            if (creature != null)
             {
-		        Map.ClearSpectatorCache();
-		        creature.SetParent(this);
+                Map.ClearSpectatorCache();
+                creature.SetParent(this);
                 MakeCreatureList();
-		        Creatures.Insert(0, creature);
-	        }
+                Creatures.Insert(0, creature);
+            }
             else
             {
-		        Item item = thing as Item;
-		        if (item == null)
+                Item item = thing as Item;
+                if (item == null)
                 {
-			        return;
-		        }
+                    return;
+                }
 
-		        if (Items != null && Items.Count >= 0xFFFF)
-			        return;
+                if (Items != null && Items.Count >= 0xFFFF)
+                    return;
 
-		        item.SetParent(this);
+                item.SetParent(this);
 
-		        if (item.IsGroundTile)
+                if (item.IsGroundTile)
                 {
-			        if (Ground == null)
+                    if (Ground == null)
                     {
-				        Ground = item;
-				        OnAddTileItem(item);
-			        }
+                        Ground = item;
+                        OnAddTileItem(item);
+                    }
                     else
                     {
                         ItemTemplate oldType = ItemManager.Templates[Ground.Id];
                         ItemTemplate newType = ItemManager.Templates[item.Id];
 
-				        Item oldGround = Ground;
+                        Item oldGround = Ground;
                         Ground.SetParent(null);
                         Game.ReleaseItem(Ground);
-				        Ground = item;
-				        ResetFlags(oldGround);
-				        SetFlags(item);
-				        OnUpdateTileItem(oldGround, oldType, item, newType);
-				        PostRemoveNotification(oldGround, null, 0);
-			        }
-		        }
+                        Ground = item;
+                        ResetFlags(oldGround);
+                        SetFlags(item);
+                        OnUpdateTileItem(oldGround, oldType, item, newType);
+                        PostRemoveNotification(oldGround, null, 0);
+                    }
+                }
                 else if (item.IsAlwaysOnTop)
                 {
-			        if (item.IsSplash)
+                    if (item.IsSplash)
                     {
-				        //remove old splash if exists
-				        if (Items != null)
+                        //remove old splash if exists
+                        if (Items != null)
                         {
-                            for(int i = TopItemsIndex; i < Items.Count; i++)
+                            for (int i = TopItemsIndex; i < Items.Count; i++)
                             {
-						        Item oldSplash = Items[i];
-						        if (oldSplash.IsSplash)
+                                Item oldSplash = Items[i];
+                                if (oldSplash.IsSplash)
                                 {
-							        RemoveThing(oldSplash, 1);
-							        oldSplash.SetParent(null);
-							        Game.ReleaseItem(oldSplash);
-							        PostRemoveNotification(oldSplash, null, 0);
-							        break;
-						        }
-					        }
-				        }
-			        }
+                                    RemoveThing(oldSplash, 1);
+                                    oldSplash.SetParent(null);
+                                    Game.ReleaseItem(oldSplash);
+                                    PostRemoveNotification(oldSplash, null, 0);
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
-			        bool isInserted = false;
+                    bool isInserted = false;
 
-			        if (Items != null)
+                    if (Items != null)
                     {
-                        for(int i = TopItemsIndex; i < Items.Count; i++)
+                        for (int i = TopItemsIndex; i < Items.Count; i++)
                         {
-					        //Note: this is different from internalAddThing
-					        if (ItemManager.Templates[item.Id].AlwaysOnTopOrder <= ItemManager.Templates[Items[i].Id].AlwaysOnTopOrder)
-					        {
-					            Items.Insert(i, item);
-						        isInserted = true;
-						        break;
-					        }
-				        }
-			        }
+                            //Note: this is different from internalAddThing
+                            if (ItemManager.Templates[item.Id].AlwaysOnTopOrder <= ItemManager.Templates[Items[i].Id].AlwaysOnTopOrder)
+                            {
+                                Items.Insert(i, item);
+                                isInserted = true;
+                                break;
+                            }
+                        }
+                    }
                     else
                     {
-				        MakeItemList();
-			        }
+                        MakeItemList();
+                    }
 
-			        if (!isInserted)
+                    if (!isInserted)
                     {
-				        Items.Add(item);
-			        }
+                        Items.Add(item);
+                    }
 
-			        OnAddTileItem(item);
-		        }
+                    OnAddTileItem(item);
+                }
                 else
                 {
-			        if (item.IsMagicField)
+                    if (item.IsMagicField)
                     {
-				        //remove old field item if exists
-				        if (Items != null)
+                        //remove old field item if exists
+                        if (Items != null)
                         {
-                            for(int i = 0; i < TopItemsIndex; i++)
+                            for (int i = 0; i < TopItemsIndex; i++)
                             {
                                 MagicField oldField = Items[i] as MagicField;
-						        if (oldField != null)
+                                if (oldField != null)
                                 {
-							        if (oldField.IsReplaceable)
+                                    if (oldField.IsReplaceable)
                                     {
-								        RemoveThing(oldField, 1);
+                                        RemoveThing(oldField, 1);
 
-								        oldField.SetParent(null);
-								        Game.ReleaseItem(oldField);
-								        PostRemoveNotification(oldField, null, 0);
-								        break;
-							        }
+                                        oldField.SetParent(null);
+                                        Game.ReleaseItem(oldField);
+                                        PostRemoveNotification(oldField, null, 0);
+                                        break;
+                                    }
                                     else
                                     {
-								        //This magic field cannot be replaced.
-								        item.SetParent(null);
-								        Game.ReleaseItem(item);
-								        return;
-							        }
-						        }
-					        }
-				        }
-			        }
+                                        //This magic field cannot be replaced.
+                                        item.SetParent(null);
+                                        Game.ReleaseItem(item);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-			        MakeItemList();
+                    MakeItemList();
                     Items.Insert(0, item);
-			        ++_downItemCount;
-			        OnAddTileItem(item);
-		        }
-	        }
+                    ++_downItemCount;
+                    OnAddTileItem(item);
+                }
+            }
         }
         #endregion
 
         #region Remove Methods
         public override void RemoveThing(Thing thing, uint count)
         {
-	        Creature creature = thing as Creature;
-	        if (creature != null)
-	        {
-	            if (Creatures.Remove(creature))
-	            {
-                    //TODO: CLEAR SPECTATOR CACHE
-	            }
-		        return;
-	        }
-
-	        Item item = thing as Item;
-	        if (item == null)
-		        return;
-
-	        int index = GetThingIndex(item);
-	        if (index == -1)
-		        return;
-
-	        if (item == Ground)
+            Creature creature = thing as Creature;
+            if (creature != null)
             {
-		        Ground.SetParent(null);
-		        Ground = null;
+                if (Creatures.Remove(creature))
+                {
+                    //TODO: CLEAR SPECTATOR CACHE
+                }
+                return;
+            }
 
-		        HashSet<Creature> spectators = new HashSet<Creature>();
-		        Map.GetSpectators(ref spectators, Position, true);
-		        OnRemoveTileItem(spectators, new List<int>(spectators.Count), item);
-		        return;
-	        }
+            Item item = thing as Item;
+            if (item == null)
+                return;
 
-	        if (Items == null)
-		        return;
+            int index = GetThingIndex(item);
+            if (index == -1)
+                return;
 
-	        if (item.IsAlwaysOnTop)
-	        {
-	            int pos = Items.FindIndex(TopItemsIndex, i => i == item);
-                if(pos == -1)
+            if (item == Ground)
+            {
+                Ground.SetParent(null);
+                Ground = null;
+
+                HashSet<Creature> spectators = new HashSet<Creature>();
+                Map.GetSpectators(ref spectators, Position, true);
+                OnRemoveTileItem(spectators, new List<int>(spectators.Count), item);
+                return;
+            }
+
+            if (Items == null)
+                return;
+
+            if (item.IsAlwaysOnTop)
+            {
+                int pos = Items.FindIndex(TopItemsIndex, i => i == item);
+                if (pos == -1)
                     return;
 
-	            List<int> oldStackPosVector = new List<int>();
+                List<int> oldStackPosVector = new List<int>();
 
-		        HashSet<Creature> spectators = new HashSet<Creature>();
-		        Map.GetSpectators(ref spectators, Position, true);
-		        foreach (Creature spectator in spectators)
-		        {
-		            Player tmpPlayer = spectator as Player;
-                    if(tmpPlayer != null)
-				        oldStackPosVector.Add(GetStackposOfItem(tmpPlayer, item));
-		        }
+                HashSet<Creature> spectators = new HashSet<Creature>();
+                Map.GetSpectators(ref spectators, Position, true);
+                foreach (Creature spectator in spectators)
+                {
+                    Player tmpPlayer = spectator as Player;
+                    if (tmpPlayer != null)
+                        oldStackPosVector.Add(GetStackposOfItem(tmpPlayer, item));
+                }
 
-		        item.SetParent(null);
-	            Items.RemoveAt(pos);
-		        OnRemoveTileItem(spectators, oldStackPosVector, item);
-	        }
+                item.SetParent(null);
+                Items.RemoveAt(pos);
+                OnRemoveTileItem(spectators, oldStackPosVector, item);
+            }
             else
-	        {
-	            int pos = Items.FindIndex(0, TopItemsIndex, i => i == item);
-		        if (pos == -1) 
-			        return;
+            {
+                int pos = Items.FindIndex(0, TopItemsIndex, i => i == item);
+                if (pos == -1)
+                    return;
 
-		        if (item.IsStackable && count != item.Count)
-		        {
-		            byte newCount = (byte)Math.Max(0, item.Count - count); 
+                if (item.IsStackable && count != item.Count)
+                {
+                    byte newCount = (byte)Math.Max(0, item.Count - count);
 
-			        item.Count = newCount;
+                    item.Count = newCount;
 
-		            ItemTemplate itemTemplate = ItemManager.Templates[item.Id];
+                    ItemTemplate itemTemplate = ItemManager.Templates[item.Id];
                     OnUpdateTileItem(item, itemTemplate, item, itemTemplate);
-		        }
+                }
                 else
                 {
                     List<int> oldStackPosVector = new List<int>();
 
                     HashSet<Creature> spectators = new HashSet<Creature>();
-			        Map.GetSpectators(ref spectators, Position, true);
+                    Map.GetSpectators(ref spectators, Position, true);
                     foreach (Creature spectator in spectators)
                     {
                         Player tmpPlayer = spectator as Player;
-                        if(tmpPlayer != null)
+                        if (tmpPlayer != null)
                             oldStackPosVector.Add(GetStackposOfItem(tmpPlayer, item));
                     }
 
-			        item.SetParent(null);
+                    item.SetParent(null);
                     Items.RemoveAt(pos);
-			        --_downItemCount;
-			        OnRemoveTileItem(spectators, oldStackPosVector, item);
-		        }
-	        }
+                    --_downItemCount;
+                    OnRemoveTileItem(spectators, oldStackPosVector, item);
+                }
+            }
         }
 
         public void RemoveCreature(Creature creature)
@@ -752,43 +754,43 @@ namespace HerhangiOT.GameServer.Model
             RemoveThing(creature, 0);
         }
         #endregion
-        
+
         private void OnAddTileItem(Item item)
         {
-	        if (item.HasProperty(ItemProperties.Moveable) || item is Container)
+            if (item.HasProperty(ItemProperties.Moveable) || item is Container)
             {
-	            Container fieldContainer;
+                Container fieldContainer;
                 if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                 {
                     fieldContainer.AddItemBack(item);
                     item.SetParent(this);
                 }
-	        }
+            }
 
-	        SetFlags(item);
+            SetFlags(item);
 
-	        Position cylinderMapPos = GetPosition();
+            Position cylinderMapPos = GetPosition();
 
             HashSet<Creature> spectators = new HashSet<Creature>();
-	        Map.GetSpectators(ref spectators, cylinderMapPos, true);
+            Map.GetSpectators(ref spectators, cylinderMapPos, true);
 
-	        //send to client
-	        foreach (Creature spectator in spectators)
-	        {
-	            Player tmpPlayer = (Player)spectator;
-	            if (tmpPlayer != null)
-			        tmpPlayer.SendAddTileItem(this, cylinderMapPos, item);
-	        }
+            //send to client
+            foreach (Creature spectator in spectators)
+            {
+                Player tmpPlayer = (Player)spectator;
+                if (tmpPlayer != null)
+                    tmpPlayer.SendAddTileItem(this, cylinderMapPos, item);
+            }
 
             //event methods
-	        foreach (Creature spectator in spectators)
-		        spectator.OnAddTileItem(this, cylinderMapPos);
+            foreach (Creature spectator in spectators)
+                spectator.OnAddTileItem(this, cylinderMapPos);
         }
         private void OnUpdateTileItem(Item oldItem, ItemTemplate oldType, Item newItem, ItemTemplate newType)
         {
-	        if (newItem.HasProperty(ItemProperties.Moveable) || newItem is Container)
+            if (newItem.HasProperty(ItemProperties.Moveable) || newItem is Container)
             {
-	            Container fieldContainer;
+                Container fieldContainer;
                 if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                 {
                     int index = fieldContainer.GetThingIndex(oldItem);
@@ -798,135 +800,135 @@ namespace HerhangiOT.GameServer.Model
                         newItem.SetParent(this);
                     }
                 }
-	        }
+            }
             else if (oldItem.HasProperty(ItemProperties.Moveable) || oldItem is Container)
             {
-	            Container fieldContainer;
+                Container fieldContainer;
                 if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                 {
                     Thing oldParent = oldItem.Parent;
                     fieldContainer.RemoveThing(oldItem, oldItem.Count);
-			        oldItem.SetParent(oldParent);
-		        }
-	        }
+                    oldItem.SetParent(oldParent);
+                }
+            }
 
-	        Position cylinderMapPos = GetPosition();
+            Position cylinderMapPos = GetPosition();
 
-	        HashSet<Creature> list = new HashSet<Creature>();
-	        Map.GetSpectators(ref list, cylinderMapPos, true);
+            HashSet<Creature> list = new HashSet<Creature>();
+            Map.GetSpectators(ref list, cylinderMapPos, true);
 
-	        //send to client
+            //send to client
             foreach (Creature spectator in list)
             {
                 Player tmpPlayer = spectator as Player;
-		        if (tmpPlayer != null)
+                if (tmpPlayer != null)
                 {
-			        tmpPlayer.SendUpdateTileItem(this, cylinderMapPos, newItem);
-		        }
-	        }
+                    tmpPlayer.SendUpdateTileItem(this, cylinderMapPos, newItem);
+                }
+            }
 
             //event methods
             foreach (Creature spectator in list)
             {
-		        spectator.OnUpdateTileItem(this, cylinderMapPos, oldItem, oldType, newItem, newType);
-	        }
+                spectator.OnUpdateTileItem(this, cylinderMapPos, oldItem, oldType, newItem, newType);
+            }
         }
         private void OnRemoveTileItem(HashSet<Creature> list, List<int> oldStackPosVector, Item item)
         {
-	        if (item.HasProperty(ItemProperties.Moveable) || item is Container)
-	        {
-	            Container fieldContainer;
-                if(Game.BrowseFields.TryGetValue(this, out fieldContainer))
+            if (item.HasProperty(ItemProperties.Moveable) || item is Container)
+            {
+                Container fieldContainer;
+                if (Game.BrowseFields.TryGetValue(this, out fieldContainer))
                     fieldContainer.RemoveThing(item, item.Count);
-	        }
+            }
 
-	        ResetFlags(item);
+            ResetFlags(item);
 
-	        Position cylinderMapPos = GetPosition();
+            Position cylinderMapPos = GetPosition();
             ItemTemplate iType = ItemManager.Templates[item.Id];
 
-	        //send to client
-	        int i = 0;
-	        foreach (Creature spectator in list)
-	        {
-	            Player tmpPlayer = spectator as Player;
-		        if (tmpPlayer != null)
+            //send to client
+            int i = 0;
+            foreach (Creature spectator in list)
+            {
+                Player tmpPlayer = spectator as Player;
+                if (tmpPlayer != null)
                 {
-			        tmpPlayer.SendRemoveTileThing(cylinderMapPos, oldStackPosVector[i++]);
-		        }
-	        }
+                    tmpPlayer.SendRemoveTileThing(cylinderMapPos, oldStackPosVector[i++]);
+                }
+            }
 
             //event methods
             foreach (Creature spectator in list)
             {
-		        spectator.OnRemoveTileItem(this, cylinderMapPos, iType, item);
-	        }
+                spectator.OnRemoveTileItem(this, cylinderMapPos, iType, item);
+            }
         }
 
         private void OnUpdateTile(HashSet<Creature> list)
         {
-	        Position cylinderMapPos = GetPosition();
+            Position cylinderMapPos = GetPosition();
 
-	        foreach (Player spectator in list)
+            foreach (Player spectator in list)
             {
-		        spectator.SendUpdateTile(this, cylinderMapPos);
-	        }
+                spectator.SendUpdateTile(this, cylinderMapPos);
+            }
         }
 
         public sealed override void PostAddNotification(Thing thing, Thing oldParent, int index, CylinderLinks link = CylinderLinks.Owner)
         {
-	        HashSet<Creature> list = new HashSet<Creature>();
-	        Map.GetSpectators(ref list, GetPosition(), true, true);
-	        foreach (Player spectator in list)
+            HashSet<Creature> list = new HashSet<Creature>();
+            Map.GetSpectators(ref list, GetPosition(), true, true);
+            foreach (Player spectator in list)
             {
-		        spectator.PostAddNotification(thing, oldParent, index, CylinderLinks.Near);
-	        }
+                spectator.PostAddNotification(thing, oldParent, index, CylinderLinks.Near);
+            }
 
-	        //add a reference to this item, it may be deleted after being added (mailbox for example)
+            //add a reference to this item, it may be deleted after being added (mailbox for example)
             Creature creature = thing as Creature;
-	        Item item;
-	        if (creature != null)
+            Item item;
+            if (creature != null)
             {
-		        creature.IncrementReferenceCounter();
-		        item = null;
-	        }
+                creature.IncrementReferenceCounter();
+                item = null;
+            }
             else
             {
-		        item = thing as Item;
-		        if (item != null)
+                item = thing as Item;
+                if (item != null)
                 {
-			        item.IncrementReferenceCounter();
-		        }
-	        }
+                    item.IncrementReferenceCounter();
+                }
+            }
 
-	        if (link == CylinderLinks.Owner)
+            if (link == CylinderLinks.Owner)
             {
-		        if (Flags.HasFlag(TileFlags.Teleport))
+                if (Flags.HasFlag(TileFlags.Teleport))
                 {
-			        Teleport teleport = GetTeleportItem();
-			        if (teleport != null)
+                    Teleport teleport = GetTeleportItem();
+                    if (teleport != null)
                     {
-				        teleport.AddThing(thing);
-			        }
-		        }
+                        teleport.AddThing(thing);
+                    }
+                }
                 else if (Flags.HasFlag(TileFlags.TrashHolder))
                 {
-			        TrashHolder trashholder = GetTrashHolder();
-			        if (trashholder != null)
+                    TrashHolder trashholder = GetTrashHolder();
+                    if (trashholder != null)
                     {
-				        trashholder.AddThing(thing);
-			        }
-		        }
+                        trashholder.AddThing(thing);
+                    }
+                }
                 else if (Flags.HasFlag(TileFlags.MailBox))
                 {
-			        Mailbox mailbox = GetMailbox();
-			        if (mailbox != null)
+                    Mailbox mailbox = GetMailbox();
+                    if (mailbox != null)
                     {
-				        mailbox.AddThing(thing);
-			        }
-		        }
+                        mailbox.AddThing(thing);
+                    }
+                }
 
-		        //calling movement scripts TODO: Scripting
+                //calling movement scripts TODO: Scripting
                 //if (creature != null)
                 //{
                 //    g_moveEvents->onCreatureMove(creature, this, oldParent ? oldParent->getPosition() : getPosition(), MOVE_EVENT_STEP_IN);
@@ -935,44 +937,44 @@ namespace HerhangiOT.GameServer.Model
                 //{
                 //    g_moveEvents->onItemMove(item, this, true);
                 //}
-	        }
+            }
 
-	        //release the reference to this item onces we are finished
-	        if (creature != null)
-		        Game.ReleaseCreature(creature);
-	        else if (item != null)
-		        Game.ReleaseItem(item);
+            //release the reference to this item onces we are finished
+            if (creature != null)
+                Game.ReleaseCreature(creature);
+            else if (item != null)
+                Game.ReleaseItem(item);
         }
 
         public sealed override void PostRemoveNotification(Thing thing, Thing newParent, int index, CylinderLinks link = CylinderLinks.Owner)
         {
             HashSet<Creature> list = new HashSet<Creature>();
-	        Map.GetSpectators(ref list, GetPosition(), true, true);
+            Map.GetSpectators(ref list, GetPosition(), true, true);
 
-	        if (GetThingCount() > 8)
+            if (GetThingCount() > 8)
             {
-		        OnUpdateTile(list);
-	        }
+                OnUpdateTile(list);
+            }
 
-	        foreach (Player spectator in list)
+            foreach (Player spectator in list)
             {
-		        spectator.PostRemoveNotification(thing, newParent, index, CylinderLinks.Near);
-	        }
+                spectator.PostRemoveNotification(thing, newParent, index, CylinderLinks.Near);
+            }
 
-	        //calling movement scripts
-	        Creature creature = thing as Creature;
-	        if (creature != null)
+            //calling movement scripts
+            Creature creature = thing as Creature;
+            if (creature != null)
             {
-		        //g_moveEvents->onCreatureMove(creature, this, GetPosition(), MOVE_EVENT_STEP_OUT); //TODO: SCRIPTING
-	        }
+                //g_moveEvents->onCreatureMove(creature, this, GetPosition(), MOVE_EVENT_STEP_OUT); //TODO: SCRIPTING
+            }
             else
             {
-		        Item item = thing as Item;
-		        if (item != null)
+                Item item = thing as Item;
+                if (item != null)
                 {
-			        //g_moveEvents->onItemMove(item, this, false); //TODO: SCRIPTING
-		        }
-	        }
+                    //g_moveEvents->onItemMove(item, this, false); //TODO: SCRIPTING
+                }
+            }
         }
 
         public bool HasProperty(ItemProperties property)
@@ -993,16 +995,16 @@ namespace HerhangiOT.GameServer.Model
 
         public bool HasHeight(uint n)
         {
-	        uint height = 0;
+            uint height = 0;
 
-	        if (Ground != null)
+            if (Ground != null)
             {
-		        if (Ground.HasProperty(ItemProperties.HasHeight))
-			        ++height;
+                if (Ground.HasProperty(ItemProperties.HasHeight))
+                    ++height;
 
-		        if (n == height)
-			        return true;
-	        }
+                if (n == height)
+                    return true;
+            }
 
             if (Items != null)
             {
@@ -1015,8 +1017,8 @@ namespace HerhangiOT.GameServer.Model
                     }
                 }
             }
-	        
-	        return false;
+
+            return false;
         }
 
         public ZoneTypes GetZone()
@@ -1030,13 +1032,13 @@ namespace HerhangiOT.GameServer.Model
             return ZoneTypes.Normal;
         }
 
-        
-		private bool FloorChange(Directions direction)
+
+        private bool FloorChange(Directions direction)
         {
-			switch (direction)
+            switch (direction)
             {
-				case Directions.North:
-					return Flags.HasFlag(TileFlags.FloorChangeNorth);
+                case Directions.North:
+                    return Flags.HasFlag(TileFlags.FloorChangeNorth);
 
                 case Directions.South:
                     return Flags.HasFlag(TileFlags.FloorChangeSouth);
@@ -1053,10 +1055,10 @@ namespace HerhangiOT.GameServer.Model
                 case Directions.EastAlt:
                     return Flags.HasFlag(TileFlags.FloorChangeEastAlt);
 
-				default:
-					return false;
-			}
-		}
+                default:
+                    return false;
+            }
+        }
 
         private Item GetTopDownItem()
         {
@@ -1082,66 +1084,67 @@ namespace HerhangiOT.GameServer.Model
 
             return thingCount;
         }
-        public int GetThingIndex(Thing thing)
+
+        public override int GetThingIndex(Thing thing)
         {
-	        int n = -1;
-	        if (Ground != null)
+            int n = -1;
+            if (Ground != null)
             {
-		        if (Ground == thing)
-			        return 0;
-		        ++n;
-	        }
+                if (Ground == thing)
+                    return 0;
+                ++n;
+            }
 
             Item item = null;
-	        if (Items != null)
-	        {
-	            item = thing as Item;
+            if (Items != null)
+            {
+                item = thing as Item;
 
-		        if (item != null && item.IsAlwaysOnTop)
+                if (item != null && item.IsAlwaysOnTop)
                 {
                     for (int i = TopItemsIndex; i < Items.Count; i++)
                     {
-				        ++n;
-				        if (Items[i] == item)
-					        return n;
-			        }
-		        }
+                        ++n;
+                        if (Items[i] == item)
+                            return n;
+                    }
+                }
                 else
                 {
-	                n += Items.Count - _downItemCount;
-		        }
-	        }
+                    n += Items.Count - _downItemCount;
+                }
+            }
 
-	        if (Creatures != null)
+            if (Creatures != null)
             {
-		        if (thing is Creature)
+                if (thing is Creature)
                 {
                     for (int i = Creatures.Count - 1; i > -1; i--)
                     {
-				        ++n;
-				        if (Creatures[i] == thing)
-					        return n;
-			        }
-		        }
+                        ++n;
+                        if (Creatures[i] == thing)
+                            return n;
+                    }
+                }
                 else
                 {
-			        n += Creatures.Count;
-		        }
-	        }
+                    n += Creatures.Count;
+                }
+            }
 
-	        if (Items != null)
+            if (Items != null)
             {
-		        if (item != null && !item.IsAlwaysOnTop)
+                if (item != null && !item.IsAlwaysOnTop)
                 {
-                    for(int i = 0; i < TopItemsIndex; i++)
+                    for (int i = 0; i < TopItemsIndex; i++)
                     {
-				        ++n;
-				        if (Items[i] == item)
-					        return n;
-			        }
-		        }
-	        }
-	        return -1;
+                        ++n;
+                        if (Items[i] == item)
+                            return n;
+                    }
+                }
+            }
+            return -1;
         }
 
         public int GetStackposOfCreature(Player player, Creature creature)
@@ -1150,42 +1153,42 @@ namespace HerhangiOT.GameServer.Model
             if (Ground != null)
                 n++;
 
-	        if (Items != null)
-	        {
-	            n += Items.Count - _downItemCount;
-		        if (n >= 10)
-			        return -1;
-	        }
+            if (Items != null)
+            {
+                n += Items.Count - _downItemCount;
+                if (n >= 10)
+                    return -1;
+            }
 
             if (Creatures != null)
             {
-                for(int i = Creatures.Count - 1; i > -1; i--)
+                for (int i = Creatures.Count - 1; i > -1; i--)
                 {
                     Creature c = Creatures[i];
                     if (c == creature)
                         return n;
-                    
+
                     if (player.CanSeeCreature(c))
                     {
                         if (++n >= 10) return -1;
                     }
                 }
             }
-	        return -1;
+            return -1;
         }
         public int GetStackposOfItem(Player player, Item item)
         {
-	        int n = 0;
-	        if (Ground != null)
+            int n = 0;
+            if (Ground != null)
             {
-		        if (Ground == item)
-			        return n;
-		        ++n;
-	        }
+                if (Ground == item)
+                    return n;
+                ++n;
+            }
 
-	        if (Items != null)
+            if (Items != null)
             {
-		        if (item.IsAlwaysOnTop)
+                if (item.IsAlwaysOnTop)
                 {
                     for (int i = TopItemsIndex; i < Items.Count; i++)
                     {
@@ -1194,16 +1197,16 @@ namespace HerhangiOT.GameServer.Model
                         if (++n == 10)
                             return -1;
                     }
-		        }
+                }
                 else
                 {
-	                n += Items.Count - _downItemCount;
-			        if (n >= 10)
-				        return -1;
-		        }
-	        }
+                    n += Items.Count - _downItemCount;
+                    if (n >= 10)
+                        return -1;
+                }
+            }
 
-	        if (Creatures != null)
+            if (Creatures != null)
             {
                 foreach (Creature creature in Creatures)
                 {
@@ -1213,22 +1216,22 @@ namespace HerhangiOT.GameServer.Model
                             return -1;
                     }
                 }
-	        }
+            }
 
-	        if (Items != null)
+            if (Items != null)
             {
-		        if (!item.IsAlwaysOnTop)
+                if (!item.IsAlwaysOnTop)
                 {
-                    for(int i = 0; i < TopItemsIndex; i++)
+                    for (int i = 0; i < TopItemsIndex; i++)
                     {
-				        if (Items[i] == item)
-					        return n;
+                        if (Items[i] == item)
+                            return n;
                         if (++n >= 10)
-					        return -1;
-			        }
-		        }
-	        }
-	        return -1;
+                            return -1;
+                    }
+                }
+            }
+            return -1;
         }
 
         public int GetClientIndexOfCreature(Player player, Creature creature)
@@ -1258,52 +1261,52 @@ namespace HerhangiOT.GameServer.Model
             }
             return -1;
         }
-        
-        
+
+
         public BedItem GetBedItem()
         {
-	        if (!Flags.HasFlag(TileFlags.Bed))
-		        return null;
+            if (!Flags.HasFlag(TileFlags.Bed))
+                return null;
 
-	        if (Ground is BedItem)
-		        return Ground as BedItem;
+            if (Ground is BedItem)
+                return Ground as BedItem;
 
             if (Items != null)
                 return Items.OfType<BedItem>().LastOrDefault();
-	        return null;
+            return null;
         }
         public Teleport GetTeleportItem()
         {
-	        if (!Flags.HasFlag(TileFlags.Teleport))
-		        return null;
+            if (!Flags.HasFlag(TileFlags.Teleport))
+                return null;
 
             if (Items != null)
                 return Items.OfType<Teleport>().LastOrDefault();
-	        return null;
+            return null;
         }
         public TrashHolder GetTrashHolder()
         {
-	        if (!Flags.HasFlag(TileFlags.TrashHolder))
-		        return null;
+            if (!Flags.HasFlag(TileFlags.TrashHolder))
+                return null;
 
-	        if (Ground is TrashHolder)
-		        return Ground as TrashHolder;
+            if (Ground is TrashHolder)
+                return Ground as TrashHolder;
 
             if (Items != null)
                 return Items.OfType<TrashHolder>().LastOrDefault();
-	        return null;
+            return null;
         }
         public Mailbox GetMailbox()
         {
-	        if (!Flags.HasFlag(TileFlags.MailBox))
-		        return null;
+            if (!Flags.HasFlag(TileFlags.MailBox))
+                return null;
 
-	        if (Ground is Mailbox)
+            if (Ground is Mailbox)
                 return Ground as Mailbox;
 
             if (Items != null)
                 return Items.OfType<Mailbox>().LastOrDefault();
-	        return null;
+            return null;
         }
 
         public List<Item> MakeItemList()

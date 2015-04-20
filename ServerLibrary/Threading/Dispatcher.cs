@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using HerhangiOT.ServerLibrary.Networking;
 
@@ -17,7 +18,6 @@ namespace HerhangiOT.ServerLibrary.Threading
         protected object TaskLock;
         protected List<Task> TaskList;
         protected DispatcherState State;
-
         protected AutoResetEvent Signaler;
 
         public Dispatcher()
@@ -25,6 +25,12 @@ namespace HerhangiOT.ServerLibrary.Threading
             TaskLock = new object();
             TaskList = new List<Task>();
             State = DispatcherState.Terminated;
+        }
+
+        // allows AddTask(() => method);
+        public void AddTask(Action action, bool pushFront = false)
+        {
+            AddTask(Task.CreateTask(action), pushFront);
         }
 
         public void AddTask(Task task, bool pushFront = false)
@@ -63,6 +69,7 @@ namespace HerhangiOT.ServerLibrary.Threading
             State = DispatcherState.Running;
             Signaler = new AutoResetEvent(false);
             Thread = new Thread(DispatcherThread);
+            Thread.IsBackground = true;
             Thread.Start();
         }
 
@@ -93,22 +100,26 @@ namespace HerhangiOT.ServerLibrary.Threading
         protected void DispatcherThread()
         {
             //OutputMessagePool* outputPool = OutputMessagePool::getInstance();
-
-            while (State != DispatcherState.Terminated)
+            Task task;
+            while (State == DispatcherState.Running)
             {
-                Task task = null;
                 if (TaskList.Count == 0)
                 {
                     Signaler.WaitOne();
                 }
 
-                if (TaskList.Count != 0 && (State != DispatcherState.Terminated))
+                if (TaskList.Count == 0 || State != DispatcherState.Running)
+                {
+                    Thread.Sleep(1);
+                    continue;
+                }
+
+                lock (TaskLock)
                 {
                     task = TaskList[0];
                     TaskList.RemoveAt(0);
                 }
-                else continue;
-                
+
                 if (!task.IsExpired())
                 {
                     //outputPool->startExecutionFrame();
@@ -119,6 +130,8 @@ namespace HerhangiOT.ServerLibrary.Threading
                     //g_game.clearSpectatorCache();
                 }
             }
+
+            State = DispatcherState.Terminated;
         }
 
         protected void Flush()

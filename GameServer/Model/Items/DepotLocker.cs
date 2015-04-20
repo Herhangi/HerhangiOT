@@ -4,7 +4,8 @@
     {
         private ushort _depotId;
 
-        public DepotLocker(ushort id) : base(id)
+        public DepotLocker(ushort id)
+            : base(id)
         {
             _depotId = 0;
             MaxSize = 3;

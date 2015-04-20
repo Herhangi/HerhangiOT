@@ -12,7 +12,8 @@ namespace HerhangiOT.ServerLibrary.Threading
         public uint Interval { get; set; }
         public long NextInvocation { get; set; }
 
-        public JobTask(uint interval, uint firstDelay, Action action) : base(interval, action)
+        public JobTask(uint interval, uint firstDelay, Action action)
+            : base(interval, action)
         {
             FirstDelay = firstDelay;
             Interval = interval;

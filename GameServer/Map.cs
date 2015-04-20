@@ -24,7 +24,7 @@ namespace HerhangiOT.GameServer
         private static Dictionary<uint, House> Houses { get; set; }
         private static Dictionary<string, Position> Waypoints { get; set; }
 
-        private static readonly Dictionary<Position, HashSet<Creature>> SpectatorCache = new Dictionary<Position, HashSet<Creature>>(); 
+        private static readonly Dictionary<Position, HashSet<Creature>> SpectatorCache = new Dictionary<Position, HashSet<Creature>>();
         private static readonly Dictionary<Position, HashSet<Creature>> PlayersSpectatorCache = new Dictionary<Position, HashSet<Creature>>();
 
         private static Floor[] Floors { get; set; }
@@ -52,7 +52,7 @@ namespace HerhangiOT.GameServer
 
         public static bool Load()
         {
-            Logger.LogOperationStart("Loading Map<"+ConfigManager.Instance[ConfigStr.MapName]+">");
+            Logger.LogOperationStart("Loading Map<" + ConfigManager.Instance[ConfigStr.MapName] + ">");
             Floors = new Floor[MapMaxLayers];
             Towns = new Dictionary<uint, Town>();
             Houses = new Dictionary<uint, House>();
@@ -75,7 +75,7 @@ namespace HerhangiOT.GameServer
 
         public static Tile GetTile(ushort x, ushort y, byte z)
         {
-            if(Floors[z] == null)
+            if (Floors[z] == null)
                 return null;
             Floor floor = Floors[z];
             return floor.Tiles[x][y];
@@ -86,11 +86,11 @@ namespace HerhangiOT.GameServer
             Position pos = tile.Position;
             if (pos.Z > MapMaxLayers)
             {
-                Logger.Log(LogLevels.Error, "Attempt to set tile on invalid coordinate! X:"+pos.X+", Y:"+pos.Y+", Z:"+pos.Z);
+                Logger.Log(LogLevels.Error, "Attempt to set tile on invalid coordinate! X:" + pos.X + ", Y:" + pos.Y + ", Z:" + pos.Z);
                 return;
             }
 
-            if(Floors[pos.Z] == null)
+            if (Floors[pos.Z] == null)
                 Floors[pos.Z] = new Floor();
             Floor floor = Floors[pos.Z];
 
@@ -104,7 +104,7 @@ namespace HerhangiOT.GameServer
             public Floor()
             {
                 Tiles = new Tile[Width][];
-                for(int i = 0; i < Width; i++)
+                for (int i = 0; i < Width; i++)
                     Tiles[i] = new Tile[Height];
             }
         }
@@ -113,7 +113,7 @@ namespace HerhangiOT.GameServer
         private static bool LoadOtbm()
         {
             FileLoader fileLoader = new FileLoader();
-            if (!fileLoader.OpenFile("Data/World/"+ConfigManager.Instance[ConfigStr.MapName]+".otbm", "OTBM"))
+            if (!fileLoader.OpenFile("Data/World/" + ConfigManager.Instance[ConfigStr.MapName] + ".otbm", "OTBM"))
             {
                 Logger.LogOperationFailed("Could not open map file: " + ConfigManager.Instance[ConfigStr.MapName]);
                 return false;
@@ -121,7 +121,7 @@ namespace HerhangiOT.GameServer
 
             byte type;
             NodeStruct root = fileLoader.GetChildNode(null, out type);
-            
+
             MemoryStream props;
             if (!fileLoader.GetProps(root, out props))
             {
@@ -155,21 +155,21 @@ namespace HerhangiOT.GameServer
                 Logger.LogOperationFailed("This map need to be upgraded by using the latest map editor version to be able to load correctly.");
                 return false;
             }
-            
-	        if (majorVersionItems > ItemManager.DwMajorVersion)
-            {
-		        Logger.LogOperationFailed("The map was saved with a different items.otb version, an upgraded items.otb is required.");
-		        return false;
-	        }
 
-	        if (minorVersionItems < (uint)OtbClientVersion.V810)
+            if (majorVersionItems > ItemManager.DwMajorVersion)
             {
-		        Logger.LogOperationFailed("This map needs to be updated.");
-		        return false;
-	        }
+                Logger.LogOperationFailed("The map was saved with a different items.otb version, an upgraded items.otb is required.");
+                return false;
+            }
 
-	        if (minorVersionItems > ItemManager.DwMinorVersion)
-		        Logger.Log(LogLevels.Warning, "This map needs an updated items.otb.");
+            if (minorVersionItems < (uint)OtbClientVersion.V810)
+            {
+                Logger.LogOperationFailed("This map needs to be updated.");
+                return false;
+            }
+
+            if (minorVersionItems > ItemManager.DwMinorVersion)
+                Logger.Log(LogLevels.Warning, "This map needs an updated items.otb.");
 
             NodeStruct nodeMap = fileLoader.GetChildNode(root, out type);
             if (type != (byte)OtbmNodeTypes.MapData)
@@ -215,7 +215,7 @@ namespace HerhangiOT.GameServer
                         return false;
                     }
                 }
-                else if (type == (byte) OtbmNodeTypes.Towns)
+                else if (type == (byte)OtbmNodeTypes.Towns)
                 {
                     if (!ParseTowns(nodeMapData, fileLoader))
                     {
@@ -223,7 +223,7 @@ namespace HerhangiOT.GameServer
                         return false;
                     }
                 }
-                else if (type == (byte) OtbmNodeTypes.Waypoints && version > 1)
+                else if (type == (byte)OtbmNodeTypes.Waypoints && version > 1)
                 {
                     if (!ParseWaypoints(nodeMapData, fileLoader))
                     {
@@ -259,7 +259,7 @@ namespace HerhangiOT.GameServer
             NodeStruct nodeTile = fileLoader.GetChildNode(node, out type);
             while (nodeTile != null)
             {
-                if (type != (byte) OtbmNodeTypes.Tile && type != (byte) OtbmNodeTypes.HouseTile)
+                if (type != (byte)OtbmNodeTypes.Tile && type != (byte)OtbmNodeTypes.HouseTile)
                 {
                     Logger.Log(LogLevels.Error, "NOT TILE OR HOUSETILE");
                     return false;
@@ -278,13 +278,13 @@ namespace HerhangiOT.GameServer
                 House house = null;
                 Tile tile = null;
 
-                if (type == (byte) OtbmNodeTypes.HouseTile)
+                if (type == (byte)OtbmNodeTypes.HouseTile)
                 {
                     //TODO: HOUSES
                     uint houseId = props.ReadUInt32();
 
                     if (!Houses.ContainsKey(houseId))
-                        Houses.Add(houseId, new House {HouseId = houseId});
+                        Houses.Add(houseId, new House { HouseId = houseId });
 
                     house = Houses[houseId];
                     tile = new HouseTile(pX, pY, pZ, house);
@@ -317,7 +317,7 @@ namespace HerhangiOT.GameServer
 
                             if (isHouseTile && item.IsMovable)
                             {
-                                Logger.Log(LogLevels.Warning, "Moveable item found in house: "+house.HouseId);
+                                Logger.Log(LogLevels.Warning, "Moveable item found in house: " + house.HouseId);
                                 item.DecrementReferenceCounter();
                             }
                             else
@@ -346,7 +346,7 @@ namespace HerhangiOT.GameServer
                             break;
 
                         default:
-                            Logger.Log(LogLevels.Warning, "Unknown tile attribute on; X:"+pX+", Y:"+pY+", Z:"+pZ+"!");
+                            Logger.Log(LogLevels.Warning, "Unknown tile attribute on; X:" + pX + ", Y:" + pY + ", Z:" + pZ + "!");
                             return false;
                     }
                 }
@@ -354,7 +354,7 @@ namespace HerhangiOT.GameServer
                 NodeStruct nodeItem = fileLoader.GetChildNode(nodeTile, out type);
                 while (nodeItem != null)
                 {
-                    if (type != (byte) OtbmNodeTypes.Item)
+                    if (type != (byte)OtbmNodeTypes.Item)
                         return false;
 
                     MemoryStream stream;
@@ -426,8 +426,8 @@ namespace HerhangiOT.GameServer
                     return false;
 
                 uint townId = props.ReadUInt32();
-                if(!Towns.ContainsKey(townId))
-                    Towns.Add(townId, new Town {TownId = townId});
+                if (!Towns.ContainsKey(townId))
+                    Towns.Add(townId, new Town { TownId = townId });
                 Town town = Towns[townId];
 
                 town.TownName = props.GetString();
@@ -444,20 +444,20 @@ namespace HerhangiOT.GameServer
             byte type;
             NodeStruct nodeWaypoint = fileLoader.GetChildNode(node, out type);
 
-			while (nodeWaypoint != null)
+            while (nodeWaypoint != null)
             {
-				if (type != (byte)OtbmNodeTypes.Waypoint) 
-					return false;
+                if (type != (byte)OtbmNodeTypes.Waypoint)
+                    return false;
 
                 MemoryStream props;
-				if (!fileLoader.GetProps(nodeWaypoint, out props))
-					return false;
+                if (!fileLoader.GetProps(nodeWaypoint, out props))
+                    return false;
 
                 //(name, new Position(x, y, z)
                 Waypoints.Add(props.GetString(), new Position(props.ReadUInt16(), props.ReadUInt16(), (byte)props.ReadByte()));
 
-				nodeWaypoint = fileLoader.GetNextNode(nodeWaypoint, out type);
-			}
+                nodeWaypoint = fileLoader.GetNextNode(nodeWaypoint, out type);
+            }
             return true;
         }
 
@@ -486,23 +486,23 @@ namespace HerhangiOT.GameServer
         //TODO: CHANGE FLOORING AND MAP STORAGE SYSTEM
         private static void GetSpectatorsInternal(ref HashSet<Creature> list, Position centerPos, int minRangeX, int maxRangeX, int minRangeY, int maxRangeY, int minRangeZ, int maxRangeZ, bool onlyPlayers)
         {
-	        int minY = centerPos.Y + minRangeY;
-	        int minX = centerPos.X + minRangeX;
-	        int maxY = centerPos.Y + maxRangeY;
-	        int maxX = centerPos.X + maxRangeX;
+            int minY = centerPos.Y + minRangeY;
+            int minX = centerPos.X + minRangeX;
+            int maxY = centerPos.Y + maxRangeY;
+            int maxX = centerPos.X + maxRangeX;
 
-	        int minoffset = centerPos.Z - maxRangeZ;
+            int minoffset = centerPos.Z - maxRangeZ;
             ushort x1 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (minX + minoffset)));
-	        ushort y1 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (minY + minoffset)));
-            
-	        int maxoffset = centerPos.Z - minRangeZ;
-	        ushort x2 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (maxX + maxoffset)));
-	        ushort y2 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (maxY + maxoffset)));
+            ushort y1 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (minY + minoffset)));
 
-	        int startx1 = x1 - (x1 % FloorSize);
-	        int starty1 = y1 - (y1 % FloorSize);
-	        int endx2 = x2 - (x2 % FloorSize);
-	        int endy2 = y2 - (y2 % FloorSize);
+            int maxoffset = centerPos.Z - minRangeZ;
+            ushort x2 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (maxX + maxoffset)));
+            ushort y2 = (ushort)Math.Min(ushort.MaxValue, Math.Max(0, (maxY + maxoffset)));
+
+            int startx1 = x1 - (x1 % FloorSize);
+            int starty1 = y1 - (y1 % FloorSize);
+            int endx2 = x2 - (x2 % FloorSize);
+            int endy2 = y2 - (y2 % FloorSize);
 
             for (int nz = minRangeZ; nz <= maxRangeZ; nz++)
             {
@@ -517,7 +517,7 @@ namespace HerhangiOT.GameServer
                             {
                                 if (ny == 117)
                                 {
-                                    
+
                                 }
                             }
                         }
@@ -536,92 +536,92 @@ namespace HerhangiOT.GameServer
                                     list.Add(creature);
                             }
                         }
-                    }    
-                }    
+                    }
+                }
             }
         }
-        
+
         public static void ClearSpectatorCache()
         {
-	        SpectatorCache.Clear();
-	        PlayersSpectatorCache.Clear();
+            SpectatorCache.Clear();
+            PlayersSpectatorCache.Clear();
         }
-        
+
         public static void MoveCreature(Creature creature, Tile newTile, bool forceTeleport = false)
         {
-	        Tile oldTile = creature.Parent;
+            Tile oldTile = creature.Parent;
 
-	        Position oldPos = oldTile.Position;
-	        Position newPos = newTile.Position;
+            Position oldPos = oldTile.Position;
+            Position newPos = newTile.Position;
 
-	        bool teleport = forceTeleport || newTile.Ground == null || !Position.AreInRange(oldPos, newPos, 1, 1, 0);
+            bool teleport = forceTeleport || newTile.Ground == null || !Position.AreInRange(oldPos, newPos, 1, 1, 0);
 
-	        HashSet<Creature> list = new HashSet<Creature>();
-	        GetSpectators(ref list, oldPos, true);
-	        GetSpectators(ref list, newPos, true);
+            HashSet<Creature> list = new HashSet<Creature>();
+            GetSpectators(ref list, oldPos, true);
+            GetSpectators(ref list, newPos, true);
 
             List<int> oldStackPosVector = new List<int>();
-	        foreach (Creature spectator in list)
-	        {
-	            Player tmpPlayer = spectator as Player;
-		        if (tmpPlayer != null)
-                {
-			        if (tmpPlayer.CanSeeCreature(creature))
-                    {
-				        oldStackPosVector.Add(oldTile.GetClientIndexOfCreature(tmpPlayer, creature));
-			        }
-                    else
-                    {
-				        oldStackPosVector.Add(-1);
-			        }
-		        }
-	        }
-
-	        //remove the creature
-	        oldTile.RemoveThing(creature, 0);
-
-            //TODO: LEAF CREATURE STORAGE
-            
-	        //add the creature
-	        newTile.AddThing(creature);
-
-	        if (!teleport)
-            {
-		        if (oldPos.Y > newPos.Y)
-			        creature.Direction = Directions.North;
-		        else if (oldPos.Y < newPos.Y)
-			        creature.Direction = Directions.South;
-
-		        if (oldPos.X < newPos.X)
-			        creature.Direction = Directions.East;
-		        else if (oldPos.X > newPos.X)
-			        creature.Direction = Directions.West;
-	        }
-
-	        //send to client
-	        int i = 0;
             foreach (Creature spectator in list)
             {
                 Player tmpPlayer = spectator as Player;
-		        if (tmpPlayer != null)
+                if (tmpPlayer != null)
                 {
-			        //Use the correct stackpos
-			        int stackpos = oldStackPosVector[i++];
-			        if (stackpos != -1)
+                    if (tmpPlayer.CanSeeCreature(creature))
                     {
-				        tmpPlayer.SendCreatureMove(creature, newPos, newTile.GetStackposOfCreature(tmpPlayer, creature), oldPos, stackpos, teleport);
-			        }
-		        }
-	        }
+                        oldStackPosVector.Add(oldTile.GetClientIndexOfCreature(tmpPlayer, creature));
+                    }
+                    else
+                    {
+                        oldStackPosVector.Add(-1);
+                    }
+                }
+            }
 
-	        //event method
-	        foreach (Creature spectator in list)
+            //remove the creature
+            oldTile.RemoveThing(creature, 0);
+
+            //TODO: LEAF CREATURE STORAGE
+
+            //add the creature
+            newTile.AddThing(creature);
+
+            if (!teleport)
             {
-		        spectator.OnCreatureMove(creature, newTile, newPos, oldTile, oldPos, teleport);
-	        }
+                if (oldPos.Y > newPos.Y)
+                    creature.Direction = Directions.North;
+                else if (oldPos.Y < newPos.Y)
+                    creature.Direction = Directions.South;
 
-	        oldTile.PostRemoveNotification(creature, newTile, 0);
-	        newTile.PostAddNotification(creature, oldTile, 0);
+                if (oldPos.X < newPos.X)
+                    creature.Direction = Directions.East;
+                else if (oldPos.X > newPos.X)
+                    creature.Direction = Directions.West;
+            }
+
+            //send to client
+            int i = 0;
+            foreach (Creature spectator in list)
+            {
+                Player tmpPlayer = spectator as Player;
+                if (tmpPlayer != null)
+                {
+                    //Use the correct stackpos
+                    int stackpos = oldStackPosVector[i++];
+                    if (stackpos != -1)
+                    {
+                        tmpPlayer.SendCreatureMove(creature, newPos, newTile.GetStackposOfCreature(tmpPlayer, creature), oldPos, stackpos, teleport);
+                    }
+                }
+            }
+
+            //event method
+            foreach (Creature spectator in list)
+            {
+                spectator.OnCreatureMove(creature, newTile, newPos, oldTile, oldPos, teleport);
+            }
+
+            oldTile.PostRemoveNotification(creature, newTile, 0);
+            newTile.PostAddNotification(creature, oldTile, 0);
         }
 
         public static void GetSpectators(ref HashSet<Creature> list, Position position, bool multifloor = false, bool onlyPlayers = false,
@@ -632,41 +632,41 @@ namespace HerhangiOT.GameServer
 
             bool foundCache = false;
             bool cacheResult = false;
-             
+
             minRangeX = (minRangeX == 0 ? -MaxViewportX : -minRangeX);
             maxRangeX = (maxRangeX == 0 ? MaxViewportX : maxRangeX);
             minRangeY = (minRangeY == 0 ? -MaxViewportY : -minRangeY);
             maxRangeY = (maxRangeY == 0 ? MaxViewportY : maxRangeY);
 
-	        if (minRangeX == -MaxViewportX && maxRangeX == MaxViewportX && minRangeY == -MaxViewportY && maxRangeY == MaxViewportY && multifloor)
+            if (minRangeX == -MaxViewportX && maxRangeX == MaxViewportX && minRangeY == -MaxViewportY && maxRangeY == MaxViewportY && multifloor)
             {
-		        if (onlyPlayers)
+                if (onlyPlayers)
                 {
-		            if (PlayersSpectatorCache.ContainsKey(position))
-		            {
-		                if (list == null || list.Count == 0)
-		                    list = PlayersSpectatorCache[position];
-		                else
-		                {
-		                    list.UnionWith(PlayersSpectatorCache[position]);
-		                }
+                    if (PlayersSpectatorCache.ContainsKey(position))
+                    {
+                        if (list == null || list.Count == 0)
+                            list = PlayersSpectatorCache[position];
+                        else
+                        {
+                            list.UnionWith(PlayersSpectatorCache[position]);
+                        }
 
-		                foundCache = true;
-		            }
-		        }
+                        foundCache = true;
+                    }
+                }
 
-		        if (!foundCache)
+                if (!foundCache)
                 {
                     if (SpectatorCache.ContainsKey(position))
                     {
                         if (!onlyPlayers)
                         {
-                             if (list == null || list.Count == 0)
-		                        list = SpectatorCache[position];
-		                    else
-		                    {
-		                        list.UnionWith(SpectatorCache[position]);
-		                    }
+                            if (list == null || list.Count == 0)
+                                list = SpectatorCache[position];
+                            else
+                            {
+                                list.UnionWith(SpectatorCache[position]);
+                            }
                         }
                         else
                         {
@@ -679,170 +679,192 @@ namespace HerhangiOT.GameServer
                             }
                         }
 
-				        foundCache = true;
-			        }
+                        foundCache = true;
+                    }
                     else
                     {
-				        cacheResult = true;
-			        }
-		        }
-	        }
+                        cacheResult = true;
+                    }
+                }
+            }
 
-	        if (!foundCache) {
-		        int minRangeZ;
-		        int maxRangeZ;
+            if (!foundCache)
+            {
+                int minRangeZ;
+                int maxRangeZ;
 
-		        if (multifloor)
+                if (multifloor)
                 {
-			        if (position.Z > 7) {
-				        //underground
-				        //8->15
-			            minRangeZ = Math.Max(position.Z - 2, 0);
-			            maxRangeZ = Math.Min(position.Z + 2, MapMaxLayers - 1);
-			        } else if (position.Z == 6) {
-				        minRangeZ = 0;
-				        maxRangeZ = 8;
-			        } else if (position.Z == 7) {
-				        minRangeZ = 0;
-				        maxRangeZ = 9;
-			        } else {
-				        minRangeZ = 0;
-				        maxRangeZ = 7;
-			        }
-		        } else {
-			        minRangeZ = position.Z;
-			        maxRangeZ = position.Z;
-		        }
+                    if (position.Z > 7)
+                    {
+                        //underground
+                        //8->15
+                        minRangeZ = Math.Max(position.Z - 2, 0);
+                        maxRangeZ = Math.Min(position.Z + 2, MapMaxLayers - 1);
+                    }
+                    else if (position.Z == 6)
+                    {
+                        minRangeZ = 0;
+                        maxRangeZ = 8;
+                    }
+                    else if (position.Z == 7)
+                    {
+                        minRangeZ = 0;
+                        maxRangeZ = 9;
+                    }
+                    else
+                    {
+                        minRangeZ = 0;
+                        maxRangeZ = 7;
+                    }
+                }
+                else
+                {
+                    minRangeZ = position.Z;
+                    maxRangeZ = position.Z;
+                }
 
-		        GetSpectatorsInternal(ref list, position, minRangeX, maxRangeX, minRangeY, maxRangeY, minRangeZ, maxRangeZ, onlyPlayers);
+                GetSpectatorsInternal(ref list, position, minRangeX, maxRangeX, minRangeY, maxRangeY, minRangeZ, maxRangeZ, onlyPlayers);
 
-		        if (cacheResult) {
-			        if (onlyPlayers) {
-				        PlayersSpectatorCache[position] = list;
-			        } else {
-				        SpectatorCache[position] = list;
-			        }
-		        }
-	        }
+                if (cacheResult)
+                {
+                    if (onlyPlayers)
+                    {
+                        PlayersSpectatorCache[position] = list;
+                    }
+                    else
+                    {
+                        SpectatorCache[position] = list;
+                    }
+                }
+            }
         }
 
         public static bool PlaceCreature(Position centerPosition, Creature creature, bool extendedPos = false, bool forceLogin = false)
         {
-	        bool foundTile;
-	        bool placeInPZ;
+            bool foundTile;
+            bool placeInPZ;
 
-	        Tile tile = GetTile(centerPosition.X, centerPosition.Y, centerPosition.Z);
-	        if (tile != null)
-	        {
-	            placeInPZ = tile.Flags.HasFlag(TileFlags.ProtectionZone);
-		        ReturnTypes ret = tile.QueryAdd(0, creature, 1, CylinderFlags.IgnoreBlockItem);
-		        foundTile = forceLogin || ret == ReturnTypes.NoError;
-	        }
+            Tile tile = GetTile(centerPosition.X, centerPosition.Y, centerPosition.Z);
+            if (tile != null)
+            {
+                placeInPZ = tile.Flags.HasFlag(TileFlags.ProtectionZone);
+                ReturnTypes ret = tile.QueryAdd(0, creature, 1, CylinderFlags.IgnoreBlockItem);
+                foundTile = forceLogin || ret == ReturnTypes.NoError;
+            }
             else
             {
-		        placeInPZ = false;
-		        foundTile = false;
-	        }
+                placeInPZ = false;
+                foundTile = false;
+            }
 
-	        if (!foundTile)
+            if (!foundTile)
             {
-		        List<Tuple<int, int>> relList = (extendedPos ? ExtendedRelList : NormalRelList);
+                List<Tuple<int, int>> relList = (extendedPos ? ExtendedRelList : NormalRelList);
 
-		        if (extendedPos)
+                if (extendedPos)
                 {
                     relList.Shuffle(0, 5);
                     relList.Shuffle(5, 6);
-		        }
+                }
                 else
-		        {
-		            relList.Shuffle();
-		        }
+                {
+                    relList.Shuffle();
+                }
 
-		        foreach (Tuple<int, int> pos in relList) {
+                foreach (Tuple<int, int> pos in relList)
+                {
                     Position tryPos = new Position((ushort)(centerPosition.X + pos.Item1), (ushort)(centerPosition.Y + pos.Item2), centerPosition.Z);
 
-			        tile = GetTile(tryPos.X, tryPos.Y, tryPos.Z);
-			        if (tile == null || (placeInPZ && !tile.Flags.HasFlag(TileFlags.ProtectionZone)))
-				        continue;
+                    tile = GetTile(tryPos.X, tryPos.Y, tryPos.Z);
+                    if (tile == null || (placeInPZ && !tile.Flags.HasFlag(TileFlags.ProtectionZone)))
+                        continue;
 
-			        if (tile.QueryAdd(0, creature, 1, CylinderFlags.None) == ReturnTypes.NoError) {
-				        if (!extendedPos || IsSightClear(centerPosition, tryPos, false)) {
-					        foundTile = true;
-					        break;
-				        }
-			        }
-		        }
+                    if (tile.QueryAdd(0, creature, 1, CylinderFlags.None) == ReturnTypes.NoError)
+                    {
+                        if (!extendedPos || IsSightClear(centerPosition, tryPos, false))
+                        {
+                            foundTile = true;
+                            break;
+                        }
+                    }
+                }
 
-		        if (!foundTile) {
-			        return false;
-		        }
-	        }
+                if (!foundTile)
+                {
+                    return false;
+                }
+            }
 
-	        int index = 0;
-	        uint flags = 0;
-	        Item toItem = null;
+            int index = 0;
+            uint flags = 0;
+            Item toItem = null;
 
-	        //Cylinder* toCylinder = tile->queryDestination(index, *creature, &toItem, flags); //TODO
-	        //toCylinder->internalAddThing(creature);
+            //Cylinder* toCylinder = tile->queryDestination(index, *creature, &toItem, flags); //TODO
+            //toCylinder->internalAddThing(creature);
             tile.InternalAddThing(creature);
-	        tile.AddCreature(creature);
-	        return true;
+            tile.AddCreature(creature);
+            return true;
         }
 
         public static bool IsSightClear(Position fromPos, Position toPos, bool floorCheck)
         {
-	        if (floorCheck && fromPos.Z != toPos.Z)
-		        return false;
+            if (floorCheck && fromPos.Z != toPos.Z)
+                return false;
 
-	        // Cast two converging rays and see if either yields a result.
-	        return CheckSightLine(fromPos, toPos) || CheckSightLine(toPos, fromPos);
+            // Cast two converging rays and see if either yields a result.
+            return CheckSightLine(fromPos, toPos) || CheckSightLine(toPos, fromPos);
         }
 
         private static bool CheckSightLine(Position fromPos, Position toPos)
         {
-	        if (fromPos == toPos)
-		        return true;
+            if (fromPos == toPos)
+                return true;
 
-	        Position start = new Position(fromPos.Z > toPos.Z ? toPos : fromPos);
-	        Position destination = new Position(fromPos.Z > toPos.Z ? fromPos : toPos);
+            Position start = new Position(fromPos.Z > toPos.Z ? toPos : fromPos);
+            Position destination = new Position(fromPos.Z > toPos.Z ? fromPos : toPos);
 
-	        sbyte mx = (sbyte)(start.X < destination.X ? 1 : start.X == destination.X ? 0 : -1);
-	        sbyte my = (sbyte)(start.Y < destination.Y ? 1 : start.Y == destination.Y ? 0 : -1);
+            sbyte mx = (sbyte)(start.X < destination.X ? 1 : start.X == destination.X ? 0 : -1);
+            sbyte my = (sbyte)(start.Y < destination.Y ? 1 : start.Y == destination.Y ? 0 : -1);
 
-	        int A = Position.GetOffsetY(destination, start);
-	        int B = Position.GetOffsetX(start, destination);
-	        int C = -(A * destination.X + B * destination.Y);
+            int A = Position.GetOffsetY(destination, start);
+            int B = Position.GetOffsetX(start, destination);
+            int C = -(A * destination.X + B * destination.Y);
 
-	        while (start.X != destination.X || start.Y != destination.Y)
+            while (start.X != destination.X || start.Y != destination.Y)
             {
-		        int moveHor = Math.Abs(A * (start.X + mx) + B * (start.Y) + C);
-		        int moveVer = Math.Abs(A * (start.X) + B * (start.Y + my) + C);
+                int moveHor = Math.Abs(A * (start.X + mx) + B * (start.Y) + C);
+                int moveVer = Math.Abs(A * (start.X) + B * (start.Y + my) + C);
                 int moveCross = Math.Abs(A * (start.X + mx) + B * (start.Y + my) + C);
 
-		        if (start.Y != destination.Y && (start.X == destination.X || moveHor > moveVer || moveHor > moveCross)) {
-			        start.Y += (ushort)my;
-		        }
+                if (start.Y != destination.Y && (start.X == destination.X || moveHor > moveVer || moveHor > moveCross))
+                {
+                    start.Y += (ushort)my;
+                }
 
-		        if (start.X != destination.X && (start.Y == destination.Y || moveVer > moveHor || moveVer > moveCross)) {
-			        start.X += (ushort)mx;
-		        }
+                if (start.X != destination.X && (start.Y == destination.Y || moveVer > moveHor || moveVer > moveCross))
+                {
+                    start.X += (ushort)mx;
+                }
 
-		        Tile tile = GetTile(start.X, start.Y, start.Z);
-		        if (tile != null && tile.HasProperty(ItemProperties.BlockProjectile))
-			        return false;
-	        }
+                Tile tile = GetTile(start.X, start.Y, start.Z);
+                if (tile != null && tile.HasProperty(ItemProperties.BlockProjectile))
+                    return false;
+            }
 
-	        // now we need to perform a jump between floors to see if everything is clear (literally)
-	        while (start.Z != destination.Z) {
-		        Tile tile = GetTile(start.X, start.Y, start.Z);
-		        if (tile != null && tile.GetThingCount() > 0) {
-			        return false;
-		        }
+            // now we need to perform a jump between floors to see if everything is clear (literally)
+            while (start.Z != destination.Z)
+            {
+                Tile tile = GetTile(start.X, start.Y, start.Z);
+                if (tile != null && tile.GetThingCount() > 0)
+                {
+                    return false;
+                }
 
-		        start.Z++;
-	        }
+                start.Z++;
+            }
 
-	        return true;
+            return true;
         }
     }
 

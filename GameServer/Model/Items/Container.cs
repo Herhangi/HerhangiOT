@@ -15,7 +15,8 @@ namespace HerhangiOT.GameServer.Model.Items
         public bool IsUnlocked { get; protected set; }
         public bool HasPagination { get; protected set; }
 
-        public Container(ushort id) : base(id)
+        public Container(ushort id)
+            : base(id)
         {
             MaxSize = ItemManager.Templates[id].MaxItems;
             TotalWeight = 0;
@@ -24,7 +25,8 @@ namespace HerhangiOT.GameServer.Model.Items
             HasPagination = false;
         }
 
-        public Container(ushort id, ushort size) : base(id)
+        public Container(ushort id, ushort size)
+            : base(id)
         {
             MaxSize = size;
             TotalWeight = 0;
@@ -33,141 +35,142 @@ namespace HerhangiOT.GameServer.Model.Items
             HasPagination = false;
         }
 
-        public Container(Tile tile) : base((ushort)FixedItems.BrowseField)
+        public Container(Tile tile)
+            : base((ushort)FixedItems.BrowseField)
         {
-	        if (tile.Items != null)
+            if (tile.Items != null)
             {
-		        foreach (Item item in tile.Items)
+                foreach (Item item in tile.Items)
                 {
-			        if (item is Container || item.HasProperty(ItemProperties.Moveable))
+                    if (item is Container || item.HasProperty(ItemProperties.Moveable))
                     {
-				        ItemList.AddToFront(item);
-				        item.SetParent(this);
-			        }
-		        }
-	        }
+                        ItemList.AddToFront(item);
+                        item.SetParent(this);
+                    }
+                }
+            }
 
-	        MaxSize = 30;
-	        TotalWeight = 0;
-	        SerializationCount = 0;
-	        IsUnlocked = false;
-	        HasPagination = true;
-	        base.SetParent(tile);
+            MaxSize = 30;
+            TotalWeight = 0;
+            SerializationCount = 0;
+            IsUnlocked = false;
+            HasPagination = true;
+            base.SetParent(tile);
         }
 
         ~Container()
         {
             if (Id == (short)FixedItems.BrowseField)
             {
-		        Game.BrowseFields.Remove((Tile)Parent);
+                Game.BrowseFields.Remove((Tile)Parent);
 
-		        foreach (Item item in ItemList)
+                foreach (Item item in ItemList)
                 {
-			        item.SetParent(Parent);
-		        }
-	        }
-            else if(ItemList != null)
+                    item.SetParent(Parent);
+                }
+            }
+            else if (ItemList != null)
             {
-		        foreach (Item item in ItemList)
+                foreach (Item item in ItemList)
                 {
-			        item.SetParent(null);
-			        item.DecrementReferenceCounter();
-		        }
-	        }
+                    item.SetParent(null);
+                    item.DecrementReferenceCounter();
+                }
+            }
         }
-        
+
         public void AddItemBack(Item item)
         {
-	        AddItem(item);
-	        UpdateItemWeight(item.GetWeight());
+            AddItem(item);
+            UpdateItemWeight(item.GetWeight());
 
-	        //send change to client
-	        if (Parent != null)// && (getParent() != VirtualCylinder::virtualCylinder)) TODO: Virtual Cylinder
+            //send change to client
+            if (Parent != null)// && (getParent() != VirtualCylinder::virtualCylinder)) TODO: Virtual Cylinder
             {
-		        OnAddContainerItem(item);
-	        }
+                OnAddContainerItem(item);
+            }
         }
-        
+
         private void AddItem(Item item)
         {
-	        ItemList.AddToBack(item);
-	        item.SetParent(this);
+            ItemList.AddToBack(item);
+            item.SetParent(this);
         }
 
         public void ReplaceThing(int index, Thing thing)
         {
-	        Item item = thing as Item;
-	        if (item == null)
-		        return;
+            Item item = thing as Item;
+            if (item == null)
+                return;
 
-	        Item replacedItem = GetItemByIndex(index);
-	        if (replacedItem == null)
-		        return;
+            Item replacedItem = GetItemByIndex(index);
+            if (replacedItem == null)
+                return;
 
-	        ItemList[index] = item;
-	        item.SetParent(this);
-	        UpdateItemWeight(-(replacedItem.GetWeight()) + item.GetWeight());
+            ItemList[index] = item;
+            item.SetParent(this);
+            UpdateItemWeight(-(replacedItem.GetWeight()) + item.GetWeight());
 
-	        //send change to client
-	        if (Parent != null)
-		        OnUpdateContainerItem((ushort)index, replacedItem, item);
+            //send change to client
+            if (Parent != null)
+                OnUpdateContainerItem((ushort)index, replacedItem, item);
 
-	        replacedItem.SetParent(null);
+            replacedItem.SetParent(null);
         }
 
         public override void RemoveThing(Thing thing, uint count)
         {
-	        Item item = thing as Item;
-	        if (item == null)
-		        return;
+            Item item = thing as Item;
+            if (item == null)
+                return;
 
             int index = ItemList.IndexOf(item);
-	        if (index == -1)
-		        return;
+            if (index == -1)
+                return;
 
-	        if (item.IsStackable && count != item.Count)
+            if (item.IsStackable && count != item.Count)
             {
-		        byte newCount = (byte)Math.Max(0, item.Count - count); 
-		        uint oldWeight = item.GetWeight();
-		        item.Count = newCount;
-		        UpdateItemWeight(-oldWeight + item.GetWeight());
+                byte newCount = (byte)Math.Max(0, item.Count - count);
+                uint oldWeight = item.GetWeight();
+                item.Count = newCount;
+                UpdateItemWeight(-oldWeight + item.GetWeight());
 
-		        //send change to client
-		        if (Parent != null)
-			        OnUpdateContainerItem((ushort)index, item, item);
-	        }
+                //send change to client
+                if (Parent != null)
+                    OnUpdateContainerItem((ushort)index, item, item);
+            }
             else
             {
-		        UpdateItemWeight(-item.GetWeight());
+                UpdateItemWeight(-item.GetWeight());
 
-		        //send change to client
-		        if (Parent != null)
-			        OnRemoveContainerItem((ushort)index, item);
+                //send change to client
+                if (Parent != null)
+                    OnRemoveContainerItem((ushort)index, item);
 
-		        item.SetParent(null);
-		        ItemList.RemoveAt(index);
-	        }
+                item.SetParent(null);
+                ItemList.RemoveAt(index);
+            }
         }
 
         private void UpdateItemWeight(long diff)
         {
-	        TotalWeight = (uint)(TotalWeight + diff);
+            TotalWeight = (uint)(TotalWeight + diff);
 
             Container parentContainer = GetParentContainer();
-	        if (parentContainer != null)
+            if (parentContainer != null)
             {
-		        parentContainer.UpdateItemWeight(diff);
-	        }
+                parentContainer.UpdateItemWeight(diff);
+            }
         }
-        
+
         public Item GetItemByIndex(int index)
         {
-	        if (index >= MaxSize)
-		        return null;
-	        
+            if (index >= MaxSize)
+                return null;
+
             return ItemList[index];
         }
-        
+
         public override int GetThingIndex(Thing thing)
         {
             Item item = thing as Item;
@@ -177,68 +180,68 @@ namespace HerhangiOT.GameServer.Model.Items
 
         private Container GetParentContainer()
         {
-	        if (Parent == null)
-		        return null;
-	        
+            if (Parent == null)
+                return null;
+
             return Parent as Container;
         }
 
         #region On Container Change Operations
         private void OnAddContainerItem(Item item)
         {
-	        HashSet<Creature> spectators = new HashSet<Creature>();
-	        Map.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
+            HashSet<Creature> spectators = new HashSet<Creature>();
+            Map.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
 
-	        //send to client
-	        foreach (Player spectator in spectators)
-	        {
-	            spectator.SendAddContainerItem(this, item);
-	        }
-
-	        //event methods
-	        foreach (Player spectator in spectators)
+            //send to client
+            foreach (Player spectator in spectators)
             {
-		        spectator.OnAddContainerItem(item);
-	        }
+                spectator.SendAddContainerItem(this, item);
+            }
+
+            //event methods
+            foreach (Player spectator in spectators)
+            {
+                spectator.OnAddContainerItem(item);
+            }
         }
 
         private void OnUpdateContainerItem(ushort index, Item oldItem, Item newItem)
         {
-	        HashSet<Creature> spectators = new HashSet<Creature>();
-	        Map.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
+            HashSet<Creature> spectators = new HashSet<Creature>();
+            Map.GetSpectators(ref spectators, GetPosition(), false, true, 2, 2, 2, 2);
 
-	        //send to client
-	        foreach (Player spectator in spectators)
+            //send to client
+            foreach (Player spectator in spectators)
             {
-		        spectator.SendUpdateContainerItem(this, index, newItem);
-	        }
+                spectator.SendUpdateContainerItem(this, index, newItem);
+            }
 
-	        //event methods
-	        foreach (Player spectator in spectators)
+            //event methods
+            foreach (Player spectator in spectators)
             {
-		        spectator.OnUpdateContainerItem(this, oldItem, newItem);
-	        }
+                spectator.OnUpdateContainerItem(this, oldItem, newItem);
+            }
         }
 
         private void OnRemoveContainerItem(ushort index, Item item)
         {
-	        HashSet<Creature> list = new HashSet<Creature>();
-	        Map.GetSpectators(ref list, GetPosition(), false, true, 2, 2, 2, 2);
+            HashSet<Creature> list = new HashSet<Creature>();
+            Map.GetSpectators(ref list, GetPosition(), false, true, 2, 2, 2, 2);
 
-	        //send change to client
-	        foreach (Player spectator in list)
+            //send change to client
+            foreach (Player spectator in list)
             {
-		        spectator.SendRemoveContainerItem(this, index);
-	        }
+                spectator.SendRemoveContainerItem(this, index);
+            }
 
-	        //event methods
-	        foreach (Player spectator in list)
+            //event methods
+            foreach (Player spectator in list)
             {
-		        spectator.OnRemoveContainerItem(this, item);
-	        }
+                spectator.OnRemoveContainerItem(this, item);
+            }
         }
         #endregion
-        
+
         public bool IsHoldingItem(Item item)
         {
             return ItemList.IndexOf(item) != -1;
@@ -246,7 +249,7 @@ namespace HerhangiOT.GameServer.Model.Items
 
         public bool HasParent()
         {
-            return Id != (short) FixedItems.BrowseField && !(GetParent() is Player);
+            return Id != (short)FixedItems.BrowseField && !(GetParent() is Player);
         }
     }
 }

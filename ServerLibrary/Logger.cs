@@ -38,7 +38,7 @@ namespace HerhangiOT.ServerLibrary
 
             int elapsed = Environment.TickCount - _operationStartedOn;
             string text = String.Format("Done ({0:0.000}s)", elapsed / 1000.0);
-            
+
             Console.Write(new string('.', Console.WindowWidth - Console.CursorLeft - 14));
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine(text);
@@ -55,7 +55,7 @@ namespace HerhangiOT.ServerLibrary
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Error!");
             Console.ResetColor();
-            if(!string.IsNullOrWhiteSpace(errorText))
+            if (!string.IsNullOrWhiteSpace(errorText))
                 Console.WriteLine(errorText);
         }
 
