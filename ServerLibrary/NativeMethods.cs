@@ -11,7 +11,7 @@ namespace HerhangiOT.ServerLibrary
         CTRL_SHUTDOWN_EVENT
     }
 
-    public class ExternalMethods
+    public class NativeMethods
     {
         public delegate void ConsoleCtrlHandlerDelegate(ConsoleCtrlEvents CtrlEvent);
 

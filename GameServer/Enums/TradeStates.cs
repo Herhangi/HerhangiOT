@@ -2,10 +2,10 @@
 {
     public enum TradeStates : byte
     {
-	    None,
-	    Initiated,
-	    Accept,
-	    Acknowledge,
-	    Transfer,
+        None,
+        Initiated,
+        Accept,
+        Acknowledge,
+        Transfer,
     }
 }

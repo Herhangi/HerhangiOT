@@ -18,7 +18,7 @@ namespace HerhangiOT.ServerLibrary.Database
                 _connection = new SqlConnection(ConfigManager.Instance[ConfigStr.DatabaseMssqlConnectionString]);
                 _connection.Open();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 
                 throw;

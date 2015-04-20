@@ -13,8 +13,8 @@ namespace HerhangiOT.ScriptLibrary
 
     public class ScriptManager
     {
-        protected  static List<Assembly> RemovableAssemblies = new List<Assembly>(); 
-        protected static Dictionary<ExternalDll, Assembly> ReferencedAssemblies = new Dictionary<ExternalDll, Assembly>(); 
+        protected static List<Assembly> RemovableAssemblies = new List<Assembly>();
+        protected static Dictionary<ExternalDll, Assembly> ReferencedAssemblies = new Dictionary<ExternalDll, Assembly>();
         public static Dictionary<string, Action<string[]>> CommandLineOperations = new Dictionary<string, Action<string[]>>();
 
         public static bool LoadCsScripts()
@@ -38,14 +38,14 @@ namespace HerhangiOT.ScriptLibrary
             redFromCache = false;
             if (!Directory.Exists(path))
             {
-                Logger.LogOperationFailed("CsScript directory could not be found: "+path+"!");
+                Logger.LogOperationFailed("CsScript directory could not be found: " + path + "!");
                 assembly = null;
                 return false;
             }
             string[] files = Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories);
             if (files.Length == 0)
             {
-                Logger.LogOperationFailed("No files found in CsScript directory: "+path+"!");
+                Logger.LogOperationFailed("No files found in CsScript directory: " + path + "!");
                 assembly = null;
                 return false;
             }
@@ -82,7 +82,7 @@ namespace HerhangiOT.ScriptLibrary
             {
                 foreach (string assemblyName in File.ReadAllLines(Path.Combine(path, "assembly")))
                 {
-                    if(!string.IsNullOrWhiteSpace(assemblyName) && !assemblyName.StartsWith("//"))
+                    if (!string.IsNullOrWhiteSpace(assemblyName) && !assemblyName.StartsWith("//"))
                         referencedAssemblies.Add(assemblyName);
                 }
             }
@@ -125,7 +125,7 @@ namespace HerhangiOT.ScriptLibrary
             bool readFromCache;
 
             Assembly cloAssembly;
-            
+
             if (!CompileCsScripts("Scripts/CLO", "CLO.*.dll", null, out cloAssembly, out readFromCache, forceCompilation))
                 return false;
 
@@ -157,7 +157,7 @@ namespace HerhangiOT.ScriptLibrary
                 return false;
             }
 
-            if(readFromCache)
+            if (readFromCache)
                 Logger.LogOperationCached();
             else
                 Logger.LogOperationDone();
@@ -176,7 +176,7 @@ namespace HerhangiOT.ScriptLibrary
                 try
                 {
                     File.Delete(files[i]);
-                    File.Delete(files[i].Replace(".dll", ".pdb"));   
+                    File.Delete(files[i].Replace(".dll", ".pdb"));
                 }
                 catch
                 {

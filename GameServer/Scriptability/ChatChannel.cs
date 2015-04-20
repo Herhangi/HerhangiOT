@@ -11,7 +11,7 @@ namespace HerhangiOT.GameServer.Scriptability
         public string Name { get; protected set; }
         public bool IsPublicChannel { get; protected set; }
         public Dictionary<uint, Player> Users { get; protected set; }
-        public Dictionary<uint, Player> Invites { get; protected set; } 
+        public Dictionary<uint, Player> Invites { get; protected set; }
 
         public ChatChannel()
         {

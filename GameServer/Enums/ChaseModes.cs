@@ -2,7 +2,7 @@
 {
     public enum ChaseModes : byte
     {
-	    StandStill = 0,
-	    Follow = 1,
+        StandStill = 0,
+        Follow = 1,
     }
 }

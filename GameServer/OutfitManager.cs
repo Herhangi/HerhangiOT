@@ -16,8 +16,8 @@ namespace HerhangiOT.GameServer
         {
             Logger.LogOperationStart("Loading Outfits");
 
-            Outfits = new List<OutfitTemplate>[(int)Genders.Last+1];
-            for(Genders i = Genders.First; i <= Genders.Last; i++)
+            Outfits = new List<OutfitTemplate>[(int)Genders.Last + 1];
+            for (Genders i = Genders.First; i <= Genders.Last; i++)
                 Outfits[(int)i] = new List<OutfitTemplate>();
 
             if (LoadFromXml())
@@ -37,10 +37,10 @@ namespace HerhangiOT.GameServer
 
                 foreach (XmlNode outfitNode in doc.GetElementsByTagName("outfit"))
                 {
-                    if(outfitNode.Attributes == null) continue;
+                    if (outfitNode.Attributes == null) continue;
 
                     XmlAttribute enabledAttribute = outfitNode.Attributes["enabled"];
-                    if(enabledAttribute == null || !Tools.ConvertLuaBoolean(enabledAttribute.InnerText)) continue;
+                    if (enabledAttribute == null || !Tools.ConvertLuaBoolean(enabledAttribute.InnerText)) continue;
 
                     XmlAttribute typeAttribute = outfitNode.Attributes["type"];
                     if (typeAttribute == null)
@@ -50,7 +50,7 @@ namespace HerhangiOT.GameServer
                     }
 
                     ushort type = ushort.Parse(typeAttribute.InnerText);
-                    if (type > (ushort) Genders.Last)
+                    if (type > (ushort)Genders.Last)
                     {
                         Logger.Log(LogLevels.Warning, "OutfitManager: Invalid outfit type: " + type);
                         continue;

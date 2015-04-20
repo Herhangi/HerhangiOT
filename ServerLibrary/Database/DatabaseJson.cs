@@ -8,9 +8,7 @@ namespace HerhangiOT.ServerLibrary.Database
     class DatabaseJson : Database
     {
         public DatabaseJson()
-        {
-            
-        }
+        { }
 
         public override List<GameWorldModel> GetGameWorlds()
         {
@@ -22,7 +20,7 @@ namespace HerhangiOT.ServerLibrary.Database
 
         public override AccountModel GetAccountInformation(string accountName, string password)
         {
-            string filePath = ConfigManager.Instance[ConfigStr.DatabaseJsonAccountPath] + accountName + ".json"; 
+            string filePath = ConfigManager.Instance[ConfigStr.DatabaseJsonAccountPath] + accountName + ".json";
             if (!File.Exists(filePath))
             {
                 return null;

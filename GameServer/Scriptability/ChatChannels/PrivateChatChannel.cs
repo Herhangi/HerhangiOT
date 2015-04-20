@@ -6,7 +6,8 @@ namespace HerhangiOT.GameServer.Scriptability.ChatChannels
 {
     public class PrivateChatChannel : ChatChannel
     {
-        public PrivateChatChannel(ushort channelId, string channelName) : base(channelId, channelName)
+        public PrivateChatChannel(ushort channelId, string channelName)
+            : base(channelId, channelName)
         {
             Invites = new Dictionary<uint, Player>();
         }
@@ -19,13 +20,13 @@ namespace HerhangiOT.GameServer.Scriptability.ChatChannels
 
         public void InvitePlayer(Player invitor, Player invitedPlayer)
         {
-            if(Invites.ContainsKey(invitedPlayer.CharacterId))
+            if (Invites.ContainsKey(invitedPlayer.CharacterId))
                 return;
 
             Invites[invitedPlayer.CharacterId] = invitedPlayer;
 
             invitedPlayer.SendTextMessage(MessageTypes.InfoDescription, string.Format("{0} invites you to {1} private chat channel.", invitor.CharacterName, GenderStringifier.Stringify(invitor)));
-            
+
             invitor.SendTextMessage(MessageTypes.InfoDescription, string.Format("{0} has been invited.", invitedPlayer.CharacterName));
 
             foreach (Player user in Users.Values)
@@ -35,7 +36,7 @@ namespace HerhangiOT.GameServer.Scriptability.ChatChannels
         }
         public void ExcludePlayer(Player player, Player excludedPlayer)
         {
-            if(!RemoveInvite(excludedPlayer.CharacterId))
+            if (!RemoveInvite(excludedPlayer.CharacterId))
                 return;
 
             RemoveUser(excludedPlayer);
@@ -56,10 +57,10 @@ namespace HerhangiOT.GameServer.Scriptability.ChatChannels
 
         public void CloseChannel()
         {
-	        foreach (Player user in Users.Values)
+            foreach (Player user in Users.Values)
             {
                 user.SendClosePrivate(Id);
-	        }
+            }
         }
     }
 }

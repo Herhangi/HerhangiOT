@@ -62,7 +62,7 @@ namespace HerhangiOT.LoginServer
 
                     if (LoginServer.GameServerConnections.ContainsKey(gameServerId))
                     {
-                        LoginServer.GameServerConnections[gameServerId].Disconnect("NEW_CONNECTION_REPLACEMENT", Constants.CLIENT_VERSION_MIN);
+                        LoginServer.GameServerConnections[gameServerId].Disconnect("NEW_CONNECTION_REPLACEMENT", Constants.ClientVersionMin);
                         LoginServer.GameServerConnections.Remove(gameServerId);
                         Logger.Log(LogLevels.Warning, "SECRET: Game server connection replaced! ID: " + gameServerId);
                     }

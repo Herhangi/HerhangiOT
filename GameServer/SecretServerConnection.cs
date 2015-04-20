@@ -25,7 +25,7 @@ namespace HerhangiOT.GameServer
 
         protected override void ProcessFirstMessage(bool isChecksummed)
         {
-            
+
         }
 
         protected override void ProcessMessage()
@@ -99,7 +99,7 @@ namespace HerhangiOT.GameServer
             Stream.Write(OutMessage.Buffer, OutMessage.HeaderPosition, OutMessage.Length);
         }
 
-        
+
         #region Packet Processors
         private static void ProcessAuthenticationPacket()
         {

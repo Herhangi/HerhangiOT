@@ -22,9 +22,9 @@ namespace HerhangiOT.LoginServer
             InMessage.GetUInt16(); //Client OS
             Version = InMessage.GetUInt16(); //Client Version
 
-            if (Version < Constants.CLIENT_VERSION_MIN || Version > Constants.CLIENT_VERSION_MAX)
+            if (Version < Constants.ClientVersionMin || Version > Constants.ClientVersionMax)
             {
-                Disconnect("Only clients with protocol " + Constants.CLIENT_VERSION_STR + " allowed!", Version);
+                Disconnect("Only clients with protocol " + Constants.ClientVersionStr + " allowed!", Version);
                 return;
             }
 

@@ -106,7 +106,7 @@ namespace HerhangiOT.GameServer
                     {
                         if (!PrivateChannels.ContainsKey(i))
                         {
-                            PrivateChatChannel newChannel =  new PrivateChatChannel(i, string.Format("{0}'s Channel", player.CharacterName)){ Owner = player.CharacterId };
+                            PrivateChatChannel newChannel = new PrivateChatChannel(i, string.Format("{0}'s Channel", player.CharacterName)) { Owner = player.CharacterId };
                             PrivateChannels[i] = newChannel;
                             return newChannel;
                         }
@@ -118,9 +118,9 @@ namespace HerhangiOT.GameServer
 
         public static bool DeleteChannel(Player player, ushort channelId)
         {
-	        switch (channelId)
+            switch (channelId)
             {
-		        case Constants.ChatChannelGuild:
+                case Constants.ChatChannelGuild:
                     //Guild* guild = player.getGuild(); //TODO: GUILD
                     //if (!guild) {
                     //    return false;
@@ -133,9 +133,9 @@ namespace HerhangiOT.GameServer
 
                     //delete it->second;
                     //guildChannels.erase(it);
-			        break;
+                    break;
 
-		        case Constants.ChatChannelParty:
+                case Constants.ChatChannelParty:
                     //Party* party = player.getParty(); //TODO: PARTY
                     //if (!party) {
                     //    return false;
@@ -148,45 +148,45 @@ namespace HerhangiOT.GameServer
 
                     //delete it->second;
                     //partyChannels.erase(it);
-			        break;
+                    break;
 
-		        default:
+                default:
                     PrivateChatChannel channel;
                     if (!PrivateChannels.TryGetValue(channelId, out channel))
                         return false;
-                    
+
                     channel.CloseChannel();
                     return PrivateChannels.Remove(channelId);
-	        }
-	        return true;
+            }
+            return true;
         }
 
         public static ChatChannel AddUserToChannel(Player player, ushort channelId)
         {
-	        ChatChannel channel = GetChannel(player, channelId);
-	        if (channel != null && channel.AddUser(player))
+            ChatChannel channel = GetChannel(player, channelId);
+            if (channel != null && channel.AddUser(player))
             {
-		        return channel;
-	        }
-	        return null;
+                return channel;
+            }
+            return null;
         }
         public static bool RemoveUserFromChannel(Player player, ushort channelId)
         {
-	        ChatChannel channel = GetChannel(player, channelId);
-	        if (channel == null || !channel.RemoveUser(player))
-		        return false;
+            ChatChannel channel = GetChannel(player, channelId);
+            if (channel == null || !channel.RemoveUser(player))
+                return false;
 
-	        if (channel.Owner == player.CharacterId)
-		        DeleteChannel(player, channelId);
-	        
+            if (channel.Owner == player.CharacterId)
+                DeleteChannel(player, channelId);
+
             return true;
         }
         public static void RemoveUserFromAllChannels(Player player)
         {
-	        foreach (ChatChannel channel in NormalChannels.Values)
+            foreach (ChatChannel channel in NormalChannels.Values)
             {
-		        channel.RemoveUser(player);
-	        }
+                channel.RemoveUser(player);
+            }
 
             //for (const auto& it : partyChannels) { //TODO: PARTY
             //    it.second->removeUser(player);
@@ -196,48 +196,48 @@ namespace HerhangiOT.GameServer
             //    it.second->removeUser(player);
             //}
 
-	        foreach (PrivateChatChannel pChannel in PrivateChannels.Values) //TODO: I THINK THIS MUST BE IMPROVED WITH PLAYER PARTY CACHING
-	        {
-	            pChannel.RemoveInvite(player.CharacterId);
-	            pChannel.RemoveUser(player);
+            foreach (PrivateChatChannel pChannel in PrivateChannels.Values) //TODO: I THINK THIS MUST BE IMPROVED WITH PLAYER PARTY CACHING
+            {
+                pChannel.RemoveInvite(player.CharacterId);
+                pChannel.RemoveUser(player);
 
-		        if (pChannel.Owner == player.CharacterId)
+                if (pChannel.Owner == player.CharacterId)
                 {
-			        DeleteChannel(player, pChannel.Id);
-		        }
-	        }
+                    DeleteChannel(player, pChannel.Id);
+                }
+            }
         }
 
         public static bool TalkToChannel(Player player, SpeakTypes type, string text, ushort channelId)
         {
-	        ChatChannel channel = GetChannel(player, channelId);
-	        if (channel == null)
-		        return false;
+            ChatChannel channel = GetChannel(player, channelId);
+            if (channel == null)
+                return false;
 
-	        if (channelId == Constants.ChatChannelGuild)
+            if (channelId == Constants.ChatChannelGuild)
             {
                 //if (player.getGuildLevel() > 1) { //TODO: GUILD
                 //    type = TALKTYPE_CHANNEL_O;
                 //} else if (type != TALKTYPE_CHANNEL_Y) {
                 //    type = TALKTYPE_CHANNEL_Y;
                 //}
-	        }
+            }
             else if (type != SpeakTypes.ChannelY && (channelId == Constants.ChatChannelPrivate || channelId == Constants.ChatChannelParty))
             {
-		        type = SpeakTypes.ChannelY;
-	        }
+                type = SpeakTypes.ChannelY;
+            }
 
-	        if (!channel.OnSpeak(player, ref type, text))
+            if (!channel.OnSpeak(player, ref type, text))
             {
-		        return false;
-	        }
+                return false;
+            }
 
-	        return channel.Talk(player, type, text);
+            return channel.Talk(player, type, text);
         }
-        
+
         public static List<ChatChannel> GetChannelList(Player player)
         {
-	        List<ChatChannel> list = new List<ChatChannel>();
+            List<ChatChannel> list = new List<ChatChannel>();
 
             //if (player.getGuild()) //TODO: GUILD
             //{
@@ -264,35 +264,35 @@ namespace HerhangiOT.GameServer
             //    }
             //}
 
-	        foreach (ChatChannel nChannel in NormalChannels.Values)
+            foreach (ChatChannel nChannel in NormalChannels.Values)
             {
-                if(nChannel.CanJoin(player))
+                if (nChannel.CanJoin(player))
                     list.Add(nChannel);
-	        }
+            }
 
-	        bool hasPrivate = false;
-	        foreach (PrivateChatChannel pChannel in PrivateChannels.Values) //TODO: THIS CAN BE IMPROVED WITH CHAT CHANNEL CACHING
+            bool hasPrivate = false;
+            foreach (PrivateChatChannel pChannel in PrivateChannels.Values) //TODO: THIS CAN BE IMPROVED WITH CHAT CHANNEL CACHING
             {
-			    uint guid = player.CharacterId;
-			    if (pChannel.IsInvited(guid))
-				    list.Add(pChannel);
+                uint guid = player.CharacterId;
+                if (pChannel.IsInvited(guid))
+                    list.Add(pChannel);
 
-			    if (pChannel.Owner == guid)
-				    hasPrivate = true;
-	        }
+                if (pChannel.Owner == guid)
+                    hasPrivate = true;
+            }
 
-	        if (!hasPrivate && player.IsPremium())
+            if (!hasPrivate && player.IsPremium())
             {
-		        list.Add(DummyPrivate);
-	        }
-	        return list;
+                list.Add(DummyPrivate);
+            }
+            return list;
         }
 
         public static ChatChannel GetChannel(Player player, ushort channelId)
         {
-	        switch (channelId)
+            switch (channelId)
             {
-		        case Constants.ChatChannelGuild:
+                case Constants.ChatChannelGuild:
                     //Guild* guild = player.getGuild(); //TODO: GUILD
                     //if (guild) {
                     //    auto it = guildChannels.find(guild->getId());
@@ -300,9 +300,9 @@ namespace HerhangiOT.GameServer
                     //        return it->second;
                     //    }
                     //}
-			        break;
+                    break;
 
-		        case Constants.ChatChannelParty:
+                case Constants.ChatChannelParty:
                     //Party* party = player.getParty(); //TODO: PARTY
                     //if (party) {
                     //    auto it = partyChannels.find(party);
@@ -310,9 +310,9 @@ namespace HerhangiOT.GameServer
                     //        return it->second;
                     //    }
                     //}
-			        break;
+                    break;
 
-		        default:
+                default:
                     ChatChannel channel;
                     if (NormalChannels.TryGetValue(channelId, out channel))
                     {
@@ -320,16 +320,16 @@ namespace HerhangiOT.GameServer
                             return null;
                         return channel;
                     }
-                    
+
                     PrivateChatChannel pChannel;
                     if (PrivateChannels.TryGetValue(channelId, out pChannel))
                     {
                         if (pChannel.IsInvited(player.CharacterId))
                             return pChannel;
                     }
-			        break;
-	        }
-	        return null;
+                    break;
+            }
+            return null;
         }
         public static ChatChannel GetChannelById(ushort channelId)
         {

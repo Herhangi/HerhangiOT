@@ -6,7 +6,8 @@ namespace HerhangiOT.GameServer.Model.Items
     {
         private long _creationTime;
 
-        public MagicField(ushort id) : base(id)
+        public MagicField(ushort id)
+            : base(id)
         {
             _creationTime = Tools.GetSystemMilliseconds();
         }
