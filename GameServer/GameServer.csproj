@@ -98,15 +98,24 @@
     <None Include="Data\ChatChannels\GamemasterChannel.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="Combat.cs" />
+    <Compile Include="Enums\BlockTypes.cs" />
     <Compile Include="Enums\ChaseModes.cs" />
     <Compile Include="Enums\ChatChannelEvents.cs" />
     <Compile Include="Enums\ClientFluidTypes.cs" />
+    <Compile Include="Enums\CombatOrigins.cs" />
+    <Compile Include="Enums\ConditionAttributes.cs" />
+    <Compile Include="Enums\ConditionIds.cs" />
+    <Compile Include="Enums\ConditionParameters.cs" />
     <Compile Include="Enums\CylinderLinks.cs" />
     <Compile Include="Enums\FightModes.cs" />
+    <Compile Include="Enums\IconFlags.cs" />
     <Compile Include="Enums\MessageTypes.cs" />
+    <Compile Include="Enums\RaceTypes.cs" />
     <Compile Include="Enums\SecureModes.cs" />
     <Compile Include="Enums\Slots.cs" />
     <Compile Include="Enums\SpeakTypes.cs" />
+    <Compile Include="Enums\SpellGroups.cs" />
     <Compile Include="Enums\TextColors.cs" />
     <Compile Include="Enums\TradeStates.cs" />
     <Compile Include="Enums\ZoneTypes.cs" />
@@ -114,7 +123,21 @@
     <Compile Include="GameConnection.cs" />
     <Compile Include="ItemManager.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="Model\CombatDamage.cs" />
+    <Compile Include="Model\Condition.cs" />
+    <Compile Include="Model\Conditions\ConditionAttributes.cs" />
+    <Compile Include="Model\Conditions\ConditionDamage.cs" />
+    <Compile Include="Model\Conditions\ConditionGeneric.cs" />
+    <Compile Include="Model\Conditions\ConditionInvisible.cs" />
+    <Compile Include="Model\Conditions\ConditionLight.cs" />
+    <Compile Include="Model\Conditions\ConditionOutfit.cs" />
+    <Compile Include="Model\Conditions\ConditionRegeneration.cs" />
+    <Compile Include="Model\Conditions\ConditionSoul.cs" />
+    <Compile Include="Model\Conditions\ConditionSpeed.cs" />
+    <Compile Include="Model\Conditions\ConditionSpellCooldown.cs" />
+    <Compile Include="Model\Conditions\ConditionSpellGroupCooldown.cs" />
     <Compile Include="Model\Groups.cs" />
+    <Compile Include="Model\IntervalInfo.cs" />
     <Compile Include="Model\Items\DepotChest.cs" />
     <Compile Include="Model\Npc.cs" />
     <Compile Include="Model\TextMessage.cs" />
@@ -192,8 +215,8 @@
     <Compile Include="Model\Thing.cs" />
     <Compile Include="Model\Tile.cs" />
     <Compile Include="Model\Town.cs" />
-    <Compile Include="Model\Vocation.cs" />
-    <Compile Include="Model\Vocations\VocationNone.cs" />
+    <Compile Include="Scriptability\Vocation.cs" />
+    <Compile Include="Scriptability\Vocations\VocationNone.cs" />
     <Compile Include="SecretServerConnection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

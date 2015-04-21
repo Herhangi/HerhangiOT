@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HerhangiOT.GameServer.Enums;
+using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
@@ -31,11 +33,13 @@ namespace HerhangiOT.GameServer.Model
 
         public virtual ushort Health { get; protected set; }
         public virtual ushort HealthMax { get; protected set; }
+        public virtual ushort Mana { get; protected set; }
+        public virtual ushort ManaMax { get; protected set; }
         public Directions Direction { get; set; }
 
-        public Outfit CurrentOutfit { get; protected set; }
+        public Outfit CurrentOutfit { get; set; }
         public Outfit DefaultOutfit { get; protected set; }
-        public LightInfo InternalLight { get; protected set; }
+        public LightInfo InternalLight { get; set; }
 
         public int BaseSpeed { get; protected set; }
         public int VarSpeed { get; protected set; }
@@ -46,6 +50,8 @@ namespace HerhangiOT.GameServer.Model
         public Creature Master { get; protected set; }
         public Creature FollowCreature { get; protected set; }
         public List<Creature> Summons { get; protected set; }
+
+        public List<Condition> Conditions { get; protected set; } 
 
         public bool LootDrop { get; protected set; }
         public bool SkillLoss { get; set; }
@@ -61,6 +67,7 @@ namespace HerhangiOT.GameServer.Model
 
         public uint BlockTicks { get; protected set; }
         public uint WalkUpdateTicks { get; protected set; }
+        public uint LastHitCreature { get; protected set; }
         public uint BlockCount { get; protected set; }
         public long LastStep { get; protected set; }
         public uint LastStepCost { get; protected set; }
@@ -75,6 +82,7 @@ namespace HerhangiOT.GameServer.Model
             for (int i = 0; i < MapWalkHeight; i++)
                 LocalMapCache[i] = new bool[MapWalkWidth];
             Summons = new List<Creature>();
+            Conditions = new List<Condition>();
         }
 
         protected virtual bool UseCacheMap()
@@ -248,18 +256,24 @@ namespace HerhangiOT.GameServer.Model
             return false; //TODO: FILL METHOD
         }
 
-        public void ExecuteConditions(uint interval)
-        {
-            //TODO: Conditions
-        }
-
         public virtual SpeechBubbles GetSpeechBubble()
         {
             return SpeechBubbles.None;
         }
 
+        public virtual LightInfo GetCreatureLight()
+        {
+            return InternalLight;
+        }
+        public virtual void SetNormalCreatureLight()
+        {
+	        InternalLight.Level = 0;
+	        InternalLight.Color = 0;
+        }
+
         public abstract CreatureTypes GetCreatureType();
         public abstract string GetName();
+        public abstract string GetNameDescription();
         public abstract void AddList();
         public abstract void RemoveList();
         public abstract void SetID();
@@ -285,6 +299,9 @@ namespace HerhangiOT.GameServer.Model
             //    }
             //}
         }
+
+		public virtual void OnBlockHit() { }
+		public virtual void OnAttackedCreatureBlockHit(BlockTypes blockType) { }
 
         public virtual void OnCreatureSay(Creature creature, SpeakTypes type, string text) { }
 
@@ -448,7 +465,6 @@ namespace HerhangiOT.GameServer.Model
                     {
                         Tile tile;
                         Position myPos = GetPosition();
-                        Position pos;
 
                         if (oldPos.Y > newPos.Y)
                         { //north
@@ -595,6 +611,22 @@ namespace HerhangiOT.GameServer.Model
             }
         }
 
+		public void SetSpeed(int varSpeedDelta)
+        {
+			int oldSpeed = Speed;
+			VarSpeed = varSpeedDelta;
+
+			if (Speed <= 0)
+            {
+				StopEventWalk();
+				CancelNextWalk = true;
+			}
+            else if (oldSpeed <= 0 && WalkDirections.Count != 0)
+            {
+				AddEventWalk();
+			}
+		}
+
         private void AddEventWalk(bool firstStep = false)
         {
             CancelNextWalk = false;
@@ -717,13 +749,155 @@ namespace HerhangiOT.GameServer.Model
             OnFollowCreature(creature);
             return true;
         }
+        public virtual BlockTypes BlockHit(Creature attacker, CombatTypeFlags combatType, ref int damage, bool checkDefense = false, bool checkArmor = false, bool field  = false)
+        {
+	        BlockTypes blockType = BlockTypes.None;
+
+	        if (IsImmune(combatType))
+            {
+		        damage = 0;
+		        blockType = BlockTypes.Immunity;
+	        }
+            else if (checkDefense || checkArmor)
+            {
+		        bool hasDefense = false;
+
+		        if (BlockCount > 0)
+                {
+			        --BlockCount;
+			        hasDefense = true;
+		        }
+
+		        if (checkDefense && hasDefense)
+                {
+			        int defense = GetDefense();
+			        damage -= Game.RNG.Next(defense / 2, defense);
+			        
+                    if (damage <= 0)
+                    {
+				        damage = 0;
+				        blockType = BlockTypes.Defense;
+				        checkArmor = false;
+			        }
+		        }
+
+		        if (checkArmor)
+                {
+			        int armorValue = GetArmor();
+			        if (armorValue > 1)
+                    {
+				        double armorFormula = armorValue * 0.475;
+				        int armorReduction = (int)Math.Ceiling(armorFormula);
+				        damage -= Game.RNG.Next(armorReduction, armorReduction + (int)Math.Floor(armorFormula));
+			        }
+                    else if (armorValue == 1)
+                    {
+				        --damage;
+			        }
+
+			        if (damage <= 0)
+                    {
+				        damage = 0;
+				        blockType = BlockTypes.Armor;
+			        }
+		        }
+
+		        if (hasDefense && blockType != BlockTypes.None)
+                {
+			        OnBlockHit();
+		        }
+	        }
+
+	        if (attacker != null)
+            {
+		        attacker.OnAttackedCreature(this);
+		        attacker.OnAttackedCreatureBlockHit(blockType);
+	        }
+
+	        OnAttacked();
+	        return blockType;
+        }
+
+        protected virtual void OnAddCondition(ConditionFlags type)
+        {
+            if (type == ConditionFlags.Paralyze && HasCondition(ConditionFlags.Haste))
+            {
+                RemoveCondition(ConditionFlags.Haste);
+            }
+            else if (type == ConditionFlags.Haste && HasCondition(ConditionFlags.Paralyze))
+            {
+                RemoveCondition(ConditionFlags.Paralyze);
+            }
+        }
+        protected virtual void OnAddCombatCondition(ConditionFlags type) { }
+        protected virtual void OnEndCondition(ConditionFlags type) { }
+        public void OnTickCondition(ConditionFlags type, ref bool bRemove)
+        {
+            MagicField field = Parent.GetMagicFieldItem();
+            if (field == null)
+                return;
+
+            switch (type)
+            {
+                case ConditionFlags.Fire:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.FireDamage);
+                    break;
+                case ConditionFlags.Energy:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.EnergyDamage);
+                    break;
+                case ConditionFlags.Poison:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.EarthDamage);
+                    break;
+                case ConditionFlags.Freezing:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.IceDamage);
+                    break;
+                case ConditionFlags.Dazzled:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.HolyDamage);
+                    break;
+                case ConditionFlags.Cursed:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.DeathDamage);
+                    break;
+                case ConditionFlags.Drown:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.DrownDamage);
+                    break;
+                case ConditionFlags.Bleeding:
+                    bRemove = (field.GetCombatType() != CombatTypeFlags.PhysicalDamage);
+                    break;
+            }
+        }
+        protected virtual void OnCombatRemoveCondition(Condition condition)
+        {
+            RemoveCondition(condition);
+        }
 
         protected virtual void OnAttackedCreature(Creature creature) { }
         protected virtual void OnAttacked() { }
+        protected virtual void OnAttackedCreatureDrainHealth(Creature target, int amount)
+        {
+            target.AddDamagePoints(this, amount);
+        }
+		protected virtual void OnTargetCreatureGainHealth(Creature target, int amount) {}
         protected virtual void OnAttackedCreatureDisappear(bool isLogout) { }
         protected virtual void OnFollowCreatureDisappear(bool isLogout) { }
         protected virtual void OnFollowCreature(Creature creature) { }
         protected virtual void OnFollowCreatureComplete(Creature creature) { }
+
+        protected virtual int GetDefense()
+        {
+            return 0;
+        }
+        protected virtual int GetArmor()
+        {
+            return 0;
+        }
+        protected virtual float GetAttackFactor()
+        {
+            return 1.0f;
+        }
+        protected virtual float GetDefenseFactor()
+        {
+            return 1.0f;
+        }
 
         protected virtual void OnChangeZone(ZoneTypes zone)
         {
@@ -897,10 +1071,271 @@ namespace HerhangiOT.GameServer.Model
             return IsInternalRemoved;
         }
 
-        private ZoneTypes GetZone()
+        public ZoneTypes GetZone()
         {
             return Parent.GetZone();
         }
+
+        public void ChangeHealth(int healthChange, bool sendHealthChange = true)
+        {
+	        int oldHealth = Health;
+
+	        if (healthChange > 0)
+		        Health += (ushort)Math.Min(healthChange, HealthMax - Health);
+            else
+		        Health = (ushort)Math.Max(0, Health + healthChange);
+
+	        if (sendHealthChange && oldHealth != Health)
+		        Game.AddCreatureHealth(this);
+        }
+        public void ChangeMana(int manaChange)
+        {
+	        if (manaChange > 0)
+            {
+		        Mana += (ushort)Math.Min(manaChange, ManaMax - Mana);
+	        }
+            else
+            {
+		        Mana = (ushort)Math.Max(0, Mana + manaChange);
+	        }
+        }
+        public void GainHealth(Creature healer, int healthGain)
+        {
+	        ChangeHealth(healthGain);
+
+	        if (healer != null)
+		        healer.OnTargetCreatureGainHealth(this, healthGain);
+        }
+        public virtual void DrainHealth(Creature attacker, int damage)
+        {
+	        ChangeHealth(-damage, false);
+
+	        if (attacker != null)
+		        attacker.OnAttackedCreatureDrainHealth(this, damage);
+        }
+        public virtual void DrainMana(Creature attacker, int manaLoss)
+        {
+	        OnAttacked();
+	        ChangeMana(-manaLoss);
+
+	        if (attacker != null)
+		        AddDamagePoints(attacker, manaLoss);
+        }
+        
+        protected void AddDamagePoints(Creature attacker, int damagePoints)
+        {
+	        if (damagePoints <= 0)
+		        return;
+
+	        uint attackerId = attacker.Id;
+
+            //auto it = damageMap.find(attackerId); //TODO: Damage List
+            //if (it == damageMap.end()) {
+            //    CountBlock_t cb;
+            //    cb.ticks = OTSYS_TIME();
+            //    cb.total = damagePoints;
+            //    damageMap[attackerId] = cb;
+            //} else {
+            //    it->second.total += damagePoints;
+            //    it->second.ticks = OTSYS_TIME();
+            //}
+
+	        LastHitCreature = attackerId;
+        }
+
+        #region Condition Operations
+        public bool AddCondition(Condition condition, bool force = false)
+        {
+	        if (condition == null)
+		        return false;
+
+	        if (!force && condition.ConditionType == ConditionFlags.Haste && HasCondition(ConditionFlags.Paralyze))
+            {
+		        int walkDelay = GetWalkDelay();
+		        if (walkDelay > 0)
+                {
+                    DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask((uint)walkDelay, () => Game.ForceAddCondition(Id, condition)));
+			        return false;
+		        }
+	        }
+
+	        Condition prevCond = GetCondition(condition.ConditionType, condition.Id, condition.SubId);
+	        if (prevCond != null)
+            {
+		        prevCond.AddCondition(this, condition);
+		        return true;
+	        }
+
+	        if (condition.StartCondition(this))
+            {
+		        Conditions.Add(condition);
+		        OnAddCondition(condition.ConditionType);
+		        return true;
+	        }
+
+	        return false;
+        }
+        public bool AddCombatCondition(Condition condition)
+        {
+            ConditionFlags type = condition.ConditionType;
+
+            if (!AddCondition(condition))
+                return false;
+
+            OnAddCombatCondition(type);
+            return true;
+        }
+        public void RemoveCondition(ConditionFlags type, ConditionIds id, bool force = false)
+        {
+            for (int i = 0; i < Conditions.Count; ++i)
+            {
+                Condition condition = Conditions[i];
+                if (condition.ConditionType != type || condition.Id != id)
+                    continue;
+
+                if (!force && type == ConditionFlags.Paralyze)
+                {
+                    int walkDelay = GetWalkDelay();
+			        if (walkDelay > 0)
+                    {
+                        DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask((uint)walkDelay, () => Game.ForceRemoveCondition(Id, type)));
+				        return;
+			        }
+                }
+
+                Conditions.RemoveAt(i);
+                condition.EndCondition(this);
+
+                OnEndCondition(type);
+            }
+        }
+        public void RemoveCondition(ConditionFlags type, bool force = false)
+        {
+            for (int i = 0; i < Conditions.Count; ++i)
+            {
+                Condition condition = Conditions[i];
+                if (condition.ConditionType != type)
+                    continue;
+
+                if (!force && type == ConditionFlags.Paralyze)
+                {
+                    int walkDelay = GetWalkDelay();
+			        if (walkDelay > 0)
+                    {
+                        DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask((uint)walkDelay, () => Game.ForceRemoveCondition(Id, type)));
+				        return;
+			        }
+                }
+
+                Conditions.RemoveAt(i);
+                condition.EndCondition(this);
+
+                OnEndCondition(type);
+            }
+        }
+        public void RemoveCondition(Condition condition, bool force = false)
+        {
+            int position = Conditions.IndexOf(condition);
+            if(position == -1) return;
+	        
+	        if (!force && condition.ConditionType == ConditionFlags.Paralyze)
+            {
+		        int walkDelay = GetWalkDelay();
+		        if (walkDelay > 0)
+                {
+                    DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask((uint)walkDelay, () => Game.ForceRemoveCondition(Id, condition.ConditionType)));
+			        return;
+		        }
+	        }
+
+	        Conditions.RemoveAt(position);
+	        condition.EndCondition(this);
+
+	        OnEndCondition(condition.ConditionType);
+        }
+        public void RemoveCombatCondition(ConditionFlags type)
+        {
+	        List<Condition> conditionsToRemove = Conditions.Where(condition => condition.ConditionType == type).ToList();
+
+            foreach (Condition condition in conditionsToRemove)
+            {
+		        OnCombatRemoveCondition(condition);
+	        }
+        }
+        public Condition GetCondition(ConditionFlags type)
+        {
+            return Conditions.FirstOrDefault(c => c.ConditionType == type);
+        }
+        public Condition GetCondition(ConditionFlags type, ConditionIds id, uint subId = 0)
+        {
+            return Conditions.FirstOrDefault(c => c.ConditionType == type && c.Id == id && c.SubId == subId);
+        }
+        public void ExecuteConditions(uint interval)
+        {
+            int iInterval = (int) interval;
+
+            for (int i = Conditions.Count - 1; i > -1; i--)
+            {
+                Condition condition = Conditions[i];
+
+                if (!condition.ExecuteCondition(this, iInterval))
+                {
+                    condition.EndCondition(this);
+                    OnEndCondition(condition.ConditionType);
+                }
+            }
+        }
+        public bool HasCondition(ConditionFlags type, uint subId = 0)
+        {
+	        if (IsSuppressed(type))
+		        return false;
+
+	        long timeNow = Tools.GetSystemMilliseconds();
+	        foreach (Condition condition in Conditions)
+            {
+		        if (condition.ConditionType != type || condition.SubId != subId)
+			        continue;
+
+		        if (condition.EndTime >= timeNow)
+			        return true;
+	        }
+	        return false;
+        }
+
+		public virtual RaceTypes GetRace()
+        {
+			return RaceTypes.None;
+		}
+
+        public virtual bool IsAttackable()
+        {
+            return true;
+        }
+        public virtual bool IsImmune(CombatTypeFlags damageType)
+        {
+            return GetDamageImmunities().HasFlag(damageType);
+        }
+        public virtual bool IsImmune(ConditionFlags condition)
+        {
+            return GetConditionImmunities().HasFlag(condition);
+        }
+        public virtual bool IsSuppressed(ConditionFlags condition)
+        {
+            return GetConditionSuppressions().HasFlag(condition);
+        }
+		public virtual CombatTypeFlags GetDamageImmunities()
+        {
+			return CombatTypeFlags.None;
+		}
+        public virtual ConditionFlags GetConditionImmunities()
+        {
+            return ConditionFlags.None;
+        }
+        public virtual ConditionFlags GetConditionSuppressions()
+        {
+            return ConditionFlags.None;
+        }
+        #endregion
 
         public void IncrementReferenceCounter()
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model;
@@ -72,6 +73,8 @@ namespace HerhangiOT.GameServer
         public static Dictionary<uint, BedItem> BedSleepers = new Dictionary<uint, BedItem>();
 
         private static readonly List<Creature>[] CheckCreatureBuckets = new List<Creature>[Constants.JobCheckCreatureBucketCount];
+
+        public static Random RNG = new Random();
 
         public static void Initialize()
         {
@@ -204,6 +207,536 @@ namespace HerhangiOT.GameServer
         {
             //TODO: FILL THIS METHOD
         }
+
+        public static void InternalCreatureChangeVisible(Creature creature, bool visible)
+        {
+	        //send to clients
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, creature.GetPosition(), true, true);
+	        foreach (Player spectator in list.OfType<Player>())
+            {
+		        spectator.SendCreatureChangeVisible(creature, visible);
+	        }
+        }
+        #endregion
+
+        #region Combat
+        delegate void SendBlockEffect(BlockTypes blockType, CombatTypeFlags combatType, Position targetPos);
+        public static bool CombatBlockHit(CombatDamage damage, Creature attacker, Creature target, bool checkDefense, bool checkArmor, bool field)
+        {
+	        if (damage.PrimaryType == CombatTypeFlags.None && damage.SecondaryType == CombatTypeFlags.None)
+		        return true;
+
+	        if (target is Player && target.IsInGhostMode())
+		        return true;
+
+	        if (damage.PrimaryValue > 0)
+		        return false;
+
+            SendBlockEffect sendBlockEffect = (blockType, combatType, targetPos) => // TODO: I DO NOT LIKE THIS, MOST LIKELY TO BE CHANGED
+            {
+		        if (blockType == BlockTypes.Defense)
+                {
+			        AddMagicEffect(targetPos, MagicEffects.Poff);
+		        }
+                else if (blockType == BlockTypes.Armor)
+                {
+			        AddMagicEffect(targetPos, MagicEffects.BlockHit);
+		        }
+                else if (blockType == BlockTypes.Immunity)
+                {
+                    MagicEffects hitEffect;
+			        switch (combatType)
+                    {
+				        case CombatTypeFlags.UndefinedDamage:
+					        return;
+				        case CombatTypeFlags.EnergyDamage:
+				        case CombatTypeFlags.FireDamage:
+				        case CombatTypeFlags.PhysicalDamage:
+				        case CombatTypeFlags.IceDamage:
+				        case CombatTypeFlags.DeathDamage:
+					        hitEffect = MagicEffects.BlockHit;
+					        break;
+
+				        case CombatTypeFlags.EarthDamage:
+					        hitEffect = MagicEffects.GreenRings;
+					        break;
+
+				        case CombatTypeFlags.HolyDamage:
+					        hitEffect = MagicEffects.HolyDamage;
+					        break;
+				        
+                        default:
+					        hitEffect = MagicEffects.Poff;
+					        break;
+			        }
+			        AddMagicEffect(targetPos, hitEffect);
+		        }
+	        };
+
+	        BlockTypes primaryBlockType, secondaryBlockType;
+	        if (damage.PrimaryType != CombatTypeFlags.None)
+	        {
+	            int primaryDamage = -damage.PrimaryValue;
+                primaryBlockType = target.BlockHit(attacker, damage.PrimaryType, ref primaryDamage, checkDefense, checkArmor, field);
+
+		        damage.PrimaryValue = -primaryDamage;
+		        sendBlockEffect(primaryBlockType, damage.PrimaryType, target.GetPosition());
+	        }
+            else
+            {
+		        primaryBlockType = BlockTypes.None;
+	        }
+
+	        if (damage.SecondaryType != CombatTypeFlags.None)
+            {
+		        int secondaryValue = -damage.SecondaryValue;
+		        secondaryBlockType = target.BlockHit(attacker, damage.SecondaryType, ref secondaryValue, false, false, field);
+
+		        damage.SecondaryValue = -secondaryValue;
+		        sendBlockEffect(secondaryBlockType, damage.SecondaryType, target.GetPosition());
+	        }
+            else
+            {
+		        secondaryBlockType = BlockTypes.None;
+	        }
+	        return (primaryBlockType != BlockTypes.None) && (secondaryBlockType != BlockTypes.None);
+        }
+
+        public static bool CombatChangeHealth(Creature attacker, Creature target, CombatDamage damage)
+        {
+	        Position targetPos = target.GetPosition();
+
+	        if (damage.PrimaryValue > 0)
+            {
+		        if (target.Health <= 0)
+			        return false;
+
+		        Player attackerPlayer;
+		        if (attacker != null)
+			        attackerPlayer = attacker as Player;
+                else
+			        attackerPlayer = null;
+
+		        Player targetPlayer = target as Player;
+                //if (attackerPlayer != null && targetPlayer != null && attackerPlayer.Skull == SkullTypes.Black && attackerPlayer.GetSkullClient(targetPlayer) == SkullTypes.None)
+                //{ //TODO: CLIENT SKULL
+                //    return false;
+                //}
+
+		        if (damage.Origin != CombatOrigins.None)
+                {
+                    //const auto& events = target->getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE); //TODO: Creature Events
+                    //if (!events.empty()) {
+                    //    for (CreatureEvent* creatureEvent : events) {
+                    //        creatureEvent->executeHealthChange(target, attacker, damage);
+                    //    }
+                    //    damage.origin = ORIGIN_NONE;
+                    //    return combatChangeHealth(attacker, target, damage);
+                    //}
+		        }
+
+		        int realHealthChange = target.Health;
+		        target.GainHealth(attacker, damage.PrimaryValue);
+		        realHealthChange = target.Health - realHealthChange;
+
+		        if (realHealthChange > 0 && !target.IsInGhostMode())
+		        {
+		            string damageString = string.Format("{0} hitpoint(s).", realHealthChange);
+
+		            string spectatorMessage = string.Empty;
+			        if (attacker == null)
+			        {
+			            spectatorMessage = target.GetNameDescription() +" was healed for " + damageString;
+			        }
+                    else
+                    {
+				        spectatorMessage += attacker.GetNameDescription() + " healed ";
+				        if (attacker == target)
+                        {
+					        spectatorMessage += (targetPlayer != null ? (targetPlayer.CharacterData.Gender == (byte)Genders.Female ? "herself" : "himself") : "itself");
+				        }
+                        else
+                        {
+					        spectatorMessage += target.GetNameDescription();
+				        }
+				        spectatorMessage += " for " + damageString;
+			        }
+
+		            TextMessage message = new TextMessage
+		            {
+		                Position = targetPos,
+		                PrimaryValue = (uint)realHealthChange,
+		                PrimaryColor = TextColors.MayaBlue
+		            };
+
+			        HashSet<Creature> list = new HashSet<Creature>();
+			        Map.GetSpectators(ref list, targetPos, false, true);
+			        foreach (Player tmpPlayer in list.OfType<Player>())
+                    {
+				        if (tmpPlayer == attackerPlayer && attackerPlayer != targetPlayer)
+                        {
+					        message.Type = MessageTypes.Healed;
+					        message.Text = "You heal " + target.GetNameDescription() + " for " + damageString;
+				        }
+                        else if (tmpPlayer == targetPlayer)
+                        {
+					        message.Type = MessageTypes.Healed;
+					        if (attacker == null)
+                            {
+						        message.Text = "You were healed for " + damageString;
+					        }
+                            else if (targetPlayer == attackerPlayer)
+                            {
+						        message.Text = "You heal yourself for " + damageString;
+					        }
+                            else
+                            {
+						        message.Text = "You were healed by " + attacker.GetNameDescription() + " for " + damageString;
+					        }
+				        }
+                        else
+                        {
+					        message.Type = MessageTypes.HealedOthers;
+					        message.Text = spectatorMessage;
+				        }
+				        tmpPlayer.SendTextMessage(message);
+			        }
+		        }
+	        }
+            else
+            {
+		        if (!target.IsAttackable())
+                {
+			        if (!target.IsInGhostMode())
+                    {
+				        AddMagicEffect(targetPos, MagicEffects.Poff);
+			        }
+			        return true;
+		        }
+
+		        Player attackerPlayer;
+		        if (attacker != null)
+			        attackerPlayer = attacker as Player;
+		        else
+			        attackerPlayer = null;
+
+		        Player targetPlayer = target as Player;
+                //if (attackerPlayer && targetPlayer && attackerPlayer->getSkull() == SKULL_BLACK && attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
+                //    return false; //TODO: CLIENT SKULL
+                //}
+
+		        damage.PrimaryValue = Math.Abs(damage.PrimaryValue);
+		        damage.SecondaryValue = Math.Abs(damage.SecondaryValue);
+
+		        int healthChange = damage.PrimaryValue + damage.SecondaryValue;
+		        if (healthChange == 0)
+			        return true;
+
+                TextMessage message = new TextMessage
+                {
+                    Position = targetPos
+                };
+
+		        HashSet<Creature> list = new HashSet<Creature>();
+                if (target.HasCondition(ConditionFlags.ManaShield) && damage.PrimaryType != CombatTypeFlags.UndefinedDamage)
+                {
+                    int manaDamage = Math.Min(target.Mana, healthChange);
+                    if (manaDamage != 0)
+                    {
+                        if (damage.Origin != CombatOrigins.None)
+                        {
+                            //const auto& events = target->getCreatureEvents(CREATURE_EVENT_MANACHANGE); //TODO: Scripting
+                            //if (!events.empty()) {
+                            //    for (CreatureEvent* creatureEvent : events) {
+                            //        creatureEvent->executeManaChange(target, attacker, healthChange, damage.origin);
+                            //    }
+                            //    if (healthChange == 0) {
+                            //        return true;
+                            //    }
+                            //    manaDamage = std::min<int32_t>(target->getMana(), healthChange);
+                            //}
+                        }
+
+                        target.DrainMana(attacker, manaDamage);
+                        Map.GetSpectators(ref list, targetPos, true, true);
+                        AddMagicEffect(list, targetPos, MagicEffects.LoseEnergy);
+
+                        string spectatorMessage = target.GetNameDescription() + " loses " + manaDamage + " mana";
+                        if (attacker != null)
+                        {
+                            spectatorMessage += " due to ";
+                            if (attacker == target)
+                            {
+                                spectatorMessage += (targetPlayer != null ? (targetPlayer.CharacterData.Gender == (byte)Genders.Female ? "her own attack" : "his own attack") : "its own attack");
+                            }
+                            else
+                            {
+                                spectatorMessage += "an attack by " + attacker.GetNameDescription();
+                            }
+                        }
+                        spectatorMessage += '.';
+
+                        message.PrimaryValue = (uint)manaDamage;
+                        message.PrimaryColor = TextColors.Blue;
+
+                        foreach (Player tmpPlayer in list.OfType<Player>())
+                        {
+                            if (tmpPlayer.GetPosition().Z != targetPos.Z) {
+                                continue;
+                            }
+
+                            if (tmpPlayer == attackerPlayer && attackerPlayer != targetPlayer)
+                            {
+                                message.Type = MessageTypes.DamageDealt;
+                                message.Text = target.GetNameDescription() + " loses " + manaDamage + " mana due to your attack.";
+                            }
+                            else if (tmpPlayer == targetPlayer)
+                            {
+                                message.Type = MessageTypes.DamageReceived;
+                                if (attacker == null)
+                                {
+                                    message.Text = "You lose " + manaDamage + " mana.";
+                                } else if (targetPlayer == attackerPlayer) {
+                                    message.Text = "You lose " + manaDamage + " mana due to your own attack.";
+                                } else {
+                                    message.Text = "You lose " + manaDamage + " mana due to an attack by " + attacker.GetNameDescription() + '.';
+                                }
+                            } else {
+                                message.Type = MessageTypes.DamageOthers;
+                                message.Text = spectatorMessage;
+                            }
+                            tmpPlayer.SendTextMessage(message);
+                        }
+
+                        damage.PrimaryValue -= manaDamage;
+                        if (damage.PrimaryValue < 0)
+                        {
+                            damage.SecondaryValue = Math.Max(0, damage.SecondaryValue + damage.PrimaryValue);
+                            damage.PrimaryValue = 0;
+                        }
+                    }
+                }
+
+		        int realDamage = damage.PrimaryValue + damage.SecondaryValue;
+		        if (realDamage == 0)
+			        return true;
+
+		        if (damage.Origin != CombatOrigins.None)
+                {
+                    //const auto& events = target->getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE); //TODO: CREATURE EVENTS
+                    //if (!events.empty()) {
+                    //    for (CreatureEvent* creatureEvent : events) {
+                    //        creatureEvent->executeHealthChange(target, attacker, damage);
+                    //    }
+                    //    damage.origin = ORIGIN_NONE;
+                    //    return combatChangeHealth(attacker, target, damage);
+                    //}
+		        }
+
+		        int targetHealth = target.Health;
+		        if (damage.PrimaryValue >= targetHealth)
+                {
+			        damage.PrimaryValue = targetHealth;
+			        damage.SecondaryValue = 0;
+		        }
+                else if (damage.SecondaryValue != 0)
+                {
+			        damage.SecondaryValue = Math.Min(damage.SecondaryValue, targetHealth - damage.PrimaryValue);
+		        }
+
+		        realDamage = damage.PrimaryValue + damage.SecondaryValue;
+		        if (realDamage == 0)
+			        return true;
+                
+                if (realDamage >= targetHealth)
+                {
+                    //for (CreatureEvent* creatureEvent : target->getCreatureEvents(CREATURE_EVENT_PREPAREDEATH)) { //TODO: CREATURE EVENTS
+                    //    if (!creatureEvent->executeOnPrepareDeath(target, attacker)) {
+                    //        return false;
+                    //    }
+                    //}
+		        }
+
+		        target.DrainHealth(attacker, realDamage);
+		        
+                if (list.Count == 0)
+			        Map.GetSpectators(ref list, targetPos, true, true);
+		        
+                AddCreatureHealth(list, target);
+
+		        message.PrimaryValue = (uint)damage.PrimaryValue;
+		        message.SecondaryValue = (uint)damage.SecondaryValue;
+
+		        MagicEffects hitEffect;
+		        if (message.PrimaryValue != 0)
+                {
+                    TextColors color;
+			        CombatGetTypeInfo(damage.PrimaryType, target, out color, out hitEffect);
+                    message.PrimaryColor = color;
+			        if (hitEffect != MagicEffects.None)
+				        AddMagicEffect(list, targetPos, hitEffect);
+		        }
+
+		        if (message.SecondaryValue != 0)
+		        {
+		            TextColors color;
+			        CombatGetTypeInfo(damage.SecondaryType, target, out color, out hitEffect);
+		            message.SecondaryColor = color;
+			        if (hitEffect != MagicEffects.None)
+				        AddMagicEffect(list, targetPos, hitEffect);
+		        }
+
+		        if (message.PrimaryColor != TextColors.None || message.SecondaryColor != TextColors.None)
+		        {
+		            string damageString = string.Format("{0} hitpoint(s).", realDamage);
+			        string spectatorMessage = target.GetNameDescription() + " loses " + damageString;
+			        
+                    if (attacker != null)
+                    {
+				        spectatorMessage += " due to ";
+				        if (attacker == target)
+                        {
+					        spectatorMessage += (targetPlayer != null ? (targetPlayer.CharacterData.Gender == (byte)Genders.Female ? "her own attack" : "his own attack") : "its own attack");
+				        }
+                        else
+                        {
+					        spectatorMessage += "an attack by " + attacker.GetNameDescription();
+				        }
+			        }
+			        spectatorMessage += '.';
+
+			        foreach (Player tmpPlayer in list.OfType<Player>())
+                    {
+				        if (tmpPlayer.GetPosition().Z != targetPos.Z)
+					        continue;
+
+				        if (tmpPlayer == attackerPlayer && attackerPlayer != targetPlayer)
+                        {
+					        message.Type = MessageTypes.DamageDealt;
+					        message.Text = target.GetNameDescription() + " loses " + damageString + " due to your attack.";
+				        }
+                        else if (tmpPlayer == targetPlayer)
+                        {
+					        message.Type = MessageTypes.DamageReceived;
+					        if (attacker == null)
+                            {
+						        message.Text = "You lose " + damageString + '.';
+					        }
+                            else if (targetPlayer == attackerPlayer)
+                            {
+						        message.Text = "You lose " + damageString + " due to your own attack.";
+					        }
+                            else
+                            {
+						        message.Text = "You lose " + damageString + " due to an attack by " + attacker.GetNameDescription() + '.';
+					        }
+				        }
+                        else
+                        {
+					        message.Type = MessageTypes.DamageOthers;
+					        message.Text = spectatorMessage;
+				        }
+				        tmpPlayer.SendTextMessage(message);
+			        }
+		        }
+	        }
+
+	        return true;
+        }
+
+        public static void CombatGetTypeInfo(CombatTypeFlags combatType, Creature target, out TextColors color, out MagicEffects effect)
+        {
+	        switch (combatType)
+            {
+		        case CombatTypeFlags.PhysicalDamage:
+                    {
+			        Item splash = null;
+			        switch (target.GetRace())
+                    {
+				        case RaceTypes.Venom:
+					        color = TextColors.LightGreen;
+					        effect = MagicEffects.HitByPoison;
+					        splash = Item.CreateItem((ushort)FixedItems.SmallSplash, (byte)FluidColors.Green);
+					        break;
+				        case RaceTypes.Blood:
+					        color = TextColors.Red;
+					        effect = MagicEffects.DrawBlood;
+					        splash = Item.CreateItem((ushort)FixedItems.SmallSplash, (byte)FluidTypes.Blood);
+					        break;
+				        case RaceTypes.Undead:
+					        color = TextColors.LightGrey;
+					        effect = MagicEffects.HitArea;
+					        break;
+				        case RaceTypes.Fire:
+					        color = TextColors.Orange;
+					        effect = MagicEffects.DrawBlood;
+					        break;
+				        case RaceTypes.Energy:
+					        color = TextColors.Purple;
+					        effect = MagicEffects.EnergyHit;
+					        break;
+				        default:
+					        color = TextColors.None;
+					        effect = MagicEffects.None;
+					        break;
+			        }
+
+			        if (splash != null)
+                    {
+                        //InternalAddItem(target.Parent, splash, -1, CylinderFlags.Nolimit); //TODO: INTERNAL ADD ITEM
+                        //StartDecay(splash);
+			        }
+
+			        break;
+		        }
+
+		        case CombatTypeFlags.EnergyDamage:
+			        color = TextColors.Purple;
+			        effect = MagicEffects.EnergyHit;
+			        break;
+
+		        case CombatTypeFlags.EarthDamage:
+			        color = TextColors.LightGreen;
+			        effect = MagicEffects.GreenRings;
+			        break;
+
+		        case CombatTypeFlags.DrownDamage:
+			        color = TextColors.LightBlue;
+			        effect = MagicEffects.LoseEnergy;
+			        break;
+		        
+                case CombatTypeFlags.FireDamage:
+			        color = TextColors.Orange;
+			        effect = MagicEffects.HitByFire;
+			        break;
+
+		        case CombatTypeFlags.IceDamage:
+			        color = TextColors.SkyBlue;
+			        effect = MagicEffects.IceAttack;
+			        break;
+
+		        case CombatTypeFlags.HolyDamage:
+			        color = TextColors.Yellow;
+			        effect = MagicEffects.HolyDamage;
+			        break;
+		        
+                case CombatTypeFlags.DeathDamage:
+			        color = TextColors.DarkRed;
+			        effect = MagicEffects.SmallClouds;
+			        break;
+		        
+                case CombatTypeFlags.LifeDrain:
+			        color = TextColors.Red;
+			        effect = MagicEffects.MagicRed;
+			        break;
+		        
+                default:
+			        color = TextColors.None;
+			        effect = MagicEffects.None;
+			        break;
+	        }
+        }
         #endregion
 
         public static bool PlaceCreature(Creature creature, Position position, bool extendedPosition = false, bool forced = false)
@@ -305,8 +838,23 @@ namespace HerhangiOT.GameServer
             }
             return true;
         }
+        
+        public static void ForceAddCondition(uint creatureId, Condition condition)
+        {
+	        Creature creature = GetCreatureById(creatureId);
+	        if (creature == null)
+		        return;
 
+	        creature.AddCondition(condition, true);
+        }
+        public static void ForceRemoveCondition(uint creatureId, ConditionFlags type)
+        {
+	        Creature creature = GetCreatureById(creatureId);
+	        if (creature == null)
+		        return;
 
+	        creature.RemoveCondition(type, true);
+        }
 
         public static void AddPlayer(Player player)
         {
@@ -495,6 +1043,53 @@ namespace HerhangiOT.GameServer
             }
 
             Cleanup();
+        }
+        
+        public static void ChangeSpeed(Creature creature, int varSpeedDelta)
+        {
+	        int varSpeed = creature.Speed - creature.BaseSpeed;
+	        varSpeed += varSpeedDelta;
+
+	        creature.SetSpeed(varSpeed);
+
+	        //send to clients
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, creature.GetPosition(), false, true);
+	        foreach (Player spectator in list.OfType<Player>())
+            {
+		        spectator.SendChangeSpeed(creature, (uint)creature.StepSpeed);
+	        }
+        }
+        
+        public static void ChangeLight(Creature creature)
+        {
+	        //send to clients
+	        HashSet<Creature> list = new HashSet<Creature>();
+            Map.GetSpectators(ref list, creature.GetPosition(), true, true);
+            foreach (Player spectator in list.OfType<Player>())
+            {
+		        spectator.SendCreatureLight(creature);
+	        }
+        }
+
+        public static void InternalCreatureChangeOutfit(Creature creature, Outfit outfit)
+        {
+            //if (!g_events->eventCreatureOnChangeOutfit(creature, outfit)) { //TODO: Scripting
+            //    return;
+            //}
+
+	        creature.CurrentOutfit = outfit;
+
+	        if (creature.IsInvisible())
+		        return;
+
+	        //send to clients
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, creature.GetPosition(), true, true);
+	        foreach (Player spectator in list.OfType<Player>())
+            {
+		        spectator.SendCreatureChangeOutfit(creature, outfit);
+	        }
         }
 
         public static void PlayerReceivePingBack(uint playerId)
@@ -801,15 +1396,16 @@ namespace HerhangiOT.GameServer
                 return false;
             }
 
-            //if (player.HasCondition(CONDITION_YELLTICKS)) { //TODO: Conditions
-            //    player.SendCancelMessage(ReturnTypes.YouAreExhausted);
-            //    return false;
-            //}
+            if (player.HasCondition(ConditionFlags.YellTicks))
+            {
+                player.SendCancelMessage(ReturnTypes.YouAreExhausted);
+                return false;
+            }
 
             if (player.AccountType < AccountTypes.GameMaster)
             {
-                //Condition* condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_YELLTICKS, 30000, 0); //TODO: Conditions
-                //player->addCondition(condition);
+                Condition condition = Condition.CreateCondition(ConditionIds.Default, ConditionFlags.YellTicks, 30000);
+                player.AddCondition(condition);
             }
 
             InternalCreatureSay(player, SpeakTypes.Yell, text.ToUpperInvariant(), false);

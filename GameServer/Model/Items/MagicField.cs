@@ -1,4 +1,5 @@
-﻿using HerhangiOT.ServerLibrary.Utility;
+﻿using HerhangiOT.GameServer.Enums;
+using HerhangiOT.ServerLibrary.Utility;
 
 namespace HerhangiOT.GameServer.Model.Items
 {
@@ -10,6 +11,11 @@ namespace HerhangiOT.GameServer.Model.Items
             : base(id)
         {
             _creationTime = Tools.GetSystemMilliseconds();
+        }
+
+        public CombatTypeFlags GetCombatType()
+        {
+            return ItemManager.Templates[Id].CombatType;
         }
     }
 }

@@ -23,11 +23,11 @@ namespace HerhangiOT.GameServer.Data.ChatChannels
                 return false;
             }
 
-            //TODO: CONDITIONS
-            //if player:getCondition(CONDITION_CHANNELMUTEDTICKS, CONDITIONID_DEFAULT, CHANNEL_HELP) then
-            //    player:sendCancelMessage("You are muted from the Help channel for using it inappropriately.")
-            //    return false
-            //end
+            if (player.GetCondition(ConditionFlags.ChannelMutedTicks, ConditionIds.Default, Id) != null)
+            {
+                player.SendCancelMessage("You are muted from the Help channel for using it inappropriately.");
+                return false;
+            }
 
             if (playerAccountType >= AccountTypes.Tutor)
             {
@@ -40,9 +40,9 @@ namespace HerhangiOT.GameServer.Data.ChatChannels
                     {
                         if (playerAccountType > target.AccountType)
                         {
-					        if (false)// target:getCondition(CONDITION_CHANNELMUTEDTICKS, CONDITIONID_DEFAULT, CHANNEL_HELP) //TODO: CONDITIONS
+					        if (target.GetCondition(ConditionFlags.ChannelMutedTicks, ConditionIds.Default, Id) != null)
                             {
-						        //target.addCondition(muted); //TODO: CONDITIONS
+                                target.AddCondition(Condition.CreateCondition(ConditionIds.Default, ConditionFlags.ChannelMutedTicks, 3600000, 0, false, Id));
                                 Chat.SendChannelMessage(Id, SpeakTypes.ChannelR1, string.Format("{0} has been muted by {1} for using Help Channel inappropriately.", target.CharacterName, player.CharacterName));
                             }
 					        else
@@ -70,8 +70,12 @@ namespace HerhangiOT.GameServer.Data.ChatChannels
                     {
                         if (playerAccountType > target.AccountType)
                         {
-					        if (false) //target:getCondition(CONDITION_CHANNELMUTEDTICKS, CONDITIONID_DEFAULT, CHANNEL_HELP) then target:removeCondition(CONDITION_CHANNELMUTEDTICKS, CONDITIONID_DEFAULT, CHANNEL_HELP) //TODO: CONDITIONS
+                            Condition condition = target.GetCondition(ConditionFlags.ChannelMutedTicks, ConditionIds.Default, Id);
+					        if (condition != null)
+					        {
+					            target.RemoveCondition(condition);
 						        Chat.SendChannelMessage(Id, SpeakTypes.ChannelR1, string.Format("{0} has been unmuted by {1}.", target.CharacterName, player.CharacterName));
+                            }
 					        else
 						        player.SendCancelMessage("That player is not muted.");
                         }

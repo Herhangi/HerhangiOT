@@ -68,6 +68,10 @@
         PlayerSkillsUpdate = 0xA1,
         PlayerFlags = 0xA2,
         CancelTarget = 0xA3,
+        
+        SpellCooldown = 0xA4,
+        SpellGroupCooldown = 0xA5,
+
         CreatureSpeech = 0xAA,
         ChannelList = 0xAB,
         ChannelOpen = 0xAC,

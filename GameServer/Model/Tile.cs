@@ -1284,6 +1284,18 @@ namespace HerhangiOT.GameServer.Model
                 return Items.OfType<Teleport>().LastOrDefault();
             return null;
         }
+        public MagicField GetMagicFieldItem()
+        {
+	        if (!Flags.HasFlag(TileFlags.MagicField))
+		        return null;
+
+            if (Ground is MagicField)
+                return Ground as MagicField;
+
+	        if (Items != null)
+                return Items.OfType<MagicField>().LastOrDefault();
+	        return null;
+        }
         public TrashHolder GetTrashHolder()
         {
             if (!Flags.HasFlag(TileFlags.TrashHolder))

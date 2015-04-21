@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Text;
 
 namespace HerhangiOT.ServerLibrary.Utility
@@ -101,17 +100,35 @@ namespace HerhangiOT.ServerLibrary.Utility
             return Encoding.UTF8.GetChars(buffer);
         }
 
+        public static bool ReadBoolean(this MemoryStream stream)
+        {
+            byte[] buffer = new byte[sizeof(bool)];
+            stream.Read(buffer, 0, buffer.Length);
+            return BitConverter.ToBoolean(buffer, 0);
+        }
         public static ushort ReadUInt16(this MemoryStream stream)
         {
             byte[] buffer = new byte[sizeof(ushort)];
             stream.Read(buffer, 0, buffer.Length);
             return BitConverter.ToUInt16(buffer, 0);
         }
+        public static int ReadInt32(this MemoryStream stream)
+        {
+            byte[] buffer = new byte[sizeof(int)];
+            stream.Read(buffer, 0, buffer.Length);
+            return BitConverter.ToInt32(buffer, 0);
+        }
         public static uint ReadUInt32(this MemoryStream stream)
         {
             byte[] buffer = new byte[sizeof(uint)];
             stream.Read(buffer, 0, buffer.Length);
             return BitConverter.ToUInt32(buffer, 0);
+        }
+        public static float ReadFloat(this MemoryStream stream)
+        {
+            byte[] buffer = new byte[sizeof(float)];
+            stream.Read(buffer, 0, buffer.Length);
+            return BitConverter.ToSingle(buffer, 0);
         }
         public static byte[] ReadBytes(this MemoryStream stream, int length)
         {
@@ -123,6 +140,32 @@ namespace HerhangiOT.ServerLibrary.Utility
         {
             ushort len = stream.ReadUInt16();
             return Encoding.Default.GetString(stream.ReadBytes(len));
+        }
+
+        public static void WriteInt32(this MemoryStream stream, int value)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+            stream.Write(buffer, 0, buffer.Length);
+        }
+        public static void WriteUInt16(this MemoryStream stream, ushort value)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+            stream.Write(buffer, 0, buffer.Length);
+        }
+        public static void WriteUInt32(this MemoryStream stream, uint value)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+            stream.Write(buffer, 0, buffer.Length);
+        }
+        public static void WriteFloat(this MemoryStream stream, float value)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+            stream.Write(buffer, 0, buffer.Length);
+        }
+        public static void WriteBoolean(this MemoryStream stream, bool value)
+        {
+            byte[] buffer = BitConverter.GetBytes(value);
+            stream.Write(buffer, 0, buffer.Length);
         }
         #endregion
     }

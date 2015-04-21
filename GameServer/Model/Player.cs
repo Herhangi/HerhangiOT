@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using HerhangiOT.GameServer.Enums;
 using HerhangiOT.GameServer.Model.Items;
+using HerhangiOT.GameServer.Scriptability;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;
 using HerhangiOT.ServerLibrary.Database.Model;
@@ -36,6 +38,10 @@ namespace HerhangiOT.GameServer.Model
         public byte EffectiveMagicLevel { get; private set; }
         public ushort LastStatsTrainingTime { get; private set; }
 
+        public ConditionFlags ConditionSupressions { get; private set; }
+        public ConditionFlags ConditionImmunities { get; private set; }
+        public CombatTypeFlags DamageImmunities { get; private set; }
+
         public SkullTypes Skull { get; private set; }
         public long SkullTicks { get; private set; }
         public Genders Gender { get; private set; }
@@ -43,6 +49,7 @@ namespace HerhangiOT.GameServer.Model
         public override sealed int StepSpeed { get { return Math.Max(PlayerMinSpeed, Math.Min(PlayerMaxSpeed, Speed)); } }
 
         public Town Town { get; private set; }
+        public ushort[] VarStats { get; private set; }
         public ushort[] VarSkillLevels { get; private set; }
         public ushort[] SkillLevels { get; private set; }
         public byte[] SkillPercents { get; private set; }
@@ -79,6 +86,8 @@ namespace HerhangiOT.GameServer.Model
 
         public override ushort Health { get { return CharacterData.Health; } protected set { CharacterData.Health = value; } }
         public override ushort HealthMax { get { return CharacterData.HealthMax; } protected set { CharacterData.HealthMax = value; } }
+        public override ushort Mana { get { return CharacterData.Mana; } protected set { CharacterData.Mana = value; } }
+        public override ushort ManaMax { get { return CharacterData.ManaMax; } protected set { CharacterData.ManaMax = value; } }
 
         private long _nextAction;
         public long NextAction
@@ -165,7 +174,19 @@ namespace HerhangiOT.GameServer.Model
             else
                 LevelPercent = 0;
 
-            //TODO: Conditions
+            if (CharacterData.Conditions != null)
+            {
+                MemoryStream conditionStream = new MemoryStream(CharacterData.Conditions);
+                Condition condition = Condition.CreateCondition(conditionStream);
+                while (condition != null)
+                {
+                    if (condition.Unserialize(conditionStream))
+                    {
+                        Conditions.Add(condition);
+                    }
+                    condition = Condition.CreateCondition(conditionStream);
+                }
+            }
 
             VocationData = Vocation.Vocations[CharacterData.Vocation];
 
@@ -220,6 +241,7 @@ namespace HerhangiOT.GameServer.Model
                 LoginPosition = new Position(Town.TemplePosition); //Breaking reference
             }
 
+            VarStats = new ushort[(byte)Stats.Last + 1];
             VarSkillLevels = new ushort[(byte)Skills.Last + 1];
             SkillLevels = new ushort[(byte)Skills.Last + 1];
             SkillLevels[(byte)Skills.Fist] = CharacterData.SkillFist;
@@ -309,15 +331,6 @@ namespace HerhangiOT.GameServer.Model
             //}
         }
 
-        private void SendStats()
-        {
-            if (Connection != null)
-            {
-                
-                LastStatsTrainingTime = (ushort)(CharacterData.OfflineTrainingTime / 60 / 1000); //Miliseconds to minutes
-            }
-        }
-
         public bool CanWalkthroughEx(Creature creature)
         {
             if (Group.Access)
@@ -386,6 +399,10 @@ namespace HerhangiOT.GameServer.Model
         {
             return CharacterName;
         }
+        public override string GetNameDescription()
+        {
+            return CharacterName;
+        }
 
         public override void AddList()
         {
@@ -420,7 +437,41 @@ namespace HerhangiOT.GameServer.Model
 		        WalkTask = null;
 	        }
         }
+
+        public sealed override bool IsAttackable()
+        {
+            return !HasFlag(PlayerFlags.CannotBeAttacked);
+        }
+        public sealed override bool IsImmune(CombatTypeFlags damageType)
+        {
+            if (HasFlag(PlayerFlags.CannotBeAttacked))
+                return true;
+            return base.IsImmune(damageType);
+        }
+        public sealed override bool IsImmune(ConditionFlags condition)
+        {
+            if (HasFlag(PlayerFlags.CannotBeAttacked))
+                return true;
+            return base.IsImmune(condition);
+        }
+        public sealed override ConditionFlags GetConditionImmunities()
+        {
+            return ConditionImmunities;
+        }
+        public sealed override ConditionFlags GetConditionSuppressions()
+        {
+            return ConditionSupressions;
+        }
         #endregion
+
+        public void AddConditionSuppressions(ConditionFlags conditions)
+        {
+            ConditionSupressions |= conditions;
+        }
+        public void RemoveConditionSuppressions(ConditionFlags conditions)
+        {
+            ConditionSupressions &= ~conditions;
+        }
 
         public void OnSendContainer(Container container)
         {
@@ -491,6 +542,19 @@ namespace HerhangiOT.GameServer.Model
         #endregion
 
         #region Send Methods
+        public void SendStats()
+        {
+            if (Connection != null)
+            {
+                Connection.SendStats();
+                LastStatsTrainingTime = (ushort)(CharacterData.OfflineTrainingTime / 60 / 1000); //Miliseconds to minutes
+            }
+        }
+        public void SendSkills()
+        {
+            if (Connection != null)
+                Connection.SendSkills();
+        }
         public void SendCreatureAppear(Creature creature, Position pos, bool isLogin)
         {
             if (Connection != null)
@@ -623,6 +687,34 @@ namespace HerhangiOT.GameServer.Model
 				Connection.SendMoveCreature(creature, newPos, newStackPos, oldPos, (byte)oldStackPos, teleport);
 			}
 		}
+        public void SendCreatureChangeVisible(Creature creature, bool visible)
+        {
+			if (Connection == null)
+				return;
+
+			if (creature is Player)
+            {
+				if (visible)
+					Connection.SendCreatureOutfit(creature, creature.CurrentOutfit);
+				else
+					Connection.SendCreatureOutfit(creature, Outfit.EmptyOutfit);
+			}
+            else if (CanSeeInvisibility())
+            {
+				Connection.SendCreatureOutfit(creature, creature.CurrentOutfit);
+			}
+            else
+            {
+				int stackpos = creature.Parent.GetStackposOfCreature(this, creature);
+				if (stackpos == -1)
+					return;
+
+				if (visible)
+					Connection.SendAddCreature(creature, creature.GetPosition(), stackpos, false);
+				else
+					Connection.SendRemoveTileThing(creature.GetPosition(), (byte)stackpos);
+			}
+		}
 
         public void SendCancelMessage(ReturnTypes message)
         {
@@ -635,6 +727,11 @@ namespace HerhangiOT.GameServer.Model
 				Connection.SendTextMessage(new TextMessage {Type = MessageTypes.StatusSmall, Text = msg});
 		}
         
+        public void SendTextMessage(TextMessage message)
+        {
+            if (Connection != null)
+                Connection.SendTextMessage(message);
+        }
 		public void SendTextMessage(MessageTypes type, string message)
         {
 			if (Connection != null) 
@@ -737,6 +834,31 @@ namespace HerhangiOT.GameServer.Model
 		        Connection.SendClosePrivate(channelId);
         }
 
+		public void SendChangeSpeed(Creature creature, uint newSpeed)
+        {
+			if (Connection != null)
+				Connection.SendChangeSpeed(creature, newSpeed);
+		}
+		public void SendCreatureChangeOutfit(Creature creature, Outfit outfit)
+        {
+			if (Connection != null)
+				Connection.SendCreatureOutfit(creature, outfit);
+		}
+		public void SendCreatureLight(Creature creature)
+        {
+			if (Connection != null)
+				Connection.SendCreatureLight(creature);
+		}
+        public void SendSpellCooldown(byte spellId, uint time)
+        {
+            if (Connection != null)
+                Connection.SendSpellCooldown(spellId, time);
+        }
+        public void SendSpellGroupCooldown(SpellGroups groupId, uint time)
+        {
+            if (Connection != null)
+                Connection.SendSpellGroupCooldown(groupId, time);
+        }
         #endregion
         
         public void ChangeSoul(int soulChange)
@@ -752,7 +874,27 @@ namespace HerhangiOT.GameServer.Model
 
 	        SendStats();
         }
-        
+
+        public void SetVarStats(Stats stat, int modifier)
+        {
+	        VarStats[(byte)stat] = (ushort)(VarStats[(byte)stat] + modifier);
+
+	        switch (stat)
+            {
+		        case Stats.MaxHitPoints:
+			        if (Health > HealthMax)
+				        ChangeHealth(HealthMax - Health);
+			        else
+				        Game.AddCreatureHealth(this);
+			        break;
+
+		        case Stats.MaxManaPoints:
+			        if (Mana > ManaMax)
+				        ChangeMana(ManaMax - Mana);
+			        break;
+	        }
+        }
+
         public void SetNextWalkTask(SchedulerTask task)
         {
 	        if (NextStepEvent != 0) {
@@ -992,15 +1134,15 @@ namespace HerhangiOT.GameServer.Model
             if (HasFlag(PlayerFlags.CannotBeMuted))
                 return 0;
 
-            //int muteTicks = 0; //TODO: Player Conditions
-            //for (Condition* condition : conditions) {
-            //    if (condition->getType() == CONDITION_MUTED && condition->getTicks() > muteTicks) {
-            //        muteTicks = condition->getTicks();
-            //    }
-            //}
-            //return static_cast<uint32_t>(muteTicks) / 1000;
-
-            return 0;
+            int muteTicks = 0;
+            foreach (Condition condition in Conditions)
+            {
+                if (condition.ConditionType == ConditionFlags.Muted && condition.Ticks > muteTicks)
+                {
+                    muteTicks = condition.Ticks;
+                }
+            }
+            return (uint)(muteTicks / 1000);
         }
 
         public void AddMessageBuffer()
@@ -1026,9 +1168,9 @@ namespace HerhangiOT.GameServer.Model
                     //}
 
 			        uint muteTime = 5 * muteCount * muteCount;
-                    //muteCountMap[guid] = muteCount + 1; TODO: Conditions
-                    //Condition* condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_MUTED, muteTime * 1000, 0);
-                    //addCondition(condition);
+                    //muteCountMap[guid] = muteCount + 1;
+                    Condition condition = Condition.CreateCondition(ConditionIds.Default, ConditionFlags.Muted, (int)(muteTime * 1000), 0);
+                    AddCondition(condition);
                     
 			        SendTextMessage(MessageTypes.StatusSmall, string.Format("You are muted for {0} seconds.", muteTime));
 		        }

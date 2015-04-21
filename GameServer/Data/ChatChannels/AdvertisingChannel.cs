@@ -29,12 +29,12 @@ namespace HerhangiOT.GameServer.Data.ChatChannels
                 return true;
             }
 
-            //TODO: CONDITIONS
-            //if player:getCondition(CONDITION_CHANNELMUTEDTICKS, CONDITIONID_DEFAULT, CHANNEL_ADVERTISING) then
-            //    player:sendCancelMessage("You may only place one offer in two minutes.")
-            //    return false
-            //end
-            //player:addCondition(muted)
+            if (player.GetCondition(ConditionFlags.ChannelMutedTicks, ConditionIds.Default, Id) != null)
+            {
+                player.SendCancelMessage("You may only place one offer in two minutes.");
+                return false;
+            }
+            player.AddCondition(Condition.CreateCondition(ConditionIds.Default, ConditionFlags.ChannelMutedTicks, 120000, 0, false, Id));
 
             if (type == SpeakTypes.ChannelO)
             {

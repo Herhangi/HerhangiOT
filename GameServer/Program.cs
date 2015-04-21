@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using HerhangiOT.GameServer.Model;
+using HerhangiOT.GameServer.Scriptability;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Database;

@@ -561,8 +561,8 @@ namespace HerhangiOT.GameServer
             message.AddUInt16(character.Stamina);
             message.AddUInt16((ushort)(PlayerData.BaseSpeed / 2U));
 
-            //Condition* condition = player->getCondition(CONDITION_REGENERATION);
-            message.AddUInt16(0);//condition ? condition->getTicks() / 1000 : 0x00); TODO: CONDITIONS
+            Condition condition = PlayerData.GetCondition(ConditionFlags.Regeneration);
+            message.AddUInt16(condition != null ? (ushort)(condition.Ticks / 1000) : (ushort)0x00);
             message.AddUInt16((ushort)(character.OfflineTrainingTime / 60U));
 
             WriteToOutputBuffer(message);
@@ -666,6 +666,22 @@ namespace HerhangiOT.GameServer
 
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
 	        AddCreatureLight(msg, creature);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendSpellCooldown(byte spellId, uint time)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte) ServerPacketType.SpellCooldown);
+	        msg.AddByte(spellId);
+	        msg.AddUInt32(time);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendSpellGroupCooldown(SpellGroups groupId, uint time)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte) ServerPacketType.SpellGroupCooldown);
+	        msg.AddByte((byte) groupId);
+	        msg.AddUInt32(time);
 	        WriteToOutputBuffer(msg);
         }
         public void SendWorldLight()
@@ -1073,6 +1089,26 @@ namespace HerhangiOT.GameServer
 	        }
 	        WriteToOutputBuffer(msg);
         }
+        public void SendCreatureOutfit(Creature creature, Outfit outfit)
+        {
+	        if (!CanSee(creature))
+		        return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.CreatureOutfit);
+	        msg.AddUInt32(creature.Id);
+	        AddOutfit(msg, outfit);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendChangeSpeed(Creature creature, uint speed)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte)ServerPacketType.CreatureSpeed);
+	        msg.AddUInt32(creature.Id);
+            msg.AddUInt16((ushort) (creature.BaseSpeed/2));
+            msg.AddUInt16((ushort) (speed/2));
+	        WriteToOutputBuffer(msg);
+        }
         public void SendChannelEvent(ushort channelId, string playerName, ChatChannelEvents channelEvent)
         {
             NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
@@ -1435,10 +1471,11 @@ namespace HerhangiOT.GameServer
 					        return;
 				        }
 
-                        //if (!player.Parent.Flags.HasFlag(TileFlags.ProtectionZone) && player->hasCondition(CONDITION_INFIGHT)) { //TODO: Conditions
-                        //    player->sendCancelMessage(RETURNVALUE_YOUMAYNOTLOGOUTDURINGAFIGHT);
-                        //    return;
-                        //}
+                        if (!player.Parent.Flags.HasFlag(TileFlags.ProtectionZone) && player.HasCondition(ConditionFlags.InFight))
+                        {
+                            player.SendCancelMessage(ReturnTypes.YouMayNotLogoutDuringAFight);
+                            return;
+                        }
 			        }
 
 			        //scripting event - onLogout TODO: Scripting

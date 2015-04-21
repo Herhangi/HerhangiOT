@@ -20,6 +20,10 @@ namespace HerhangiOT.GameServer.Model
         {
             throw new System.NotImplementedException();
         }
+        public override string GetNameDescription()
+        {
+            throw new System.NotImplementedException();
+        }
 
         public override void AddList()
         {

@@ -1,4 +1,4 @@
-﻿namespace HerhangiOT.GameServer.Model.Vocations
+﻿namespace HerhangiOT.GameServer.Scriptability.Vocations
 {
     public class VocationNone : Vocation
     {

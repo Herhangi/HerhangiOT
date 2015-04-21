@@ -1,4 +1,5 @@
-﻿using HerhangiOT.GameServer.Enums;
+﻿using System;
+using HerhangiOT.GameServer.Enums;
 using HerhangiOT.ServerLibrary.Threading;
 using HerhangiOT.ServerLibrary.Utility;
 
@@ -6,10 +7,6 @@ namespace HerhangiOT.GameServer.Model.Items
 {
     public class BedItem : Item
     {
-        public House House { get; set; }
-        public long SleepStart { get; protected set; }
-        public uint SleeperGuid { get; protected set; }
-
         public BedItem(ushort id)
             : base(id)
         {
@@ -17,7 +14,11 @@ namespace HerhangiOT.GameServer.Model.Items
             InternalRemoveSleeper();
         }
 
-        public sealed override bool CanRemove()
+        public House House { get; set; }
+        public long SleepStart { get; protected set; }
+        public uint SleeperGuid { get; protected set; }
+
+        public override sealed bool CanRemove()
         {
             return House == null;
         }
@@ -52,7 +53,8 @@ namespace HerhangiOT.GameServer.Model.Items
 
             if (SleeperGuid != 0)
             {
-                if (ItemManager.Templates[Id].TransformToFree != 0)// && House->getOwner() == player->getGUID()) TODO: House
+                if (ItemManager.Templates[Id].TransformToFree != 0)
+                    // && House->getOwner() == player->getGUID()) TODO: House
                 {
                     WakeUp(null);
                 }
@@ -89,7 +91,8 @@ namespace HerhangiOT.GameServer.Model.Items
 
             // kick player after he sees himself walk onto the bed and it change id
             uint playerId = player.Id;
-            DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask(SchedulerTask.SchedulerMinTicks, () => Game.KickPlayer(playerId, false)));
+            DispatcherManager.Scheduler.AddEvent(SchedulerTask.CreateSchedulerTask(SchedulerTask.SchedulerMinTicks,
+                () => Game.KickPlayer(playerId, false)));
 
             // change self and partner's appearance
             UpdateAppearance(player);
@@ -102,7 +105,7 @@ namespace HerhangiOT.GameServer.Model.Items
             return true;
         }
 
-        void WakeUp(Player player)
+        private void WakeUp(Player player)
         {
             if (House == null)
                 return;
@@ -183,27 +186,33 @@ namespace HerhangiOT.GameServer.Model.Items
         {
             long sleptTime = Tools.GetSystemMilliseconds() - SleepStart;
 
-            //Condition* condition = player->getCondition(CONDITION_REGENERATION, CONDITIONID_DEFAULT); TODO: Conditions
-            //if (condition)
-            //{
-            //    uint32_t regen;
-            //    if (condition->getTicks() != -1) {
-            //        regen = std::min<int32_t>((condition->getTicks() / 1000), sleptTime) / 30;
-            //        const int32_t newRegenTicks = condition->getTicks() - (regen * 30000);
-            //        if (newRegenTicks <= 0) {
-            //            player->removeCondition(condition);
-            //        } else {
-            //            condition->setTicks(newRegenTicks);
-            //        }
-            //    } else {
-            //        regen = sleptTime / 30;
-            //    }
+            Condition condition = player.GetCondition(ConditionFlags.Regeneration, ConditionIds.Default);
+            if (condition != null)
+            {
+                int regen;
+                if (condition.Ticks != -1)
+                {
+                    regen = (int) Math.Min((condition.Ticks/1000), sleptTime)/30;
+                    int newRegenTicks = condition.Ticks - (regen*30000);
+                    if (newRegenTicks <= 0)
+                    {
+                        player.RemoveCondition(condition);
+                    }
+                    else
+                    {
+                        condition.SetTicks(newRegenTicks);
+                    }
+                }
+                else
+                {
+                    regen = (int) (sleptTime/30);
+                }
 
-            //    player->changeHealth(regen, false);
-            //    player->changeMana(regen);
-            //}
+                player.ChangeHealth(regen, false);
+                player.ChangeMana(regen);
+            }
 
-            int soulRegen = (int)(sleptTime / (60 * 15));
+            var soulRegen = (int) (sleptTime/(60*15));
             player.ChangeSoul(soulRegen);
         }
 
@@ -215,6 +224,7 @@ namespace HerhangiOT.GameServer.Model.Items
             SleepStart = Tools.GetSystemMilliseconds();
             SetSpecialDescription(description);
         }
+
         protected void InternalRemoveSleeper()
         {
             SleepStart = 0;

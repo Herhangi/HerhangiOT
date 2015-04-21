@@ -28,7 +28,7 @@ namespace HerhangiOT.ServerLibrary.Database.Model
         public ushort PosX { get; set; }
         public ushort PosY { get; set; }
         public byte PosZ { get; set; }
-        public int Conditions { get; set; }
+        public byte[] Conditions { get; set; }
         public uint Capacity { get; set; }
         public byte Gender { get; set; }
         public DateTime? LastLogin { get; set; }

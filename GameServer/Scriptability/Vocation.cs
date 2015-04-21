@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HerhangiOT.GameServer.Enums;
-using HerhangiOT.GameServer.Model.Vocations;
+using HerhangiOT.GameServer.Scriptability.Vocations;
 using HerhangiOT.ScriptLibrary;
 using HerhangiOT.ServerLibrary;
 
-namespace HerhangiOT.GameServer.Model
+namespace HerhangiOT.GameServer.Scriptability
 {
     public abstract class Vocation
     {
