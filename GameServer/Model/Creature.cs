@@ -1280,6 +1280,8 @@ namespace HerhangiOT.GameServer.Model
 
                 if (!condition.ExecuteCondition(this, iInterval))
                 {
+                    Conditions.RemoveAt(i);
+
                     condition.EndCondition(this);
                     OnEndCondition(condition.ConditionType);
                 }

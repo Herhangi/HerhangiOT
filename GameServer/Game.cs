@@ -1025,9 +1025,9 @@ namespace HerhangiOT.GameServer
                 {
                     if (creature.Health > 0)
                     {
-                        creature.OnThink(Constants.JobCheckCreatureInterval);
-                        creature.OnAttacking(Constants.JobCheckCreatureInterval);
-                        creature.ExecuteConditions(Constants.JobCheckCreatureInterval);
+                        creature.OnThink(Constants.JobCheckCreatureCompletionInterval);
+                        creature.OnAttacking(Constants.JobCheckCreatureCompletionInterval);
+                        creature.ExecuteConditions(Constants.JobCheckCreatureCompletionInterval);
                     }
                     else
                     {

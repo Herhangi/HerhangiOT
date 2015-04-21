@@ -65,6 +65,7 @@ namespace HerhangiOT.GameServer.Model
         protected long LastWalkthroughAttempt { get; set; }
         protected Position LastWalkthroughPosition { get; set; }
 
+        public int MessageBufferTicks { get; set; }
         public int MessageBufferCount { get; set; }
         public uint IdleTime { get; set; }
         public uint WalkTaskEvent { get; set; }
@@ -390,6 +391,20 @@ namespace HerhangiOT.GameServer.Model
         }
 
         #region Creature Overrides
+        public override void OnThink(uint interval)
+        {
+            base.OnThink(interval);
+
+            MessageBufferTicks += (int)interval;
+            if (MessageBufferTicks >= 1500)
+            {
+                MessageBufferTicks = 0;
+                AddMessageBuffer();
+            }
+
+            //TODO: Continue this method
+        }
+
         public sealed override CreatureTypes GetCreatureType()
         {
             return CreatureTypes.Player;
