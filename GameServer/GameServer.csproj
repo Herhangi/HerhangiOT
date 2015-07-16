@@ -148,6 +148,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="SecretCommunication.cs" />
+    <Compile Include="Utility\GameTools.cs" />
     <Compile Include="Utility\ServerLibraryExtensions.cs" />
     <Content Include="Data\Items\items.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
