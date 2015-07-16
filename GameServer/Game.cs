@@ -669,7 +669,7 @@ namespace HerhangiOT.GameServer
 		        case CombatTypeFlags.PhysicalDamage:
                     {
 			        Item splash = null;
-			        switch (target.GetRace())
+			        switch (target.Race)
                     {
 				        case RaceTypes.Venom:
 					        color = TextColors.LightGreen;
@@ -843,7 +843,7 @@ namespace HerhangiOT.GameServer
             creature.Parent.PostRemoveNotification(creature, null, 0);
 
             creature.RemoveList();
-            creature.IsInternalRemoved = true;
+            creature.SetRemoved();
             ReleaseCreature(creature);
 
             RemoveCreatureCheck(creature);

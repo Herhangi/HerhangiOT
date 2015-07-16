@@ -729,10 +729,10 @@ namespace HerhangiOT.GameServer.Model
         }
         #endregion
         #region Health/Mana Operations
-        public ushort Health { get; protected set; }
+        public virtual ushort Health { get; protected set; }
         public virtual ushort HealthMax { get; protected set; }
-        public ushort Mana { get; protected set; }
-        public virtual ushort ManaMax { get { return 0; } }
+        public virtual ushort Mana { get; protected set; }
+        public virtual ushort ManaMax { get; protected set; }
 
         public void ChangeHealth(int healthChange, bool sendHealthChange = true)
         {

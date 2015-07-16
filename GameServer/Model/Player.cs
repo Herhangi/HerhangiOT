@@ -42,7 +42,6 @@ namespace HerhangiOT.GameServer.Model
         public ConditionFlags ConditionImmunities { get; private set; }
         public CombatTypeFlags DamageImmunities { get; private set; }
 
-        public SkullTypes Skull { get; private set; }
         public long SkullTicks { get; private set; }
         public Genders Gender { get; private set; }
         public Position LoginPosition { get; private set; }
@@ -959,11 +958,6 @@ namespace HerhangiOT.GameServer.Model
         }
 
         public override string GetDescription(int lookDistance)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int GetThrowRange()
         {
             throw new NotImplementedException();
         }
