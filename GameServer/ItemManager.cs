@@ -545,6 +545,9 @@ namespace HerhangiOT.GameServer
                         case "transformto":
                             item.TransformToFree = ushort.Parse(valueAttribute.InnerText);
                             break;
+                        case "destroyto":
+                            item.DestroyTo = ushort.Parse(valueAttribute.InnerText);
+                            break;
                         case "walkstack":
                             item.WalkStack = int.Parse(valueAttribute.InnerText) != 0;
                             break;

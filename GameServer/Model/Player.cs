@@ -60,6 +60,7 @@ namespace HerhangiOT.GameServer.Model
         public ChaseModes ChaseMode { get; set; }
         public SecureModes SecureMode { get; set; }
 
+        public bool WasMounted { get; protected set; }
         public bool IsConnecting { get; set; }
         public bool IsPzLocked { get; protected set; }
         protected long LastWalkthroughAttempt { get; set; }

@@ -44,6 +44,7 @@ namespace HerhangiOT.GameServer.Model
         public CombatTypeFlags CombatType;
         public ushort[] TransformToOnUse; //[2]
         public ushort TransformToFree;
+        public ushort DestroyTo;
         public ushort MaxTextLength;
         public ushort WriteOnceItemId;
         public ushort TransformEquipTo;

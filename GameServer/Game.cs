@@ -6,6 +6,7 @@ using HerhangiOT.GameServer.Model;
 using HerhangiOT.GameServer.Model.Items;
 using HerhangiOT.GameServer.Scriptability;
 using HerhangiOT.GameServer.Scriptability.ChatChannels;
+using HerhangiOT.GameServer.Utility;
 using HerhangiOT.ServerLibrary;
 using HerhangiOT.ServerLibrary.Threading;
 
@@ -156,14 +157,13 @@ namespace HerhangiOT.GameServer
 
             Map.MoveCreature(creature, toTile);
             if (creature.Parent != toTile)
-            {
                 return ReturnTypes.NoError;
-            }
 
             int index = 0;
             Item toItem = null;
             Tile subCylinder;
             Tile toCylinder = toTile;
+            Tile fromCylinder = null;
             uint n = 0;
 
             while ((subCylinder = toTile.QueryDestination(ref index, creature, ref toItem, ref flags) as Tile) != toCylinder)
@@ -173,15 +173,32 @@ namespace HerhangiOT.GameServer
                 if (creature.GetParent() != subCylinder)
                 {
                     //could happen if a script move the creature
+                    fromCylinder = null;
                     break;
                 }
 
+                fromCylinder = toCylinder;
                 toCylinder = subCylinder;
                 flags = 0;
 
                 //to prevent infinite loop
                 if (++n >= Map.MapMaxLayers)
                     break;
+            }
+
+            if (fromCylinder != null)
+            {
+                Position fromPosition = fromCylinder.Position;
+                Position toPosition = toCylinder.Position;
+
+                if (fromPosition.Z != toPosition.Z && (fromPosition.X != toPosition.X || fromPosition.Y != toPosition.Y))
+                {
+                    Directions dir = GameTools.GetDirectionTo(fromPosition, toPosition);
+                    if (!dir.HasFlag(Directions.DiagonalMask))
+                    {
+                        InternalCreatureTurn(creature, dir);
+                    }
+                }
             }
 
             return ReturnTypes.NoError;

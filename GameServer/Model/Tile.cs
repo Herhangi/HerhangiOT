@@ -80,7 +80,7 @@ namespace HerhangiOT.GameServer.Model
         #endregion
 
         #region Add Methods
-        public void InternalAddThing(Thing thing)
+        public override void InternalAddThing(Thing thing)
         {
             thing.SetParent(this);
 
@@ -88,24 +88,28 @@ namespace HerhangiOT.GameServer.Model
 
             if (creature != null)
             {
-                //TODO: PROGRAM HERE
-                //g_game.map.clearSpectatorCache();
-                //CreatureVector* creatures = makeCreatures();
-                //creatures->insert(creatures->begin(), creature);
+                Map.ClearSpectatorCache();
+                List<Creature> creatures = MakeCreatureList();
+                creatures.Insert(0, creature);
             }
             else
             {
                 Item item = thing as Item;
                 if (item == null) return;
 
-                List<Item> items = MakeItemList();
-
                 if (item.IsGroundTile)
                 {
                     if (Ground == null)
+                    {
                         Ground = item;
+                        SetFlags(item);
+                    }
+                    return;
                 }
-                else if (item.IsAlwaysOnTop)
+
+                List<Item> items = MakeItemList();
+                
+                if (item.IsAlwaysOnTop)
                 {
                     bool isInserted = false;
 
@@ -282,30 +286,30 @@ namespace HerhangiOT.GameServer.Model
                     }
                 }
 
-                if (Items != null)
+                if (!cFlags.HasFlag(CylinderFlags.IgnoreBlockItem))
                 {
-                    if (!cFlags.HasFlag(CylinderFlags.IgnoreBlockItem))
+                    //If the CylinderFlags.IgnoreBlockItem bit isn't set we dont have to iterate every single item
+                    if (Flags.HasFlag(TileFlags.BlockSolid))
+                        return ReturnTypes.NotEnoughRoom;
+                }
+                else
+                {
+                    //CylinderFlags.IgnoreBlockItem is set
+                    if (Ground != null)
                     {
-                        //If the CylinderFlags.IgnoreBlockItem bit isn't set we dont have to iterate every single item
-                        if (Flags.HasFlag(TileFlags.BlockSolid))
-                            return ReturnTypes.NotEnoughRoom;
+                        ItemTemplate it = ItemManager.Templates[Ground.Id];
+                        if (it.DoesBlockSolid && (!it.IsMoveable))// || Ground->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) { TODO: Attributes
+                            return ReturnTypes.NotPossible;
                     }
-                    else
-                    {
-                        //CylinderFlags.IgnoreBlockItem is set
-                        if (Ground != null)
-                        {
-                            ItemTemplate it = ItemManager.Templates[Ground.Id];
-                            if (it.DoesBlockSolid && (!it.IsMoveable))// || Ground->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) { TODO: Attributes
-                                return ReturnTypes.NotPossible;
-                        }
 
+                    if (Items != null)
+                    {
                         foreach (Item stackItem in Items)
                         {
                             ItemTemplate it = ItemManager.Templates[stackItem.Id];
                             if (it.DoesBlockSolid && (!it.IsMoveable))// || item->hasAttribute(ITEM_ATTRIBUTE_UNIQUEID))) {
                                 return ReturnTypes.NotPossible;
-                        }
+                        } 
                     }
                 }
             }

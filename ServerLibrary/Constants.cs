@@ -7,8 +7,8 @@
         public const string ServerDevelopers = "Turhan Yagiz 'Herhangi' Merpez";
 
         public const ushort ClientVersionMin = 1076;
-        public const ushort ClientVersionMax = 1076;
-        public const string ClientVersionStr = "10.76";
+        public const ushort ClientVersionMax = 1077;
+        public const string ClientVersionStr = "10.77";
 
         public const ushort NetworkMessageSizeMax = 24590;
         public const ushort NetworkMessageErrorSizeMax = NetworkMessageSizeMax - 16;

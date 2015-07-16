@@ -1012,11 +1012,10 @@ namespace HerhangiOT.GameServer.Model
                 calculatedStepSpeed = 1;
             }
 
-            Tile tile = Parent;
-            if (tile != null && tile.Ground != null)
+            Item ground = Parent.Ground;
+            if (ground != null)
             {
-                ushort groundId = tile.Ground.Id;
-                groundSpeed = ItemManager.Templates[groundId].Speed;
+                groundSpeed = ItemManager.Templates[ground.Id].Speed;
                 if (groundSpeed == 0)
                     groundSpeed = 150;
             }
