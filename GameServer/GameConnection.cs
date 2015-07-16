@@ -1225,7 +1225,21 @@ namespace HerhangiOT.GameServer
 	        msg.AddByte((byte) type);
 	        msg.AddString(text);
 	        WriteToOutputBuffer(msg);
-}
+        }
+        public void SendCreatureSkull(Creature creature)
+        {
+            if (Game.WorldType != GameWorldTypes.Pvp)
+                return;
+
+            if (!CanSee(creature))
+                return;
+
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+            msg.AddByte((byte) ServerPacketType.CreatureSkull);
+            msg.AddUInt32(creature.Id);
+            msg.AddByte((byte) PlayerData.GetSkullClient(creature));
+            WriteToOutputBuffer(msg);
+        }
         #endregion
 
         #region Add Messages

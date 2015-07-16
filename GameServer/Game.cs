@@ -1547,5 +1547,18 @@ namespace HerhangiOT.GameServer
             BedSleepers.Remove(guid);
         }
         #endregion
+
+        public static void UpdateCreatureSkull(Creature creature)
+        {
+	        if (WorldType != GameWorldTypes.Pvp)
+		        return;
+
+	        HashSet<Creature> list = new HashSet<Creature>();
+	        Map.GetSpectators(ref list, creature.GetPosition(), true, true);
+	        foreach (Player spectator in list)
+            {
+		        spectator.SendCreatureSkull(creature);
+	        }
+        }
     }
 }

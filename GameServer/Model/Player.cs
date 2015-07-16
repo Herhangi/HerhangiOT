@@ -875,6 +875,14 @@ namespace HerhangiOT.GameServer.Model
             if (Connection != null)
                 Connection.SendSpellGroupCooldown(groupId, time);
         }
+
+        public void SendCreatureSkull(Creature creature)
+        {
+            if (Connection != null)
+            {
+                Connection.SendCreatureSkull(creature);
+            }
+        }
         #endregion
         
         public void ChangeSoul(int soulChange)
