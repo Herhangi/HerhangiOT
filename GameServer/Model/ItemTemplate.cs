@@ -117,5 +117,9 @@ namespace HerhangiOT.GameServer.Model
         {
             return Abilities ?? (Abilities = new Abilities());
         }
+
+        public bool IsSplash { get { return Group == ItemGroups.Splash; } }
+        public bool IsFluidContainer { get { return Group == ItemGroups.Fluid; } }
+        public bool HasSubType { get { return (IsFluidContainer || IsSplash || IsStackable || Charges != 0); } }
     }
 }

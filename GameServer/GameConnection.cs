@@ -1240,6 +1240,110 @@ namespace HerhangiOT.GameServer
             msg.AddByte((byte) PlayerData.GetSkullClient(creature));
             WriteToOutputBuffer(msg);
         }
+        public void SendShop(Npc npc, List<ShopInfo> itemList)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte) ServerPacketType.ShopWindowOpen);
+	        msg.AddString(npc.GetName());
+
+            ushort itemsToSend = (ushort)itemList.Count;
+	        msg.AddUInt16(itemsToSend);
+
+            foreach (ShopInfo itemInfo in itemList)
+                AddShopItem(msg, itemInfo);
+
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendCloseShop()
+        {
+	        NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte) ServerPacketType.ShopWindowClose);
+	        WriteToOutputBuffer(msg);
+        }
+        public void SendSaleItemList(List<ShopInfo> shop)
+        {
+            NetworkMessage msg = NetworkMessagePool.GetEmptyMessage();
+	        msg.AddByte((byte) ServerPacketType.ShopSaleGoldCount);
+	        msg.AddUInt64(PlayerData.GetMoney());
+
+            Dictionary<ushort, byte> saleMap = new Dictionary<ushort, byte>();
+
+	        if (shop.Count <= 5)
+            {
+		        // For very small shops it's not worth it to create the complete map
+		        foreach (ShopInfo shopInfo in shop)
+                {
+			        if (shopInfo.SellPrice == 0)
+				        continue;
+
+			        sbyte subtype = -1;
+
+			        ItemTemplate itemType = ItemManager.Templates[shopInfo.ItemId];
+			        if (itemType.HasSubType && !itemType.IsStackable)
+				        subtype = (sbyte)(shopInfo.SubType == 0 ? -1 : shopInfo.SubType);
+
+			        byte count = (byte)PlayerData.GetItemTypeCount(shopInfo.ItemId, subtype);
+			        if (count > 0)
+				        saleMap[shopInfo.ItemId] = count;
+		        }
+	        }
+            else
+            {
+		        // Large shop, it's better to get a cached map of all item counts and use it
+		        // We need a temporary map since the finished map should only contain items
+		        // available in the shop
+		        Dictionary<uint, uint> tempSaleMap = new Dictionary<uint, uint>();
+		        PlayerData.GetAllItemTypeCount(tempSaleMap);
+
+		        // We must still check manually for the special items that require subtype matches
+		        // (That is, fluids such as potions etc., actually these items are very few since
+		        // health potions now use their own ID)
+		        foreach (ShopInfo shopInfo in shop)
+                {
+			        if (shopInfo.SellPrice == 0)
+				        continue;
+
+			        sbyte subtype = -1;
+
+			        ItemTemplate itemType = ItemManager.Templates[shopInfo.ItemId];
+			        if (itemType.HasSubType && !itemType.IsStackable) {
+				        subtype = (sbyte)(shopInfo.SubType == 0 ? -1 : shopInfo.SubType);
+			        }
+
+			        if (subtype != -1)
+                    {
+				        byte count;
+				        if (!itemType.IsFluidContainer && !itemType.IsSplash)
+                            count = (byte)PlayerData.GetItemTypeCount(shopInfo.ItemId, subtype);    // This shop item requires extra checks
+                        else 
+					        count = (byte)subtype;
+
+				        if (count > 0)
+					        saleMap[shopInfo.ItemId] = count;
+			        }
+                    else
+			        {
+			            uint itemCount;
+			            if (tempSaleMap.TryGetValue(shopInfo.ItemId, out itemCount) && itemCount > 0)
+			            {
+			                saleMap[shopInfo.ItemId] = (byte)itemCount;
+			            }
+			        }
+		        }
+	        }
+
+            byte itemsToSend = (byte)saleMap.Count;
+	        msg.AddByte(itemsToSend);
+
+	        byte i = 0;
+            foreach (KeyValuePair<ushort, byte> item in saleMap)
+            {
+                msg.AddItemId(item.Key);
+                msg.AddByte(item.Value);
+            }
+
+	        WriteToOutputBuffer(msg);
+        }
         #endregion
 
         #region Add Messages
@@ -1362,6 +1466,21 @@ namespace HerhangiOT.GameServer
             msg.AddUInt32(creature.Id);
             msg.AddByte(PlayerData.Group.Access ? (byte)0xFF : creature.InternalLight.Level);
             msg.AddByte(creature.InternalLight.Color);
+        }
+        private void AddShopItem(NetworkMessage msg, ShopInfo item)
+        {
+	        ItemTemplate it = ItemManager.Templates[item.ItemId];
+	        msg.AddUInt16(it.ClientId);
+
+	        if (it.Group == ItemGroups.Splash || it.Group == ItemGroups.Fluid)
+		        msg.AddByte(GameTools.ServerFluidToClient((byte)item.SubType));
+	        else
+		        msg.AddByte(0x00);
+
+	        msg.AddString(item.RealName);
+	        msg.AddUInt32(it.Weight);
+	        msg.AddUInt32(item.BuyPrice);
+	        msg.AddUInt32(item.SellPrice);
         }
 
         private void RemoveTileThing(NetworkMessage msg, Position pos, byte stackpos)

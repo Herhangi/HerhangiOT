@@ -188,7 +188,7 @@ namespace HerhangiOT.GameServer.Model
 
             AddEventWalk(directions.Count >= 1);
         }
-        private void AddEventWalk(bool firstStep = false)
+        protected void AddEventWalk(bool firstStep = false)
         {
             CancelNextWalk = false;
 
@@ -276,15 +276,18 @@ namespace HerhangiOT.GameServer.Model
         
         public virtual void OnWalk(ref Directions dir)
         {
-            //if (hasCondition(CONDITION_DRUNK)) { //TODO: Drunk
-            //    uint32_t r = uniform_random(0, 20);
-            //    if (r <= DIRECTION_DIAGONAL_MASK) {
-            //        if (r < DIRECTION_DIAGONAL_MASK) {
-            //            dir = static_cast<Direction>(r);
-            //        }
-            //        g_game.internalCreatureSay(this, TALKTYPE_MONSTER_SAY, "Hicks!", false);
-            //    }
-            //}
+            if (HasCondition(ConditionFlags.Drunk))
+            {
+                Directions r = (Directions)Game.RNG.Next(0, 20);
+                if (r <= Directions.DiagonalMask)
+                {
+                    if (r < Directions.DiagonalMask)
+                    {
+                        dir = r;
+                    }
+                    Game.InternalCreatureSay(this, SpeakTypes.MonsterSay, "Hicks!", false);
+                }
+            }
         }
         public virtual void OnWalkAborted() { }
         public virtual void OnWalkComplete() { }
@@ -1176,21 +1179,24 @@ namespace HerhangiOT.GameServer.Model
                     StopEventWalk();
                 }
 
-                //if (!summons.empty()) //TODO: SUMMONS
-                //{
-                //    //check if any of our summons is out of range (+/- 2 floors or 30 tiles away)
-                //    std::forward_list<Creature*> despawnList;
-                //    for (Creature* summon : summons) {
-                //        const Position pos = summon->getPosition();
-                //        if (Position::getDistanceZ(newPos, pos) > 2 || (std::max<int32_t>(Position::getDistanceX(newPos, pos), Position::getDistanceY(newPos, pos)) > 30)) {
-                //            despawnList.push_front(summon);
-                //        }
-                //    }
+                if (Summons.Count > 0)
+                {
+                    //check if any of our summons is out of range (+/- 2 floors or 30 tiles away)
+                    List<Creature> despawnList = new List<Creature>();
+                    foreach (Creature summon in Summons)
+                    {
+                        Position pos = summon.GetPosition();
+                        if (Position.GetDistanceZ(newPos, pos) > 2 || (Math.Max(Position.GetDistanceX(newPos, pos), Position.GetDistanceY(newPos, pos)) > 30))
+                        {
+                            despawnList.Add(summon);
+                        }
+                    }
 
-                //    for (Creature* despawnCreature : despawnList) {
-                //        g_game.removeCreature(despawnCreature, true);
-                //    }
-                //}
+                    foreach (Creature despawnCreature in despawnList)
+                    {
+                        Game.RemoveCreature(despawnCreature, true);
+                    }
+                }
 
                 if (newTile.GetZone() != oldTile.GetZone())
                     OnChangeZone(GetZone());

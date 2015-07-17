@@ -880,13 +880,21 @@ namespace HerhangiOT.GameServer
             //TODO: Wildcard tree
             OnlinePlayersById[player.Id] = player;
         }
-
         public static void RemovePlayer(Player player)
         {
             string lowercaseName = player.CharacterName.ToLowerInvariant();
             OnlinePlayers.Remove(lowercaseName);
             //TODO: Wildcard tree
             OnlinePlayersById.Remove(player.Id);
+        }
+
+        public static void AddNpc(Npc npc)
+        {
+            Npcs[npc.Id] = npc;
+        }
+        public static void RemoveNpc(Npc npc)
+        {
+            Npcs.Remove(npc.Id);
         }
 
         #region Get Operations
@@ -1012,7 +1020,7 @@ namespace HerhangiOT.GameServer
         }
 
 
-        private static bool InternalCreatureTurn(Creature creature, Directions direction)
+        public static bool InternalCreatureTurn(Creature creature, Directions direction)
         {
             if (creature.Direction == direction)
                 return false;
@@ -1486,7 +1494,7 @@ namespace HerhangiOT.GameServer
             return true;
         }
 
-        private static void InternalCreatureSay(Creature creature, SpeakTypes type, string text, bool ghostMode, HashSet<Creature> spectatorsPtr = null, Position pos = null)
+        public static void InternalCreatureSay(Creature creature, SpeakTypes type, string text, bool ghostMode, HashSet<Creature> spectatorsPtr = null, Position pos = null)
         {
             if (pos == null)
             {

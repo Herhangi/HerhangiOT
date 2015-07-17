@@ -141,6 +141,7 @@
     <Compile Include="Model\Items\DepotChest.cs" />
     <Compile Include="Model\Npc.cs" />
     <Compile Include="Model\PathfindingParameters.cs" />
+    <Compile Include="Model\ShopInfo.cs" />
     <Compile Include="Model\TextMessage.cs" />
     <Compile Include="OutfitManager.cs" />
     <Compile Include="Scriptability\ChatChannel.cs" />

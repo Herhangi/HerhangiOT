@@ -75,7 +75,10 @@ namespace HerhangiOT.GameServer.Model
 
         public Item TradeItem { get; protected set; }
         public TradeStates TradeState { get; protected set; }
+        public List<ShopInfo> ShopItemList { get; protected set; }
 
+        public int PurchaseCallback { get; protected set; }
+        public int SaleCallback { get; protected set; }
         public Npc ShopOwner { get; protected set; }
 
         public HashSet<uint> ModalWindows { get; protected set; } 
@@ -874,14 +877,26 @@ namespace HerhangiOT.GameServer.Model
             if (Connection != null)
                 Connection.SendSpellGroupCooldown(groupId, time);
         }
-
         public void SendCreatureSkull(Creature creature)
         {
             if (Connection != null)
-            {
                 Connection.SendCreatureSkull(creature);
-            }
         }
+		public void SendShop(Npc npc)
+        {
+            if (Connection != null)
+                Connection.SendShop(npc, ShopItemList);
+		}
+        public void SendSaleItemList()
+        {
+            if (Connection != null)
+                Connection.SendSaleItemList(ShopItemList);
+        }
+		public void SendCloseShop()
+        {
+            if (Connection != null)
+                Connection.SendCloseShop();
+		}
         #endregion
         
         public void ChangeSoul(int soulChange)
@@ -1194,5 +1209,55 @@ namespace HerhangiOT.GameServer.Model
 		        }
 	        }
         }
+
+        public ulong GetMoney()
+        {
+            return 0; //TODO: Program Here
+        }
+
+        public void OpenShopWindow(Npc npc, List<ShopInfo> shop)
+        {
+	        ShopItemList = shop;
+	        SendShop(npc);
+	        SendSaleItemList();
+        }
+        public bool CloseShopWindow(bool sendCloseShopWindow = true)
+        {
+            //unreference callbacks
+            int onBuy;
+            int onSell;
+
+            Npc npc = GetShopOwner(out onBuy, out onSell);
+            if (npc == null)
+            {
+                ShopItemList.Clear();
+                return false;
+            }
+
+            SetShopOwner(null, -1, -1);
+            npc.FireOnPlayerEndTrade(this, onBuy, onSell);
+
+            if (sendCloseShopWindow)
+                SendCloseShop();
+
+            ShopItemList.Clear();
+            return true;
+        }
+
+        #region Shop Methods
+        private void SetShopOwner(Npc owner, int onBuy, int onSell)
+        {
+            ShopOwner = owner;
+            SaleCallback = onSell;
+			PurchaseCallback = onBuy;
+		}
+
+        private Npc GetShopOwner(out int onBuy, out int onSell)
+        {
+			onBuy = PurchaseCallback;
+			onSell = SaleCallback;
+			return ShopOwner;
+        }
+        #endregion
     }
 }

@@ -9,7 +9,7 @@
         Slime = FluidColors.Green,
         Lemonade = FluidColors.Yellow,
         Milk = FluidColors.White,
-        Purple = FluidColors.Purple,
+        Mana = FluidColors.Purple,
 
         Life = FluidColors.Red + 8,
         Oil = FluidColors.Brown + 8,
